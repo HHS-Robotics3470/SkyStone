@@ -2,25 +2,25 @@ package org.firstinspires.ftc.teamcode;
 
 /**
  * this will be the main class for the aim assist.
- * it should be able to take an input consisting of the robots position, yaw, velocity(?), acceleration(?), and the position
- * of the target and be able to output the yaw, and pitch required for the robot to launch the ring into the goal
+ * it should be able to take an input consisting of the robots position, heading, velocity(?), acceleration(?), and the position
+ * of the target and be able to output the heading, and pitch required for the robot to launch the ring into the goal
  *
  * parameters with a ? before the description may not be needed.
  *
  * @param   rPosition         a double array with two indexs recording the position of the robot (x,y) relative to the starting position.
- * @param   rYaw              the direction that the robot is facing relative to the starting direction.
+ * @param   rHeading              the direction that the robot is facing relative to the starting direction.
  * @param   rVelocity         ?the magnitude of the velocity of the robot
  * @param   rAcceleration     ?the acceleration the robot is undergoing, needed to correct the aim of the turret to anticipate
  *                              the impact the robots acceleration will have on the arc of the projectile
  *                              (may not be needed if the robot stops before firing)
  *
- * @param   tuYaw             ?the direction that the turret is facing relative to the robot
+ * @param   tuHeading             ?the direction that the turret is facing relative to the robot
  *
  * @param   tPosition         a double array with three indexs recording the position of the target (x,y,z(up))
  *
  *
  *
- * @return yawToTarget          the yaw that the turret needs to point to (relative to the robot) to face the target
+ * @return headingToTarget          the heading that the turret needs to point to (relative to the robot) to face the target
  * @return pitchToTarget        the pitch that the turret needs to be at to hit the target.
  */
 
@@ -28,18 +28,18 @@ public class AimAssist {
 
     //variables defining the robots characteristics
     double[] robotPosition; // x, y, coords of robot, measured in meters
-    double robotYaw;        // direction the robot is facing relative to it's starting direction (0), measured in degrees
+    double robotHeading;        // direction the robot is facing relative to it's starting direction (0), measured in degrees
     double robotVelocity;   // magnitude of the velocity of the robot, measure in meters per second
     double robotAcceleration; // magnitude of the acceleration of the robot, measured in meters per second per second
 
     //variables defining the turrets characteristics
-    double turretYaw; // the direction that the turret is facing relative to the front of the robot (0), measured in degrees
+    double turretHeading; // the direction that the turret is facing relative to the front of the robot (0), measured in degrees
 
     //variables defining the targets characteristics
     double[] targetPosition; // x, y, z, coords of the robot, measured in meters
 
     //variables that are calculated
-    double yawToTarget; // the direction that the turret needs to face relative to the front of the robot (0), measured in degrees
+    double headingToTarget; // the direction that the turret needs to face relative to the front of the robot (0), measured in degrees
     double pitchToTarget; // the pitch that the turret needs to be at to hit the target, measured in degrees
 
     /**
@@ -50,14 +50,14 @@ public class AimAssist {
 
     }
     /**constructor**/
-    public AimAssist(double[] rPosition, double rYaw, double rVelocity, double rAcceleration, double tuYaw, double[] tPosition)
+    public AimAssist(double[] rPosition, double rHeading, double rVelocity, double rAcceleration, double tuHeading, double[] tPosition)
     {
         robotPosition = rPosition;
-        robotYaw = rYaw;
+        robotHeading = rHeading;
         robotVelocity = rVelocity;
         robotAcceleration = rAcceleration;
 
-        turretYaw = tuYaw;
+        turretHeading = tuHeading;
 
         targetPosition = tPosition;
     }
@@ -65,26 +65,26 @@ public class AimAssist {
     /**
      * method to update the the variables to the most recent values
      */
-    public void Update(double[] rPosition, double rYaw, double rVelocity, double rAcceleration, double tuYaw, double[] tPosition)
+    public void Update(double[] rPosition, double rHeading, double rVelocity, double rAcceleration, double tuHeading, double[] tPosition)
     {
         robotPosition = rPosition;
-        robotYaw = rYaw;
+        robotHeading = rHeading;
         robotVelocity = rVelocity;
         robotAcceleration = rAcceleration;
 
-        turretYaw = tuYaw;
+        turretHeading = tuHeading;
 
         targetPosition = tPosition;
 
-        yawToTarget = YawCalculation();
+        headingToTarget = HeadingCalculation();
         pitchToTarget = pitchCalculation();
     }
 
     /**
-     * the method to calculate the yaw that the turret needs to point at in order to point to the target
-     * @return yawToTarget the yaw to the target
+     * the method to calculate the heading that the turret needs to point at in order to point to the target
+     * @return headingToTarget the heading to the target
      */
-    private double YawCalculation ()
+    private double HeadingCalculation ()
     {
         //x and y values of the robot
         double rX = robotPosition[0];
@@ -96,15 +96,15 @@ public class AimAssist {
         double x = tX - rX;
         double y = tY -rY;
 
-        yawToTarget = Math.atan(y / x); // yaw relative to the field (-|+)
-        yawToTarget = yawToTarget - turretYaw; // yaw relative to the robot
+        headingToTarget = Math.atan(y / x); // heading relative to the field (-|+)
+        headingToTarget = headingToTarget - turretHeading; // heading relative to the robot
 
-        return yawToTarget;
+        return headingToTarget;
     }
 
     /**
      * the method to calculate the pitch that the turret needs to be at in order to point to the target
-     * @return pitchToTarget the yaw to the target
+     * @return pitchToTarget the heading to the target
      */
     // TODO: 9/24/2020 adjust method to take air resistance and gravity into effect, need to know: the initial velocity the turret launches at, weight of the rings, and more 
     private double pitchCalculation()
