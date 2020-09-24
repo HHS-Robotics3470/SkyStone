@@ -50,8 +50,14 @@ public class HardwareUltimateGoal {
         rightDrive.setPower(0);
 
         // Set all motors to run without encoders.
-        // May want to use RUN_USING_ENCODERS if encoders are installed.
+        // May want to use RUN_WITHOUT_ENCODERS if encoders are not installed.
+        leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Define and initialize ALL installed servos.
+
+        // Define and initialize ALL installed sensors.
+
+
     }
 }
