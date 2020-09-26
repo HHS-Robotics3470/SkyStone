@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 /**
  * This is NOT an opmode.
@@ -26,6 +28,12 @@ public class HardwareUltimateGoal {
     /* Public OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
+    public DcMotor  flyWheel = null;
+    public DcMotor  conveyor1 = null;
+
+    public TouchSensor touch1 = null;
+    public ColorSensor color1 = null;
+
 
     /* local OpMode members. */
     HardwareMap hwMap           =  null;
@@ -42,12 +50,19 @@ public class HardwareUltimateGoal {
         hwMap = ahwMap;
 
         // Define and Initialize Motors
-        leftDrive  = hwMap.get(DcMotor.class, "left_drive");
-        rightDrive = hwMap.get(DcMotor.class, "right_drive");
+        leftDrive   = hwMap.get(DcMotor.class, "left_drive");
+        rightDrive  = hwMap.get(DcMotor.class, "right_drive");
+        leftDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
+        rightDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
+
+        flyWheel    = hwMap.get(DcMotor.class, "flywheel");
+        conveyor1   = hwMap.get(DcMotor.class, "conveyor1");
 
         // Set all motors to zero power
         leftDrive.setPower(0);
         rightDrive.setPower(0);
+        flyWheel.setPower(0);
+        conveyor1.setPower(0);
 
         // Set all motors to run without encoders.
         // May want to use RUN_WITHOUT_ENCODERS if encoders are not installed.
@@ -57,7 +72,7 @@ public class HardwareUltimateGoal {
         // Define and initialize ALL installed servos.
 
         // Define and initialize ALL installed sensors.
-
-
+        touch1 = hwMap.touchSensor.get("touch_sensor");
+        color1 = hwMap.colorSensor.get("color1");
     }
 }
