@@ -96,10 +96,12 @@ public class AimAssist {
         double x = tX - rX;
         double y = tY -rY;
 
-        headingToTarget = Math.atan(y / x); // heading relative to the field (-|+)
-        headingToTarget = headingToTarget - turretHeading; // heading relative to the robot
+        // heading relative to the field (-|+)
+        double heading;
+        heading = Math.atan(y / x);
+        heading = heading - turretHeading; // heading relative to the robot
 
-        return headingToTarget;
+        return heading;
     }
 
     /**
@@ -122,4 +124,66 @@ public class AimAssist {
         //calculate pitch to target
         return Math.atan(height / distance);
     }
+    /**
+     * calculations for more accurate pitch calculations
+     *
+     * knowns:
+     *  y displacement needed = height
+     *  mass of ring = 0.065lbs = 0.029483504kg
+     *  weight of ring (downward acceleration newtons?) = mass * -9.80665m/s/s = -0.2891344045016N
+     *  a of y = -9.80665m/s/s
+     *
+     *  x displacement needed = distance
+     *
+     *  knowns to calculate initial velocity?
+     *      maximum RPM of the motor (tetrix torqueNADO) (no load) = 100 RPM = 5/3 RPS
+     *      stall torque of the motor = 700 oz/in. = 4.94308628333331 newton meter
+     *
+     *      diameter of the flywheels (andymark 4in compliant wheels) = 4in = 0.1016m
+     *      circumference of flywheels = 0.1016 * pi = 0.319185813605m
+     *      mass of the flywheels:  [0.228, 0.269] Lbs (between those numbers) = [0.1034190604, 0.12201635] kg ~= 0.1127177052 kg
+     *      velocity of flywheel at point of contact? = 5/3 rps * (0.1016m * pi)/r = (0.508)*pi/3 m/s = 0.169333...*pi m/s = 0.531976 m/s
+     *
+     *      torque applied to the wheel = torque of the motor / 2 because 1 motor is driving two outputs = 2.47154314167 newton meter
+     *      force at point of contact = torque to wheel / radius = 2.47154314167Nm / 0.1016/2m = 48.6524N
+     *
+     *
+     *  need to: find the pitch
+     *  assuming that the fly wheels are able to apply all of their speed to the ring, without the ring slipping, basically, assuming high friction
+     *  initial velocity of the ring = velocity of the flywheel at point of contact = 0.531976 m/s
+     *
+     *  know:
+     *  velocity = 0.531976 m/s,
+     *  x displacement = distance,
+     *  y displacement = height,
+     *  x acceleration = 0m/s/s,
+     *  y acceleration = -9.8m/s/s
+     *
+     *  v of x = cos( arcsin( v of y / velocity
+     *
+     *  time:
+     *  d = v * t
+     *  t = d/v
+     *
+     *
+     *
+     *  if we disregard air resistance, the initial velocity of x = average velocity of x
+     *  d = v * t
+     *  t = d/v
+     *
+     *  time = distance / (v of x)
+     *
+     *  finding initial velocity of y:
+     *  height = (initial velocity of y) * t + 0.5 * a * t^2
+     *  (initial velocity of y) * t = 0.5 * a * t^2 - height
+     *  (initial velocity of y) = (0.5 * a * t^2 - height) / t
+     *  (initial velocity of y) = ( t(0.5 * -9.80665m/s/s * t - (height/t)) )/t
+     *  (initial velocity of y) = 0.5 * -9.80665m/s/s * t - (height/t)
+     *
+     *  finding t:
+     *  t = sqrt( (2*distance) / (a of x) )
+     *  a of x = force at point of contact / m = 48.6524N / 0.029483504kg
+     *
+     *  initial velocity of y = sin( arccos( (v of x) / v ) )
+     */
 }
