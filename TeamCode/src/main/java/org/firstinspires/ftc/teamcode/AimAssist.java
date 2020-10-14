@@ -220,11 +220,18 @@ public class AimAssist {
 
         try {
             //the heading angle, what is being calculated
-            double angle;
+            double angle1;
+            double angle2;
             // the launch speed TODO update this when Aaron finishes the experiment to determine launch speed
             final double v = 0;
-            angle = Math.atan( ( (v*v) + Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );
-            return angle;
+            angle1 = Math.atan( ( (v*v) + Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );
+            angle2 = Math.atan( ( (v*v) - Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );
+
+            if (angle1 < angle2)
+            {
+                return angle1;
+            }
+            return angle2;
         } catch (Exception e) {
             //return -1
             // TODO 10/14/2020 in teleOP and autonomous programs that use this, add a thing that sends the following message to the phone "out of range, move closer"
