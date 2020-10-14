@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-
 /**
  * this will be the main class for the aim assist.
  * it should be able to take an input consisting of the robots position, heading, velocity(?), acceleration(?), and the position
@@ -148,6 +146,10 @@ public class AimAssist {
      *      mass of the flywheels:  [0.228, 0.269] Lbs (between those numbers) = [0.1034190604, 0.12201635] kg ~= 0.1127177052 kg
      *      velocity of flywheel at point of contact? = 5/3 r/s * (0.1016m * pi)/r = (0.508)*pi/3 m/s = 0.169333...*pi m/s = 0.531976 m/s
      *
+     *      with NevaRest motors (1780 rpm)
+     *      velocity = 29.6666 r/s * (0.1016 * pi)/r = 9.469 m/s
+     *
+     *
      *      torque applied to the wheel = torque of the motor / 2 (because 1 motor is driving two outputs) = 2.47154314167 newton meter (may be double this, if the torque of the two flywheels add up)
      *      force at point of contact = torque to wheel / radius = 2.47154314167Nm / 0.1016/2m = 48.6524N
      *
@@ -162,33 +164,6 @@ public class AimAssist {
      *  y displacement = height,
      *  x acceleration = 0m/s/s, (this may be incorrect, depends on how the flywheels accelerate the ring)
      *  y acceleration = -9.8m/s/s
-     *
-     *  v of x = cos( arcsin( v of y / velocity
-     *
-     *  time:
-     *  d = v * t
-     *  t = d/v
-     *
-     *
-     *
-     *  if we disregard air resistance, the initial velocity of x = average velocity of x
-     *  d = v * t
-     *  t = d/v
-     *
-     *  time = distance / (v of x)
-     *
-     *  finding initial velocity of y:
-     *  height = (initial velocity of y) * t + 0.5 * a * t^2
-     *  (initial velocity of y) * t = 0.5 * a * t^2 - height
-     *  (initial velocity of y) = (0.5 * a * t^2 - height) / t
-     *  (initial velocity of y) = ( t(0.5 * -9.80665m/s/s * t - (height/t)) )/t
-     *  (initial velocity of y) = 0.5 * -9.80665m/s/s * t - (height/t)
-     *
-     *  finding t:
-     *  t = sqrt( (2*distance) / (a of x) )
-     *  a of x = force at point of contact / mass = 48.6524N / 0.029483504kg =
-     *
-     *  initial velocity of y = sin( arccos( (v of x) / v ) )
      */
 
     /**calculations for more accurate pitch calculations attempt 2 (will be mostly done on paper)
@@ -208,6 +183,10 @@ public class AimAssist {
     // TODO 10/14/2020 update turret height, and calculation of launch speed (magnitude of velocity
     private double pitchCalculation()
     {
+        //trajectory height and range caps
+        final double heightCap = 1.524; //meters (5ft)
+        final double rangeCap = 4.572; //meters (15ft)
+
         //find distance and height
         final double turretHeight = 0.30; //height from the floor of the field to the turret (measured in meters)
         // calculate distance to target
@@ -219,18 +198,30 @@ public class AimAssist {
 
         try {
             //the heading angle, what is being calculated
-            double angle1;
-            double angle2;
+            double angle;
+            double a1;
+            double a2;
             // the launch speed TODO update this when Aaron finishes the experiment to determine launch speed
-            final double v = 0;
-            angle1 = Math.atan( ( (v*v) + Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );
-            angle2 = Math.atan( ( (v*v) - Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );
+            final double v = 9.469;
+            a1 = Math.atan( ( (v*v) + Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );
+            a2 = Math.atan( ( (v*v) - Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );
 
-            if (angle1 < angle2)
+            angle = a2;
+            if (a1 < a2)
             {
-                return angle1;
+                angle = a1;
             }
-            return angle2;
+
+            //make sure that the height and length of the trajectory stay within bounds
+            // height || range
+            boolean overHeight = ((v*v * Math.sin(angle) * Math.sin(angle)) / (2 * g)) >= heightCap;
+            boolean overRange = ((v*v * Math.sin(2 * angle)) / (g)) >= rangeCap;
+            if ( (overHeight && overRange) || (overHeight || overRange) )
+            {
+                return -1;
+            }
+
+            return angle;
         } catch (Exception e) {
             //return -1
             // TODO 10/14/2020 in teleOP and autonomous programs that use this, add a thing that sends the following message to the phone "out of range, move closer"
