@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 /**
  * this will be the main class for the aim assist.
  * it should be able to take an input consisting of the robots position, heading, velocity(?), acceleration(?), and the position
@@ -25,6 +27,8 @@ package org.firstinspires.ftc.teamcode;
  */
 
 public class AimAssist {
+    //the gravitational constant g
+    final double g = 9.80655;
 
     //variables defining the robots characteristics
     double[] robotPosition; // x, y, coords of robot, measured in meters
@@ -77,7 +81,7 @@ public class AimAssist {
         targetPosition = tPosition;
 
         headingToTarget = HeadingCalculation();
-        pitchToTarget = pitchCalculation();
+        pitchToTarget = pitchCalculationBasic();
     }
 
     /**
@@ -109,7 +113,7 @@ public class AimAssist {
      * @return pitchToTarget the heading to the target
      */
     // TODO: 9/24/2020 adjust method to take air resistance and gravity into effect, need to know: the initial velocity the turret launches at, weight of the rings, and more 
-    private double pitchCalculation()
+    private double pitchCalculationBasic()
     {
         final double turretHeight = 0.30; //height from the floor of the field to the turret (measured in meters)
 
@@ -125,13 +129,13 @@ public class AimAssist {
         return Math.atan(height / distance);
     }
     /**
-     * calculations for more accurate pitch calculations
+     * calculations for more accurate pitch calculations attempt 1
      *
      * knowns:
      *  y displacement needed = height
      *  mass of ring = 0.065lbs = 0.029483504kg
      *  weight of ring (downward acceleration newtons?) = mass * -9.80665m/s/s = -0.2891344045016N
-     *  a of y = -9.80665m/s/s
+     *  a of y = -g = -9.80665m/s/s
      *
      *  x displacement needed = distance
      *
@@ -142,9 +146,9 @@ public class AimAssist {
      *      diameter of the flywheels (andymark 4in compliant wheels) = 4in = 0.1016m
      *      circumference of flywheels = 0.1016 * pi = 0.319185813605m
      *      mass of the flywheels:  [0.228, 0.269] Lbs (between those numbers) = [0.1034190604, 0.12201635] kg ~= 0.1127177052 kg
-     *      velocity of flywheel at point of contact? = 5/3 rps * (0.1016m * pi)/r = (0.508)*pi/3 m/s = 0.169333...*pi m/s = 0.531976 m/s
+     *      velocity of flywheel at point of contact? = 5/3 r/s * (0.1016m * pi)/r = (0.508)*pi/3 m/s = 0.169333...*pi m/s = 0.531976 m/s
      *
-     *      torque applied to the wheel = torque of the motor / 2 because 1 motor is driving two outputs = 2.47154314167 newton meter
+     *      torque applied to the wheel = torque of the motor / 2 (because 1 motor is driving two outputs) = 2.47154314167 newton meter (may be double this, if the torque of the two flywheels add up)
      *      force at point of contact = torque to wheel / radius = 2.47154314167Nm / 0.1016/2m = 48.6524N
      *
      *
@@ -153,10 +157,10 @@ public class AimAssist {
      *  initial velocity of the ring = velocity of the flywheel at point of contact = 0.531976 m/s
      *
      *  know:
-     *  velocity = 0.531976 m/s,
+     *  velocity = 0.531976 m/s, (if the flywheels are able to transfer all their velocity to the ring)
      *  x displacement = distance,
      *  y displacement = height,
-     *  x acceleration = 0m/s/s,
+     *  x acceleration = 0m/s/s, (this may be incorrect, depends on how the flywheels accelerate the ring)
      *  y acceleration = -9.8m/s/s
      *
      *  v of x = cos( arcsin( v of y / velocity
@@ -182,8 +186,49 @@ public class AimAssist {
      *
      *  finding t:
      *  t = sqrt( (2*distance) / (a of x) )
-     *  a of x = force at point of contact / m = 48.6524N / 0.029483504kg
+     *  a of x = force at point of contact / mass = 48.6524N / 0.029483504kg =
      *
      *  initial velocity of y = sin( arccos( (v of x) / v ) )
      */
+
+    /**calculations for more accurate pitch calculations attempt 2 (will be mostly done on paper)
+     *
+     * knowns:
+     *  y displacement needed = height = h
+     *  mass of ring = 0.065lbs = 0.029483504kg
+     *  weight of ring (downward acceleration newtons?) = mass * -9.80665m/s/s = -0.2891344045016N
+     *  a of y = -g = -9.80665m/s/s
+     *
+     *  x displacement needed = distance = d
+     *
+     *  calculation for angle:
+     *  angle = Math.atan( (v*v +- Math.sqrt(v*v*v*v - g * (g*d*d + 2*h*v*v)) )/(g * d) )
+     *
+     * @see Telemetry
+     **/
+    // TODO 10/14/2020 update turret height, and calculation of launch speed (magnitude of velocity
+    private double pitchCalculation()
+    {
+        //find distance and height
+        final double turretHeight = 0.30; //height from the floor of the field to the turret (measured in meters)
+        // calculate distance to target
+        double x = targetPosition[0] - robotPosition[0];
+        double y = targetPosition[1] - robotPosition[1];
+        double d = Math.sqrt( x*x + y*y);
+        // calculate height to target
+        double h = targetPosition[2] - turretHeight;
+
+        try {
+            //the heading angle, what is being calculated
+            double angle;
+            // the launch speed TODO update this when Aaron finishes the experiment to determine launch speed
+            final double v = 0;
+            angle = Math.atan( ( (v*v) + Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );
+            return angle;
+        } catch (Exception e) {
+            //return -1
+            // TODO 10/14/2020 in teleOP and autonomous programs that use this, add a thing that sends the following message to the phone "out of range, move closer"
+            return -1.0;
+        }
+    }
 }
