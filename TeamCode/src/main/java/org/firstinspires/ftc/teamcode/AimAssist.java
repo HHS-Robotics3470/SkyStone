@@ -81,7 +81,7 @@ public class AimAssist {
         targetPosition = tPosition;
 
         headingToTarget = HeadingCalculation();
-        pitchToTarget = pitchCalculationBasic();
+        pitchToTarget = pitchCalculationBasic(); // TODO: 10/14/2020 this when with pitchToTarget = pitchCalculation(); when pitchCalculation() is working
     }
 
     /**
@@ -112,7 +112,7 @@ public class AimAssist {
      * the method to calculate the pitch that the turret needs to be at in order to point to the target
      * @return pitchToTarget the heading to the target
      */
-    // TODO: 9/24/2020 adjust method to take air resistance and gravity into effect, need to know: the initial velocity the turret launches at, weight of the rings, and more 
+    // TODO: 10/14/2020 remove this when pitchCalculation() is working
     private double pitchCalculationBasic()
     {
         final double turretHeight = 0.30; //height from the floor of the field to the turret (measured in meters)
@@ -204,7 +204,6 @@ public class AimAssist {
      *  calculation for angle:
      *  angle = Math.atan( (v*v +- Math.sqrt(v*v*v*v - g * (g*d*d + 2*h*v*v)) )/(g * d) )
      *
-     * @see Telemetry
      **/
     // TODO 10/14/2020 update turret height, and calculation of launch speed (magnitude of velocity
     private double pitchCalculation()
