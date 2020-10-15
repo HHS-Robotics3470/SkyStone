@@ -214,12 +214,7 @@ public class AimAssist {
 
             //make sure that the height and length of the trajectory stay within bounds
             // height || range
-            boolean overHeight = ((v*v * Math.sin(angle) * Math.sin(angle)) / (2 * g)) >= heightCap;
-            boolean overRange = ((v*v * Math.sin(2 * angle)) / (g)) >= rangeCap;
-            if ( (overHeight && overRange) || (overHeight || overRange) )
-            {
-                return -1;
-            }
+            if ( (((v*v * Math.sin(angle) * Math.sin(angle)) / (2 * g)) >= (heightCap - turretHeight)) || (((v*v * Math.sin(2 * angle)) / (g)) >= rangeCap) )  return -1.0;
 
             return angle;
         } catch (Exception e) {
