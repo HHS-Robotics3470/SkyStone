@@ -113,7 +113,7 @@ public class AimAssist {
     // TODO: 10/14/2020 remove this when pitchCalculation() is working
     private double pitchCalculationBasic()
     {
-        final double turretHeight = 0.30; //height from the floor of the field to the turret (measured in meters)
+        final double turretHeight = 0.30; //height from the floor of the field to the turret (measured in meters) //TODO 10/15/2020 update this when the robot is done
 
         //calculate distance to target
         double x = targetPosition[0] - robotPosition[0];
@@ -180,7 +180,7 @@ public class AimAssist {
      *  angle = Math.atan( (v*v +- Math.sqrt(v*v*v*v - g * (g*d*d + 2*h*v*v)) )/(g * d) )
      *
      **/
-    // TODO 10/14/2020 update turret height, and calculation of launch speed (magnitude of velocity
+    // TODO 10/14/2020 update turret height, and calculation of launch speed (magnitude of velocity) by accounting for friction, then using the launch speed determined by Aaron
     private double pitchCalculation()
     {
         //trajectory height and range caps
@@ -188,7 +188,7 @@ public class AimAssist {
         final double rangeCap = 4.572; //meters (15ft)
 
         //find distance and height
-        final double turretHeight = 0.30; //height from the floor of the field to the turret (measured in meters)
+        final double turretHeight = 0.30; //height from the floor of the field to the turret (measured in meters) //TODO 10/15/2020 update this when the robot is done
         // calculate distance to target
         double x = targetPosition[0] - robotPosition[0];
         double y = targetPosition[1] - robotPosition[1];
@@ -203,9 +203,10 @@ public class AimAssist {
             double a2;
             // the launch speed TODO update this when Aaron finishes the experiment to determine launch speed
             final double v = 9.469;
-            a1 = Math.atan( ( (v*v) + Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );
-            a2 = Math.atan( ( (v*v) - Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );
+            a1 = Math.atan( ( (v*v) + Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );//+
+            a2 = Math.atan( ( (v*v) - Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );//-
 
+            //decide the optimal angle
             angle = a2;
             if (a1 < a2)
             {
