@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 
 @TeleOp(name="Basic TeleOP Ultimate Goal", group="UltimateGoal")
-@Disabled
 public class BasicTeleopUltimateGoal extends LinearOpMode
 {
     /* Declare OpMode members. */

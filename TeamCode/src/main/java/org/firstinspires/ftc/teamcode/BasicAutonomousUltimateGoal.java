@@ -13,11 +13,10 @@ import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
  *
  */
 @Autonomous(name="Basic Autonomous Ultimate Goal", group="UltimateGoal")
-@Disabled
 public class BasicAutonomousUltimateGoal extends LinearOpMode
 {
     /* Declare OpMode members. */
-    HardwareUltimateGoal robot   = new HardwareUltimateGoal();   // Use a Pushbot's hardware
+    HardwareUltimateGoal robot   = new HardwareUltimateGoal();
 
 
 
