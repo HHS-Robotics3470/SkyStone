@@ -29,6 +29,8 @@ package org.firstinspires.ftc.teamcode;
  */
 
 public class AimAssist {
+    double turretHeight;
+
     //the gravitational constant g
     final double g = 9.80655;
 
@@ -50,12 +52,8 @@ public class AimAssist {
     double pitchToTarget; // the pitch that the turret needs to be at to hit the target, measured in degrees
 
     ////////////////////////////// constructors //////////////////////////////
-    /**default constructor**/
-    public AimAssist(){
-
-    }
     /**constructor (tuHeading and tuPitch should both be zero, unless the robot starts in an awkward position**/
-    public AimAssist(double[] rPosition, double rHeading, double rVelocity, double rAcceleration, double tuHeading, double tuPitch, double[] tPosition) {
+    public AimAssist(HardwareUltimateGoal robot, double[] rPosition, double rHeading, double rVelocity, double rAcceleration, double tuHeading, double tuPitch, double[] tPosition) {
         robotPosition = rPosition;
         robotHeading = rHeading;
         robotVelocity = rVelocity;
@@ -65,6 +63,8 @@ public class AimAssist {
         turretPitch = tuPitch;
 
         targetPosition = tPosition;
+
+        turretHeight = robot.turretHeight;
     }
 
     ////////////////////////////// update method //////////////////////////////
@@ -190,7 +190,6 @@ public class AimAssist {
         final double rangeCap = 4.572; //meters (15ft)
 
         //find distance and height
-        final double turretHeight = 0.30; //height from the floor of the field to the turret (measured in meters) //TODO 10/15/2020 update this when the robot is done
         // calculate distance to target
         double x = targetPosition[0] - robotPosition[0];
         double y = targetPosition[1] - robotPosition[1];

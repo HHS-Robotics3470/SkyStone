@@ -39,6 +39,12 @@ public class HardwareUltimateGoal {
     HardwareMap hwMap           =  null;
     private ElapsedTime period  = new ElapsedTime();
 
+
+    /* some variables for different measurements of the robot */ //TODO: keep up to date
+    public double turretHeight = 0;
+    public double driveWheelRadius = 0.0508; //2" measured in meters
+    public double robotWidth = 0.4572; //18" measured in meters
+
     /* Constructor */
     public HardwareUltimateGoal(){
 
