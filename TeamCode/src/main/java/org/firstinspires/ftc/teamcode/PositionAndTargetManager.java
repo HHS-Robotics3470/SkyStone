@@ -92,32 +92,40 @@ public class PositionAndTargetManager {
     ////////////////////////////// update method //////////////////////////////
     //TODO: 10/18/2020 optimize these if/else statements sometime
     public void update(double leftRotations, double rightRotations) {
-        double positionChange;
-        double headingChange;
+        double positionChange = 0;
+        double headingChange = 0;
 
         //calculate the change in position, and heading
-        if (leftRotations == rightRotations) {
+        if (leftRotations == rightRotations) { // both sides going either forward or backward same speed;
             positionChange = leftRotations * 2 * Math.PI * wheelRadius;
-            headingChange = 0;
-        } else if (leftRotations > 0 && rightRotations > 0) {
-            //TODO: 10/18/2020 calculate this reeee
-
-            // variables
+        } else if ( (leftRotations < 0 && rightRotations < 0) || (leftRotations > 0 && rightRotations > 0) ) { //both sides either going forward, or backward (different speed) (coded with forward in mind)
+            //TODO: 10/18/2020 check if this works when the robot is going backwards too
+            //variables
             double s1 = leftRotations * 2 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
             double s2 = rightRotations * 2 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
             double r; //radius of the inner circle
 
-            if (s1 > s2) {r = () / s1};
-            /*
-            s1/r1 = s2/r2
-            s1 * r2 = s2 * (r + 18)
-            s1 * r = s2 *r + s2 * 18
-            s1 * r -
-             */
-
-        } else if (leftRotations < 0 || rightRotations < 0) {
+            //calculate r, headingChange, and position change
+            if (s1 > s2) {
+                r = (s1 - s2) / (s2 * robotWidth);
+                headingChange = s2/r;
+                positionChange = 2 * Math.sin(headingChange) * (r + 9);
+            }
+            else if (s1 < s2) {
+                r = (s2 - s1) / (s1 * robotWidth);
+                headingChange = s1/r;
+                positionChange = 2 * Math.sin(headingChange) * (r + 9);
+            }
+        } else if (leftRotations < 0 || rightRotations < 0) { //one side going forward, other going backward
             //TODO: calculate this reeee
+
         }
+
+        //store changes to position and heading
+        heading += headingChange;
+        robotPosition[0] = Math.cos(heading) * positionChange;
+        robotPosition[1] = Math.sin(heading) * positionChange;
+
 
         //call a method to choose the best target at the moment
         //targetPosition = bestTargetPosition(robotPosition);
