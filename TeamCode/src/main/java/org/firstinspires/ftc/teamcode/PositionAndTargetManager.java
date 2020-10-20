@@ -163,10 +163,10 @@ public class PositionAndTargetManager {
     public void bestTargetPosition(ElapsedTime time) {
         double bestTarget[];
 
-        int i = (int) (Math.random() * (targets.length - 2)); //random row of targets
-        if (i <= 3) { //prevents the robot from shooting the powershots before endgame, and increased the chance of aiming to the high goal
+        int i = (int) (Math.random() * (targets.length - 2)); //random row of targets -1
+        if (i <= 3 && i > 4) { //prevents the robot from shooting the powershots before endgame, and increased the chance of aiming to the high goal
             i = 3;
-        }
+        } // at this point, i should be either 3 or 4
         //TODO: 10/19/2020 change the > to < depending on what the launch zone actually is
         if (robotPosition[1] > launchZone) { // if the robot is outside of the launchZone
             i = 5; //target low goal
