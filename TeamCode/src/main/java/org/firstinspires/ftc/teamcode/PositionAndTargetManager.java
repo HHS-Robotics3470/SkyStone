@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 public class PositionAndTargetManager {
     /**info found: https://firstinspiresst01.blob.core.windows.net/first-game-changers/ftc/field-setup-guide.pdf starting page 8
      *        and: https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-2-remote-events.pdf starting page 26
@@ -65,12 +67,14 @@ public class PositionAndTargetManager {
     //initializes assuming it's on team red, in the constructor, values will be changed as needed if it's on team blue
     double[] robotPosition = new double[3]; //TODO: 10/18/2020 replace "new double[3];" with the array of the starting position if on red team
     double[] targetPosition = new double[3];
-    double launchZone = 2.06375/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
+    double launchZone = 2.06375-1.79705/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
 
-    double heading = 0;
+    double heading = 90;
 
     double wheelRadius;
     double robotWidth;
+
+    short powerShotsHit = 0;
     ////////////////////////////// constructors //////////////////////////////
     /**
      * constructor for the PositionAndTargetManager
@@ -89,11 +93,12 @@ public class PositionAndTargetManager {
             robotPosition[0] *= -1; //flip the x-axis if not on the red team
         }
     }
-    ////////////////////////////// update method //////////////////////////////
+    ////////////////////////////// update and calculate method //////////////////////////////
     //TODO: 10/18/2020 optimize these if/else statements sometime
-    public void update(double leftRotations, double rightRotations) {
-        double positionChange = 0;
+    public void update(double leftRotations, double rightRotations, ElapsedTime timeElapsed) {
+        double positionChange;
         double headingChange = 0;
+        //calculate in radians, convert heading back into degrees after
 
         //calculate the change in position, and heading
         if (leftRotations == rightRotations) { // both sides going either forward or backward same speed;
@@ -103,33 +108,77 @@ public class PositionAndTargetManager {
             //variables
             double s1 = leftRotations * 2 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
             double s2 = rightRotations * 2 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
-            double r; //radius of the inner circle
+            double r = 0; //radius of the inner circle
 
             //calculate r, headingChange, and position change
             if (s1 > s2) {
-                r = (s1 - s2) / (s2 * robotWidth);
-                headingChange = s2/r;
-                positionChange = 2 * Math.sin(headingChange) * (r + 9);
+                r = (s1 - s2) / (s2 * robotWidth); // calculating r
+                headingChange = s2/r;//https://www.desmos.com/calculator/r16kcermq2
             }
             else if (s1 < s2) {
-                r = (s2 - s1) / (s1 * robotWidth);
-                headingChange = s1/r;
-                positionChange = 2 * Math.sin(headingChange) * (r + 9);
+                r = (s2 - s1) / (s1 * robotWidth);// calculating r
+                headingChange = s1/r; //calculating headingChange
             }
+            positionChange = Math.sqrt( Math.pow((r + robotWidth/2)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((r + robotWidth/2)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
         } else if (leftRotations < 0 || rightRotations < 0) { //one side going forward, other going backward
-            //TODO: calculate this reeee
+            //TODO: 10/19/2020 check if this works when the robot is going backwards too
+            //variables
+            double s1 = leftRotations * 2 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
+            double s2 = rightRotations * 2 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
+            double r; //radius of the inner circle
 
+            //calculate r, headingChange, and position change
+            if (Math.abs(s1) > Math.abs(s2)) { //turning clockwise
+                r = (robotWidth * s2) / (s1 + s2);
+                headingChange = s1/r; //calculating headingChange
+            } else { //turning counter clockwise
+                r = (robotWidth * s1) / (s2 + s1);
+                headingChange = s2/r; //calculating headingChange
+            }
+
+            positionChange = Math.sqrt( Math.pow((robotWidth/2 -r)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((robotWidth/2 -r)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
+        } else { //one side isn't moving
+            //TODO: 10/19/2020 check if this works when the robot is going backwards too
+            //variables
+            double s = leftRotations * 2 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
+            if (s == 0) {
+                s = rightRotations * 2 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
+            }
+            double r = robotWidth;
+
+            headingChange = s/r;
+
+            positionChange = Math.sqrt( Math.pow((robotWidth/2)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((robotWidth/2)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
         }
 
         //store changes to position and heading
-        heading += headingChange;
-        robotPosition[0] = Math.cos(heading) * positionChange;
-        robotPosition[1] = Math.sin(heading) * positionChange;
-
+        heading += Math.toDegrees(headingChange);
+        robotPosition[0] += Math.cos(heading) * positionChange;
+        robotPosition[1] += Math.sin(heading) * positionChange;
 
         //call a method to choose the best target at the moment
-        //targetPosition = bestTargetPosition(robotPosition);
+        bestTargetPosition(timeElapsed);
     }
-    ////////////////////////////// calculate method //////////////////////////////
+
+    public void bestTargetPosition(ElapsedTime time) {
+        double bestTarget[];
+
+        int i = (int) (Math.random() * (targets.length - 2)); //random row of targets
+        if (i <= 3) { //prevents the robot from shooting the powershots before endgame, and increased the chance of aiming to the high goal
+            i = 3;
+        }
+        //TODO: 10/19/2020 change the > to < depending on what the launch zone actually is
+        if (robotPosition[1] > launchZone) { // if the robot is outside of the launchZone
+            i = 5; //target low goal
+        }
+        bestTarget = targets[i];
+
+        if (time.seconds() >= 200 && (int) (Math.random()*3 + 1) == 2 && powerShotsHit <= 2) { //if it's the endgame,  and rng (1/3)
+            bestTarget = targets[powerShotsHit]; // cycle through the powershots
+            powerShotsHit ++;
+        }
+
+        targetPosition = bestTarget;
+    }
     ////////////////////////////// get methods //////////////////////////////
 }
