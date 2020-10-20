@@ -36,7 +36,7 @@ public class AimAssist {
 
     //variables defining the robots characteristics
     double[] robotPosition; // x, y, coords of robot, measured in meters
-    double robotHeading;        // direction the robot is facing relative to it's starting direction (0), measured in degrees
+    double robotHeading;        // direction the robot is facing relative to it's starting direction (90), measured in degrees
     double robotVelocity;   // magnitude of the velocity of the robot, measure in meters per second
     double robotAcceleration; // magnitude of the acceleration of the robot, measured in meters per second per second
 
@@ -48,8 +48,8 @@ public class AimAssist {
     double[] targetPosition; // x, y, z, coords of the robot, measured in meters
 
     //variables that are calculated
-    double headingToTarget; // the direction that the turret needs to face relative to the front of the robot (0), measured in degrees
-    double pitchToTarget; // the pitch that the turret needs to be at to hit the target, measured in degrees
+    public double headingToTarget; // the direction that the turret needs to face relative to the front of the robot (0), measured in degrees
+    public double pitchToTarget; // the pitch that the turret needs to be at to hit the target, measured in degrees
 
     ////////////////////////////// constructors //////////////////////////////
     /**constructor (tuHeading and tuPitch should both be zero, unless the robot starts in an awkward position**/
@@ -102,7 +102,7 @@ public class AimAssist {
         double x = tX - rX;
         double y = tY -rY;
 
-        // heading relative to the field (-|+)
+        // heading relative to the field (theta = 90, toward the goals)
         double heading;
         heading = Math.atan(y / x);
         heading = heading - turretHeading; // heading relative to the robot
