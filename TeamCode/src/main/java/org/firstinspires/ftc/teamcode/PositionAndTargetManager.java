@@ -94,7 +94,14 @@ public class PositionAndTargetManager {
         }
     }
     ////////////////////////////// update and calculate method //////////////////////////////
-    public void update(double leftRotations, double rightRotations, ElapsedTime timeElapsed) {
+
+    /**
+     * the update method takes the number of times that the two drive motors have rotated since the last update, using this it calculates the change in
+     * position and heading
+     * @param leftRotations
+     * @param rightRotations
+     */
+    public void update(double leftRotations, double rightRotations) {
         double positionChange;
         double headingChange = 0.0;
 
@@ -149,8 +156,6 @@ public class PositionAndTargetManager {
         heading += Math.toDegrees(headingChange);
         robotPosition[0] += Math.cos(heading) * positionChange;
         robotPosition[1] += Math.sin(heading) * positionChange;
-        //call a method to choose the best target at the moment
-        bestTargetPosition(timeElapsed);
 
         /*old logic VVVVV
         if ((float)leftRotations == (float)rightRotations) { // both sides going either forward or backward same speed;
@@ -207,7 +212,12 @@ public class PositionAndTargetManager {
         bestTargetPosition(timeElapsed); */
     }
 
-    public void bestTargetPosition(ElapsedTime time) {
+    /**
+     * acts as an update method, that also returns the value it is setting the target position to
+     * @param timeSeconds  time elapsed during match, measured in seconds, used to differentiate between mid game and end game targets
+     * @return the position of the target selected, it also sets targetPosition to these coordinates
+     */
+    public double[] bestTargetPosition(double timeSeconds) {
         double[] bestTarget;
 
         int i = (int) (Math.random() * (targets.length - 1)); //random row of targets -1
@@ -220,12 +230,13 @@ public class PositionAndTargetManager {
         }
         bestTarget = targets[i];
 
-        if (time.seconds() >= 200 && (int) (Math.random()*3 + 1) == 2 && powerShotsHit <= 2) { //if it's the endgame,  and rng (1/3)
+        if (timeSeconds >= 200 && (int) (Math.random()*3 + 1) == 2 && powerShotsHit <= 2) { //if it's the endgame,  and rng (1/3)
             bestTarget = targets[powerShotsHit]; // cycle through the powershots
             powerShotsHit ++;
         }
 
         targetPosition = bestTarget;
+        return targetPosition;
     }
     ////////////////////////////// get methods //////////////////////////////
 }
