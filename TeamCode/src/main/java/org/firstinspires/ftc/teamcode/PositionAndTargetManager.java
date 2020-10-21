@@ -82,7 +82,7 @@ public class PositionAndTargetManager {
      */
     public PositionAndTargetManager(HardwareUltimateGoal robot, boolean isTeamRed) {
         //take some variables from the robot
-        metersPerRevolution = robot.NADO_METERS_PER_REVOLUTION;
+        metersPerRevolution = robot.NADO_METERS_PER_REV;
         robotWidth = robot.robotWidth;
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
