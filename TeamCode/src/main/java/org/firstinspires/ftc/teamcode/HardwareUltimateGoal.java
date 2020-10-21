@@ -45,8 +45,21 @@ public class HardwareUltimateGoal {
 
     /* some variables for different measurements of the robot */ //TODO: keep up to date
     public double turretHeight = 0;
-    public double driveWheelRadius = 0.0508; //2" measured in meters
     public double robotWidth = 0.4572; //18" measured in meters
+    // stats for the TorqueNADO motors
+    public final double NADO_COUNTS_PER_MOTOR_REV = 1440;
+    public final double NADO_DRIVE_GEAR_REDUCTION = 1.0;    // This is < 1.0 if geared UP
+    public final double NADO_WHEEL_DIAMETER_METERS= 0.1016; //(4") For figuring circumference
+    public final double NADO_COUNTS_PER_METER      = (NADO_COUNTS_PER_MOTOR_REV * NADO_DRIVE_GEAR_REDUCTION) /
+            (NADO_WHEEL_DIAMETER_METERS * Math.PI);
+    public final double NADO_METERS_PER_REV = NADO_COUNTS_PER_METER / (NADO_COUNTS_PER_MOTOR_REV * NADO_DRIVE_GEAR_REDUCTION);
+    // stats for the NeveRest motor
+    public final double NEVE_COUNTS_PER_MOTOR_REV = 448; // 28 * 16(gear ratio)
+    public final double NEVE_DRIVE_GEAR_REDUCTION = 1.0;    // This is < 1.0 if geared UP
+    public final double NEVE_WHEEL_DIAMETER_METERS= 0.1016; //(4") For figuring circumference
+    public final double NEVE_COUNTS_PER_METER      = (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION) /
+            (NEVE_WHEEL_DIAMETER_METERS * Math.PI);
+    public final double NEVE_METERS_PER_REV = NEVE_COUNTS_PER_METER / (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION);
 
     /* Constructor */
     public HardwareUltimateGoal(){
