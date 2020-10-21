@@ -69,12 +69,12 @@ public class PositionAndTargetManager {
     double[] targetPosition = new double[3];
     double launchZone = 2.06375-1.79705/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
 
-    double heading = 90;
+    double heading = 90.0;
 
     double wheelRadius;
     double robotWidth;
 
-    short powerShotsHit = 0;
+    byte powerShotsHit = 0;
     ////////////////////////////// constructors //////////////////////////////
     /**
      * constructor for the PositionAndTargetManager
@@ -87,21 +87,21 @@ public class PositionAndTargetManager {
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
             for (int r = 0; r < targets.length; r ++) {
-                targets[r][0] *= -1; //flip the x-axis if not on the red team
+                targets[r][0] *= -1.0; //flip the x-axis if not on the red team
             }
 
-            robotPosition[0] *= -1; //flip the x-axis if not on the red team
+            robotPosition[0] *= -1.0; //flip the x-axis if not on the red team
         }
     }
     ////////////////////////////// update and calculate method //////////////////////////////
     public void update(double leftRotations, double rightRotations, ElapsedTime timeElapsed) {
         double positionChange;
-        double headingChange = 0;
+        double headingChange = 0.0;
 
         //new logic
-        double s1 = leftRotations * 2 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
-        double s2 = rightRotations * 2 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
-        double r = 0;// = robotWidth; //for case 4
+        double s1 = leftRotations * 2.0 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
+        double s2 = rightRotations * 2.0 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
+        double r = 0.0;// = robotWidth; //for case 4
         /*
         4 cases:
         1) equal in distance,       equal in direction      (both sides equal)
@@ -127,8 +127,8 @@ public class PositionAndTargetManager {
             } catch (Exception e) { //case 4
                 r = robotWidth; //calculating r for heading calculation
                 headingChange = s1 / r;
-                if (s1 == 0) {headingChange = s2 / r;}
-                r /= 2;// calculating r for position calculation
+                if (s1 == 0.0) {headingChange = s2 / r;}
+                r /= 2.0;// calculating r for position calculation
             }
             positionChange = Math.sqrt( Math.pow((r)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
         }
@@ -210,7 +210,7 @@ public class PositionAndTargetManager {
     public void bestTargetPosition(ElapsedTime time) {
         double[] bestTarget;
 
-        int i = (int) (Math.random() * (targets.length - 2)); //random row of targets -1
+        int i = (int) (Math.random() * (targets.length - 1)); //random row of targets -1
         if (i < 3 || i >= 5) { //prevents the robot from shooting the powershots before endgame, and increased the chance of aiming to the high goal
             i = 3;
         } // at this point, i should be either 3 or 4
