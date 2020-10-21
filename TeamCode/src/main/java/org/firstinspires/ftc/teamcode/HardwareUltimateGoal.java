@@ -31,6 +31,9 @@ public class HardwareUltimateGoal {
     public DcMotor  flyWheel = null;
     public DcMotor  conveyor1 = null;
 
+    public DcMotor turretElevator = null;
+    public Servo turretRotator = null;
+
     public TouchSensor touch1 = null;
     public ColorSensor color1 = null;
 
@@ -61,8 +64,9 @@ public class HardwareUltimateGoal {
         leftDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
         rightDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
 
-        flyWheel    = hwMap.get(DcMotor.class, "flywheel");
-        conveyor1   = hwMap.get(DcMotor.class, "conveyor1");
+        flyWheel        = hwMap.get(DcMotor.class, "flywheel");
+        conveyor1       = hwMap.get(DcMotor.class, "conveyor1");
+        turretElevator  = hwMap.get(DcMotor.class, "elevator");
 
         // Set all motors to zero power
         leftDrive.setPower(0);
@@ -70,15 +74,19 @@ public class HardwareUltimateGoal {
         flyWheel.setPower(0);
         conveyor1.setPower(0);
 
-        // Set all motors to run without encoders.
         // May want to use RUN_WITHOUT_ENCODERS if encoders are not installed.
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Define and initialize ALL installed servos.
+        turretRotator = hwMap.get(Servo.class, "turretRotator");
+        turretRotator.setPosition(0);
 
         // Define and initialize ALL installed sensors.
         touch1 = hwMap.touchSensor.get("touch_sensor");
         color1 = hwMap.colorSensor.get("color1");
     }
+
+
+    //methods for the turret that set things to precise positions
 }
