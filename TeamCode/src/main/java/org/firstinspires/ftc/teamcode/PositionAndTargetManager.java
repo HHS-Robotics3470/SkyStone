@@ -71,7 +71,7 @@ public class PositionAndTargetManager {
 
     double heading = 90.0;
 
-    double wheelRadius;
+    double metersPerRevolution;
     double robotWidth;
 
     byte powerShotsHit = 0;
@@ -82,7 +82,7 @@ public class PositionAndTargetManager {
      */
     public PositionAndTargetManager(HardwareUltimateGoal robot, boolean isTeamRed) {
         //take some variables from the robot
-        wheelRadius = robot.driveWheelRadius;
+        metersPerRevolution = robot.NADO_METERS_PER_REVOLUTION;
         robotWidth = robot.robotWidth;
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
@@ -98,16 +98,16 @@ public class PositionAndTargetManager {
     /**
      * the update method takes the number of times that the two drive motors have rotated since the last update, using this it calculates the change in
      * position and heading
-     * @param leftRotations
-     * @param rightRotations
+     * @param leftRotations     number of times the left motor has rotated since last update
+     * @param rightRotations    number of times the right motor has rotated since last update
      */
     public void update(double leftRotations, double rightRotations) {
         double positionChange;
         double headingChange = 0.0;
 
         //new logic
-        double s1 = leftRotations * 2.0 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
-        double s2 = rightRotations * 2.0 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
+        double s1 = leftRotations * metersPerRevolution; //distance the left wheel traveled (m)
+        double s2 = rightRotations * metersPerRevolution; //distance the right wheel traveled (m)
         double r = 0.0;// = robotWidth; //for case 4
         /*
         4 cases:
