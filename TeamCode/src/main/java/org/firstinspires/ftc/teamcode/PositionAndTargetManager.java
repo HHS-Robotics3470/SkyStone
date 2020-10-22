@@ -69,7 +69,7 @@ public class PositionAndTargetManager {
     double[] targetPosition = new double[3];
     double launchZone = 2.06375-1.79705/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
 
-    double heading = 90.0;
+    double heading = 90.0; //heading relative to field, 90 = toward goals
 
     double metersPerRevolution;
     double robotWidth;
