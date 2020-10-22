@@ -12,7 +12,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
     HardwareUltimateGoal robot          = new HardwareUltimateGoal();
     PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, true); //TODO: 10/21/2020 change true to false if on team blue
     ElapsedTime runtime                 = new ElapsedTime();
-    AimAssist aimMan                    = new AimAssist(robot, posTarMan.robotPosition, posTarMan.heading, posTarMan.bestTargetPosition(0));
+    AimAssist aimMan                    = new AimAssist(robot, posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.bestTargetPosition(0));
 
     double currentTurretHeading = 0;
     double currentTurretPitch   = 0;
@@ -43,7 +43,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             // controls and movement
             totalLeftCounts     = robot.leftDrive.getCurrentPosition();
             totalRightCounts    = robot.rightDrive.getCurrentPosition();
-            basicStickControls(gamepad1.left_stick_x, gamepad1.left_stick_y);
+            tankControls(gamepad1.right_stick_y, gamepad1.left_stick_y);
 
             if (gamepad1.a) { // if driver presses A, change targets
                 posTarMan.bestTargetPosition(runtime.seconds());
@@ -55,7 +55,20 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             double rightRevs    = (totalRightCounts - robot.rightDrive.getCurrentPosition()) / robot.NADO_COUNTS_PER_MOTOR_REV; //right rotations since last count
             posTarMan.update(leftRevs, rightRevs);
 
-            aimMan.update(posTarMan.robotPosition, posTarMan.heading, posTarMan.targetPosition);
+            aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
+
+            //telemetry
+            telemetry.addLine("position information");
+            telemetry.addData("x", posTarMan.getRobotPosition()[0]);
+            telemetry.addData("y", posTarMan.getRobotPosition()[1]);
+            telemetry.addData("heading", posTarMan.getRobotHeading());
+
+            telemetry.addLine("turret information");
+            telemetry.addData("heading", currentTurretHeading);
+            telemetry.addData("pitch", currentTurretPitch);
+            telemetry.addData("heading to target", aimMan.getHeadingToTarget());
+            telemetry.addData("pitch to target", aimMan.getPitchToTarget());
+
             // automated movement (turret)
             rotateTurretTo(aimMan.headingToTarget);
 
@@ -89,11 +102,11 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         while(degrees < -180) degrees   += 360;
 
         if (degrees > currentTurretHeading) {
-            currentTurretHeading    = ((robot.turretRotator.getPosition() - 0.5) * 360)/*turret heading*/ - posTarMan.heading;
+            currentTurretHeading    = ((robot.turretRotator.getPosition() - 0.5) * 360)/*turret heading*/ - posTarMan.robotHeading;
             pos                     = ((degrees - currentTurretHeading) / 180) + 0.5;
 
         } else if (degrees < currentTurretHeading) {
-            currentTurretHeading    = ((robot.turretRotator.getPosition() - 0.5) * 360)/*turret heading*/ - posTarMan.heading;
+            currentTurretHeading    = ((robot.turretRotator.getPosition() - 0.5) * 360)/*turret heading*/ - posTarMan.robotHeading;
             pos                     = ((degrees + currentTurretHeading) / 180) + 0.5;
         }
         robot.turretRotator.setPosition(pos);
