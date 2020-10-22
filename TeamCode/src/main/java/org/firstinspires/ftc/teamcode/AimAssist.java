@@ -38,25 +38,18 @@ public class AimAssist {
     double[] robotPosition; // x, y, coords of robot, measured in meters
     double robotHeading;        // direction the robot is facing relative to it's starting direction (90), measured in degrees
 
-    //variables defining the turrets characteristics
-    double turretHeading; // the direction that the turret is facing relative to the front of the robot (0), measured in degrees
-    double turretPitch; // the pitch of the turret, relative to the horizontal plane (0), measured in degrees
-
     //variables defining the targets characteristics
     double[] targetPosition; // x, y, z, coords of the robot, measured in meters
 
     //variables that are calculated
-    public double headingToTarget; // the direction that the turret needs to face relative to the front of the robot (0), measured in degrees
+    public double headingToTarget; // the direction that the turret needs to face relative to the front of the robot (90), measured in degrees
     public double pitchToTarget; // the pitch that the turret needs to be at to hit the target, measured in degrees
 
     ////////////////////////////// constructors //////////////////////////////
     /**constructor (tuHeading and tuPitch should both be zero, unless the robot starts in an awkward position**/
-    public AimAssist(HardwareUltimateGoal robot, double[] rPosition, double rHeading, double tuHeading, double tuPitch, double[] tPosition) {
+    public AimAssist(HardwareUltimateGoal robot, double[] rPosition, double rHeading, double[] tPosition) {
         robotPosition = rPosition;
         robotHeading = rHeading;
-
-        turretHeading = tuHeading;
-        turretPitch = tuPitch;
 
         targetPosition = tPosition;
 
@@ -67,12 +60,9 @@ public class AimAssist {
     /**
      * method to update the the variables to the most recent values
      */
-    public void update(double[] rPosition, double rHeading, double tuHeading, double tuPitch, double[] tPosition) {
+    public void update(double[] rPosition, double rHeading, double[] tPosition) {
         robotPosition = rPosition;
         robotHeading = rHeading;
-
-        turretHeading = tuHeading;
-        turretPitch = tuPitch;
 
         targetPosition = tPosition;
 
@@ -96,11 +86,8 @@ public class AimAssist {
         double x = tX - rX;
         double y = tY -rY;
 
-        // heading relative to the field (theta = 90, toward the goals)
-        double heading;
-        heading = Math.atan(y / x);
-        heading = heading - turretHeading; // heading relative to the robot
-
+        // heading relative to the field (theta = 90 toward the goals)
+        double heading = Math.atan2(y,x) ;
         return heading;
     }
 
