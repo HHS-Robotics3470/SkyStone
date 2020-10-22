@@ -28,14 +28,14 @@ public class HardwareUltimateGoal {
     /* Public OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
-    public DcMotor  flyWheel = null;
-    public DcMotor  conveyor1 = null;
+    //public DcMotor  flyWheel = null; //commented out bc it's not installed yet
+    //public DcMotor  conveyor1 = null; //commented out bc it's not installed yet
 
     public DcMotor turretElevator = null;
     public Servo turretRotator = null;
 
-    public TouchSensor touch1 = null;
-    public ColorSensor color1 = null;
+    //public TouchSensor touch1 = null; //commented out bc it's not installed yet
+    //public ColorSensor color1 = null; //commented out bc it's not installed yet
 
 
     /* local OpMode members. */
@@ -77,15 +77,15 @@ public class HardwareUltimateGoal {
         leftDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
         rightDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
 
-        flyWheel        = hwMap.get(DcMotor.class, "flywheel");
-        conveyor1       = hwMap.get(DcMotor.class, "conveyor1");
+        //flyWheel        = hwMap.get(DcMotor.class, "flywheel");
+        //conveyor1       = hwMap.get(DcMotor.class, "conveyor1");
         turretElevator  = hwMap.get(DcMotor.class, "elevator");
 
         // Set all motors to zero power
         leftDrive.setPower(0);
         rightDrive.setPower(0);
-        flyWheel.setPower(0);
-        conveyor1.setPower(0);
+        //flyWheel.setPower(0);
+        //conveyor1.setPower(0);
 
         // May want to use RUN_WITHOUT_ENCODERS if encoders are not installed.
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -96,10 +96,8 @@ public class HardwareUltimateGoal {
         turretRotator.setPosition(0);
 
         // Define and initialize ALL installed sensors.
-        touch1 = hwMap.touchSensor.get("touch_sensor");
-        color1 = hwMap.colorSensor.get("color1");
+        //touch1 = hwMap.touchSensor.get("touch_sensor");
+        //color1 = hwMap.colorSensor.get("color1");
     }
 
-
-    //methods for the turret that set things to precise positions
 }
