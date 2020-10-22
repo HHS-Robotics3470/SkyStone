@@ -69,12 +69,12 @@ public class PositionAndTargetManager {
     double[] targetPosition = new double[3];
     double launchZone = 2.06375-1.79705/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
 
-    double heading = 90.0;
+    double heading = 90;
 
-    double metersPerRevolution;
+    double wheelRadius;
     double robotWidth;
 
-    byte powerShotsHit = 0;
+    short powerShotsHit = 0;
     ////////////////////////////// constructors //////////////////////////////
     /**
      * constructor for the PositionAndTargetManager
@@ -82,87 +82,30 @@ public class PositionAndTargetManager {
      */
     public PositionAndTargetManager(HardwareUltimateGoal robot, boolean isTeamRed) {
         //take some variables from the robot
-        metersPerRevolution = robot.NADO_METERS_PER_REV;
+        wheelRadius = robot.driveWheelRadius;
         robotWidth = robot.robotWidth;
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
             for (int r = 0; r < targets.length; r ++) {
-                targets[r][0] *= -1.0; //flip the x-axis if not on the red team
+                targets[r][0] *= -1; //flip the x-axis if not on the red team
             }
 
-            robotPosition[0] *= -1.0; //flip the x-axis if not on the red team
+            robotPosition[0] *= -1; //flip the x-axis if not on the red team
         }
     }
     ////////////////////////////// update and calculate method //////////////////////////////
-
-    /**
-     * the update method takes the number of times that the two drive motors have rotated since the last update, using this it calculates the change in
-     * position and heading
-     * @param leftRotations     number of times the left motor has rotated since last update
-     * @param rightRotations    number of times the right motor has rotated since last update
-     */
-    public void update(double leftRotations, double rightRotations) {
+    //TODO: 10/18/2020 optimize these if/else statements sometime
+    public void update(double leftRotations, double rightRotations, ElapsedTime timeElapsed) {
         double positionChange;
-        double headingChange = 0.0;
+        double headingChange = 0;
+        //calculate in radians, convert heading back into degrees after
 
-        //new logic
-        double s1 = leftRotations * metersPerRevolution; //distance the left wheel traveled (m)
-        double s2 = rightRotations * metersPerRevolution; //distance the right wheel traveled (m)
-        double r = 0.0;// = robotWidth; //for case 4
-        /*
-        4 cases:
-        1) equal in distance,       equal in direction      (both sides equal)
-        2) not equal in distance,   equal in direction      (both are same direction, one is greater than the other)
-        3) equal in distance,       not equal in direction  (one is forward, one is backward)
-        4) not equal in distance,   not equal in direction  (one is zero)
-
-        order: 2,4,1,3
-         */
-        //TODO: 10/20/2020 check if this works when the robot is going backwards too
-        if (Math.abs(s1) != Math.abs(s2)) { //are the sides traveling different distances (case 2,4)
-            try { //try case 2, if it doesn't work (divide by zero), do case 4      // filters out cases where one side is positive and the other is 0
-                if (Math.abs(s1) > Math.abs(s2)) { //the abs should both: allow this to work when the robot is going backwards, and filter out cases where one side is negative and the other is 0
-                    r = (s1 - s2) / (s2 * robotWidth); //calculating r for heading calculation
-                    headingChange = s2/r;//https://www.desmos.com/calculator/r16kcermq2
-                }
-                else if (Math.abs(s1) < Math.abs(s2)) {
-                    r = (s2 - s1) / (s1 * robotWidth); //calculating r for heading calculation
-                    headingChange = s1/r; //calculating headingChange
-                }
-                r = r + robotWidth/2; // calculating r for position calculation
-
-            } catch (Exception e) { //case 4
-                r = robotWidth; //calculating r for heading calculation
-                headingChange = s1 / r;
-                if (s1 == 0.0) {headingChange = s2 / r;}
-                r /= 2.0;// calculating r for position calculation
-            }
-            positionChange = Math.sqrt( Math.pow((r)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
-        }
-        else { // going in the same direction (case 1,3)
-            positionChange = s1; //case 1
-            if (s1 != s2) { //case 3
-                if (Math.abs(s1) > Math.abs(s2)) { //turning clockwise
-                    r = (robotWidth * s2) / (s1 + s2);
-                    headingChange = s1/r; //calculating headingChange
-                } else if (Math.abs(s1) < Math.abs(s2)) { //turning counter clockwise
-                    r = (robotWidth * s1) / (s2 + s1);
-                    headingChange = s2/r; //calculating headingChange
-                }
-                positionChange = Math.sqrt( Math.pow((r)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
-            }
-        }
-        //store changes to position and heading
-        heading += Math.toDegrees(headingChange);
-        robotPosition[0] += Math.cos(heading) * positionChange;
-        robotPosition[1] += Math.sin(heading) * positionChange;
-
-        /*old logic VVVVV
-        if ((float)leftRotations == (float)rightRotations) { // both sides going either forward or backward same speed;
+        //calculate the change in position, and heading
+        if (leftRotations == rightRotations) { // both sides going either forward or backward same speed;
             positionChange = leftRotations * 2 * Math.PI * wheelRadius;
-        }
-        else if ( (leftRotations < 0 && rightRotations < 0) || (leftRotations > 0 && rightRotations > 0) ) { //both sides either going forward, or backward (different speed) (coded with forward in mind)
-            // variables
+        } else if ( (leftRotations < 0 && rightRotations < 0) || (leftRotations > 0 && rightRotations > 0) ) { //both sides either going forward, or backward (different speed) (coded with forward in mind)
+            //TODO: 10/18/2020 check if this works when the robot is going backwards too
+            //variables
             double s1 = leftRotations * 2 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
             double s2 = rightRotations * 2 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
             double r = 0; //radius of the inner circle
@@ -177,8 +120,8 @@ public class PositionAndTargetManager {
                 headingChange = s1/r; //calculating headingChange
             }
             positionChange = Math.sqrt( Math.pow((r + robotWidth/2)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((r + robotWidth/2)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
-        }
-        else if ((float)leftRotations < 0 || (float)rightRotations < 0) { //one side going forward, other going backward
+        } else if (leftRotations < 0 || rightRotations < 0) { //one side going forward, other going backward
+            //TODO: 10/19/2020 check if this works when the robot is going backwards too
             //variables
             double s1 = leftRotations * 2 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
             double s2 = rightRotations * 2 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
@@ -192,36 +135,36 @@ public class PositionAndTargetManager {
                 r = (robotWidth * s1) / (s2 + s1);
                 headingChange = s2/r; //calculating headingChange
             }
+
             positionChange = Math.sqrt( Math.pow((robotWidth/2 -r)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((robotWidth/2 -r)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
-        }
-        else { //one side isn't moving
+        } else { //one side isn't moving
+            //TODO: 10/19/2020 check if this works when the robot is going backwards too
             //variables
             double s = leftRotations * 2 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
             if (s == 0) {
                 s = rightRotations * 2 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
             }
             double r = robotWidth;
+
             headingChange = s/r;
+
             positionChange = Math.sqrt( Math.pow((robotWidth/2)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((robotWidth/2)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
         }
+
         //store changes to position and heading
         heading += Math.toDegrees(headingChange);
         robotPosition[0] += Math.cos(heading) * positionChange;
         robotPosition[1] += Math.sin(heading) * positionChange;
+
         //call a method to choose the best target at the moment
-        bestTargetPosition(timeElapsed); */
+        bestTargetPosition(timeElapsed);
     }
 
-    /**
-     * acts as an update method, that also returns the value it is setting the target position to
-     * @param timeSeconds  time elapsed during match, measured in seconds, used to differentiate between mid game and end game targets
-     * @return the position of the target selected, it also sets targetPosition to these coordinates
-     */
-    public double[] bestTargetPosition(double timeSeconds) {
-        double[] bestTarget;
+    public void bestTargetPosition(ElapsedTime time) {
+        double bestTarget[];
 
-        int i = (int) (Math.random() * (targets.length - 1)); //random row of targets -1
-        if (i < 3 || i >= 5) { //prevents the robot from shooting the powershots before endgame, and increased the chance of aiming to the high goal
+        int i = (int) (Math.random() * (targets.length - 2)); //random row of targets -1
+        if (i <= 3 && i > 4) { //prevents the robot from shooting the powershots before endgame, and increased the chance of aiming to the high goal
             i = 3;
         } // at this point, i should be either 3 or 4
         //TODO: 10/19/2020 change the > to < depending on what the launch zone actually is
@@ -230,13 +173,12 @@ public class PositionAndTargetManager {
         }
         bestTarget = targets[i];
 
-        if (timeSeconds >= 200 && (int) (Math.random()*3 + 1) == 2 && powerShotsHit <= 2) { //if it's the endgame,  and rng (1/3)
+        if (time.seconds() >= 200 && (int) (Math.random()*3 + 1) == 2 && powerShotsHit <= 2) { //if it's the endgame,  and rng (1/3)
             bestTarget = targets[powerShotsHit]; // cycle through the powershots
             powerShotsHit ++;
         }
 
         targetPosition = bestTarget;
-        return targetPosition;
     }
     ////////////////////////////// get methods //////////////////////////////
 }
