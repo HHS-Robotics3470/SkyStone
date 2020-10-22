@@ -1,9 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.util.ElapsedTime;
-
 public class PositionAndTargetManager {
-    /**info found: https://firstinspiresst01.blob.core.windows.net/first-game-changers/ftc/field-setup-guide.pdf starting page 8
+    /*info found: https://firstinspiresst01.blob.core.windows.net/first-game-changers/ftc/field-setup-guide.pdf starting page 8
      *        and: https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-2-remote-events.pdf starting page 26
      * Coords format: x,y,z
      * Origin (0,0) : center of the 6x6(square) grid
@@ -69,7 +67,7 @@ public class PositionAndTargetManager {
     double[] targetPosition = new double[3];
     double launchZone = 2.06375-1.79705/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
 
-    double heading = 90.0; //heading relative to field, 90 = toward goals
+    double robotHeading = 90.0; //heading relative to field, 90 = toward goals
 
     double metersPerRevolution;
     double robotWidth;
@@ -137,7 +135,7 @@ public class PositionAndTargetManager {
                 if (s1 == 0.0) {headingChange = s2 / r;}
                 r /= 2.0;// calculating r for position calculation
             }
-            positionChange = Math.sqrt( Math.pow((r)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
+            positionChange = Math.sqrt( Math.pow((r)*Math.cos(Math.toRadians(robotHeading) + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(Math.toRadians(robotHeading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
         }
         else { // going in the same direction (case 1,3)
             positionChange = s1; //case 1
@@ -149,13 +147,13 @@ public class PositionAndTargetManager {
                     r = (robotWidth * s1) / (s2 + s1);
                     headingChange = s2/r; //calculating headingChange
                 }
-                positionChange = Math.sqrt( Math.pow((r)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
+                positionChange = Math.sqrt( Math.pow((r)*Math.cos(Math.toRadians(robotHeading) + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(Math.toRadians(robotHeading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
             }
         }
         //store changes to position and heading
-        heading += Math.toDegrees(headingChange);
-        robotPosition[0] += Math.cos(heading) * positionChange;
-        robotPosition[1] += Math.sin(heading) * positionChange;
+        robotHeading += Math.toDegrees(headingChange);
+        robotPosition[0] += Math.cos(robotHeading) * positionChange;
+        robotPosition[1] += Math.sin(robotHeading) * positionChange;
 
         /*old logic VVVVV
         if ((float)leftRotations == (float)rightRotations) { // both sides going either forward or backward same speed;
@@ -239,4 +237,16 @@ public class PositionAndTargetManager {
         return targetPosition;
     }
     ////////////////////////////// get methods //////////////////////////////
+
+    public double getRobotHeading() {
+        return robotHeading;
+    }
+
+    public double[] getRobotPosition() {
+        return robotPosition;
+    }
+
+    public double[] getTargetPosition() {
+        return targetPosition;
+    }
 }
