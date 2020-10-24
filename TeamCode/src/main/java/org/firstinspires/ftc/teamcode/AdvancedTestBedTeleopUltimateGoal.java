@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
     /* Declare OpMode members. initialize some classes */
     HardwareUltimateGoal robot          = new HardwareUltimateGoal();
-    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, true); //TODO: 10/21/2020 change true to false if on team blue
+    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, HardwareUltimateGoal.readPosition(), HardwareUltimateGoal.readHeading(), true); //TODO: 10/21/2020 change true to false if on team blue
     ElapsedTime runtime                 = new ElapsedTime();
     AimAssist aimMan                    = new AimAssist(robot, posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.bestTargetPosition(0));
 
@@ -69,10 +69,13 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             telemetry.addData("heading to target", aimMan.getHeadingToTarget());
             telemetry.addData("pitch to target", aimMan.getPitchToTarget());
 
+            telemetry.update();
             // automated movement (turret)
             //rotateTurretTo(aimMan.headingToTarget);
-
         }
+
+        //after opMode, save current position and heading for reasons
+        HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
     }
 
     public void basicStickControls(double x, double y) {
