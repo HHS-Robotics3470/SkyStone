@@ -110,6 +110,12 @@ public class HardwareUltimateGoal {
     public static File positionYFile = AppUtil.getInstance().getSettingsFile("positionY.txt");
     public static File headingFile = AppUtil.getInstance().getSettingsFile("heading.txt");
 
+    /**
+     * method to write the position and heading of the robot to a file (overwriting any data already there)
+     * in order to allow that information to persist after, for example, the execution of an autonomous opmode
+     * @param position  the position of the robot, in meters, on a coordinate plane as described in comments at the beginning of PositionAndTargetManager.java
+     * @param heading   the heading of the robot, in degrees
+     */
     public static void writePositionHeading(double[] position, double heading) {
         ReadWriteFile.writeFile(positionXFile, String.valueOf(position[0]));
         ReadWriteFile.writeFile(positionYFile, String.valueOf(position[1]));
@@ -117,10 +123,18 @@ public class HardwareUltimateGoal {
         ReadWriteFile.writeFile(headingFile, String.valueOf(heading));
     }
 
+    /**
+     * reads information from positionX.txt and positionY.txt to return the x,y position of the robot
+     * @return a double array containing the [x,y] coordinates of the robot on the field, in meters
+     */
     public static double[] readPosition() {
         return new double[]{Double.parseDouble(ReadWriteFile.readFile(positionXFile).trim()) , Double.parseDouble(ReadWriteFile.readFile(positionYFile).trim()) };
     }
 
+    /**
+     * reads information for heading.txt to return the heading of the robot
+     * @return the heading of the robot, in degrees
+     */
     public static double readHeading() {
         return Double.parseDouble(ReadWriteFile.readFile(headingFile).trim());
     }
