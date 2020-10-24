@@ -63,11 +63,13 @@ public class PositionAndTargetManager {
         r = 2, z
      */
     //initializes assuming it's on team red, in the constructor, values will be changed as needed if it's on team blue
-    double[] robotPosition = new double[3]; //TODO: 10/18/2020 replace "new double[3];" with the array of the starting position if on red team
-    double[] targetPosition = new double[3];
-    double launchZone = 2.06375-1.79705/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
-
+    double[] robotPosition = new double[2]; //TODO: 10/18/2020 replace "new double[3];" with the array of the starting position if on red team
     double robotHeading = 90.0; //heading relative to field, 90 = toward goals
+
+    double[] targetPosition = new double[3];
+    int currentTarget;
+
+    double launchZone = 2.06375-1.79705/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
 
     double metersPerRevolution;
     double robotWidth;
@@ -75,13 +77,16 @@ public class PositionAndTargetManager {
     byte powerShotsHit = 0;
     ////////////////////////////// constructors //////////////////////////////
     /**
-     * constructor for the PositionAndTargetManager
-     * @param isTeamRed pass as true if the robot is on the red alliance
+     * constructor for the PositionAndTargetManager class
+     * use this constructor if no autonomous was run
+     * this constructor assumes that the robot is in the corner, facing toward the wall with the goal targets
+     * @param robot     passed to allow for some calculations, and access to certain robot dimensions
+     * @param isTeamRed true if on team red, false otherwise, used to personalize the target array, and initial position for what team the robot is on
      */
     public PositionAndTargetManager(HardwareUltimateGoal robot, boolean isTeamRed) {
         //take some variables from the robot
         metersPerRevolution = robot.NADO_METERS_PER_REV;
-        robotWidth = robot.robotWidth;
+        robotWidth          = robot.robotWidth;
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
             for (int r = 0; r < targets.length; r ++) {
@@ -91,8 +96,31 @@ public class PositionAndTargetManager {
             robotPosition[0] *= -1.0; //flip the x-axis if not on the red team
         }
     }
-    ////////////////////////////// update and calculate method //////////////////////////////
 
+    /**
+     * constructor for the PositionAndTargetManager class
+     * use this constructor if an autonomous was run
+     * @param robot         passed to allow for some calculations, and access to certain robot dimensions
+     * @param initPosition  this array should be given by the readPosition() method of HardwareUltimateGoal
+     * @param initHeading   this should be given by the readHeading() method of HardwareUltimateGoal
+     * @param isTeamRed     true if on team red, false otherwise, used to personalize the target array for what team the robot is on
+     */
+    public PositionAndTargetManager(HardwareUltimateGoal robot, double[] initPosition, double initHeading, boolean isTeamRed) {
+        //take some variables from the robot
+        metersPerRevolution = robot.NADO_METERS_PER_REV;
+        robotWidth          = robot.robotWidth;
+        //flip some things for if the robot is on blue team
+        if (!isTeamRed) {
+            for (int r = 0; r < targets.length; r ++) {
+                targets[r][0] *= -1.0; //flip the x-axis if not on the red team
+            }
+        }
+        //set position and heading to given values
+        robotPosition   = initPosition;
+        robotHeading    = initHeading;
+    }
+
+    ////////////////////////////// update and calculate method //////////////////////////////
     /**
      * the update method takes the number of times that the two drive motors have rotated since the last update, using this it calculates the change in
      * position and heading
@@ -227,26 +255,75 @@ public class PositionAndTargetManager {
             i = 5; //target low goal
         }
         bestTarget = targets[i];
-
+        currentTarget = i;
         if (timeSeconds >= 200 && (int) (Math.random()*3 + 1) == 2 && powerShotsHit <= 2) { //if it's the endgame,  and rng (1/3)
             bestTarget = targets[powerShotsHit]; // cycle through the powershots
+            currentTarget = powerShotsHit;
             powerShotsHit ++;
         }
 
         targetPosition = bestTarget;
         return targetPosition;
     }
-    ////////////////////////////// get methods //////////////////////////////
 
+    ////////////////////////////// get methods //////////////////////////////
+    /**
+     * @return robotHeading:     the heading, in degrees, that the robot is facing
+     */
     public double getRobotHeading() {
         return robotHeading;
     }
 
+    /**
+     * @return robotPosition:   the position (x,y) of the robot on the field, measured in meters
+     */
     public double[] getRobotPosition() {
         return robotPosition;
     }
 
+    /**
+     * @return targetPosition:  the position (x,y,z) of the current target, measured in meters
+     */
     public double[] getTargetPosition() {
         return targetPosition;
+    }
+
+    /**
+     * @return a description of the current target
+     */
+    public String getCurrentTarget() {
+        /*
+        r = 0, power shot 1
+        r = 1, power shot 2
+        r = 2, power shot 3
+        r = 3, high goal
+        r = 4, medium goal
+        r = 5, low goal
+         */
+        String description;
+        switch (currentTarget) {
+            case 0:
+                description = "power shot 1";
+                break;
+            case 1:
+                description = "power shot 2";
+                break;
+            case 2:
+                description = "power shot 3";
+                break;
+            case 3:
+                description = "high goal";
+                break;
+            case 4:
+                description = "medium goal";
+                break;
+            case 5:
+                description = "low goal";
+                break;
+            default:
+                description = "no target selected, or unknown";
+                break;
+        }
+        return description;
     }
 }
