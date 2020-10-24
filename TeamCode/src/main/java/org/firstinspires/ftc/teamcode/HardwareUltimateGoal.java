@@ -119,13 +119,11 @@ public class HardwareUltimateGoal {
     }
 
     public static double[] readPosition() {
-        double[] rPos = {Double.parseDouble(ReadWriteFile.readFile(positionXFile).trim()) , Double.parseDouble(ReadWriteFile.readFile(positionYFile).trim()) };
-        return rPos;
+        return new double[]{Double.parseDouble(ReadWriteFile.readFile(positionXFile).trim()) , Double.parseDouble(ReadWriteFile.readFile(positionYFile).trim()) };
     }
 
     public static double readHeading() {
-        double rHeading = Double.parseDouble(ReadWriteFile.readFile(headingFile).trim());
-        return rHeading;
+        return Double.parseDouble(ReadWriteFile.readFile(headingFile).trim());
     }
 
     ////////////////////////////// Movement methods //////////////////////////////
