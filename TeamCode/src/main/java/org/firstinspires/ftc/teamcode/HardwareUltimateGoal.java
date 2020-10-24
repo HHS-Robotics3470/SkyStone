@@ -110,7 +110,6 @@ public class HardwareUltimateGoal {
     public static File positionYFile = AppUtil.getInstance().getSettingsFile("positionY.txt");
     public static File headingFile = AppUtil.getInstance().getSettingsFile("heading.txt");
 
-
     public static void writePositionHeading(double[] position, double heading) {
         ReadWriteFile.writeFile(positionXFile, String.valueOf(position[0]));
         ReadWriteFile.writeFile(positionYFile, String.valueOf(position[1]));
