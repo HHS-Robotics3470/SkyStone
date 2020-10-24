@@ -72,14 +72,14 @@ public class HardwareUltimateGoal {
         hwMap = ahwMap;
 
         // Define and Initialize Motors
-        leftDrive   = hwMap.get(DcMotor.class, "left_drive");
-        rightDrive  = hwMap.get(DcMotor.class, "right_drive");
+        leftDrive   = hwMap.get(DcMotor.class, "leftDrive");
+        rightDrive  = hwMap.get(DcMotor.class, "rightDrive");
         leftDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
         rightDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
 
         //flyWheel        = hwMap.get(DcMotor.class, "flywheel");
         //conveyor1       = hwMap.get(DcMotor.class, "conveyor1");
-        turretElevator  = hwMap.get(DcMotor.class, "turret_elevator");
+        turretElevator  = hwMap.get(DcMotor.class, "turretElevator");
 
         // Set all motors to zero power
         leftDrive.setPower(0);
@@ -92,7 +92,7 @@ public class HardwareUltimateGoal {
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Define and initialize ALL installed servos.
-        turretRotator = hwMap.get(Servo.class, "turret_rotator");
+        turretRotator = hwMap.get(Servo.class, "turretServo");
         turretRotator.setPosition(0);
 
         // Define and initialize ALL installed sensors.
