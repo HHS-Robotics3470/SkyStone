@@ -69,6 +69,12 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             telemetry.addData("heading to target", aimMan.getHeadingToTarget());
             telemetry.addData("pitch to target", aimMan.getPitchToTarget());
 
+            telemetry.addLine("target info");
+            telemetry.addData("target", posTarMan.getCurrentTarget());
+            telemetry.addData("x", posTarMan.getTargetPosition()[0]);
+            telemetry.addData("y", posTarMan.getTargetPosition()[1]);
+            telemetry.addData("z", posTarMan.getTargetPosition()[2]);
+
             telemetry.update();
             // automated movement (turret)
             //rotateTurretTo(aimMan.headingToTarget);
