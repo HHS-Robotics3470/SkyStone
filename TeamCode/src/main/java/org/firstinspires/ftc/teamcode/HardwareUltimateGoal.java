@@ -79,7 +79,7 @@ public class HardwareUltimateGoal {
 
         //flyWheel        = hwMap.get(DcMotor.class, "flywheel");
         //conveyor1       = hwMap.get(DcMotor.class, "conveyor1");
-        turretElevator  = hwMap.get(DcMotor.class, "elevator");
+        turretElevator  = hwMap.get(DcMotor.class, "turret_elevator");
 
         // Set all motors to zero power
         leftDrive.setPower(0);
@@ -92,7 +92,7 @@ public class HardwareUltimateGoal {
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Define and initialize ALL installed servos.
-        turretRotator = hwMap.get(Servo.class, "turretRotator");
+        turretRotator = hwMap.get(Servo.class, "turret_rotator");
         turretRotator.setPosition(0);
 
         // Define and initialize ALL installed sensors.

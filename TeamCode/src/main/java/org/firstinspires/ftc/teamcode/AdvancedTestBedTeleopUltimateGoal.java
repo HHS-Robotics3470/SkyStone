@@ -70,7 +70,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             telemetry.addData("pitch to target", aimMan.getPitchToTarget());
 
             // automated movement (turret)
-            rotateTurretTo(aimMan.headingToTarget);
+            //rotateTurretTo(aimMan.headingToTarget);
 
         }
     }
