@@ -6,6 +6,11 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.util.ReadWriteFile;
+
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+
+import java.io.File;
 
 /**
  * This is NOT an opmode.
@@ -99,5 +104,32 @@ public class HardwareUltimateGoal {
         //touch1 = hwMap.touchSensor.get("touch_sensor");
         //color1 = hwMap.colorSensor.get("color1");
     }
+
+    ////////////////////////////// file for storing position and heading info after autonomous //////////////////////////////
+    public static File positionXFile = AppUtil.getInstance().getSettingsFile("positionX.txt");
+    public static File positionYFile = AppUtil.getInstance().getSettingsFile("positionY.txt");
+    public static File headingFile = AppUtil.getInstance().getSettingsFile("heading.txt");
+
+
+    public static void writePositionHeading(double[] position, double heading) {
+        ReadWriteFile.writeFile(positionXFile, String.valueOf(position[0]));
+        ReadWriteFile.writeFile(positionYFile, String.valueOf(position[1]));
+
+        ReadWriteFile.writeFile(headingFile, String.valueOf(heading));
+    }
+
+    public static double[] readPosition() {
+        double[] rPos = {Double.parseDouble(ReadWriteFile.readFile(positionXFile).trim()) , Double.parseDouble(ReadWriteFile.readFile(positionYFile).trim()) };
+        return rPos;
+    }
+
+    public static double readHeading() {
+        double rHeading = Double.parseDouble(ReadWriteFile.readFile(headingFile).trim());
+        return rHeading;
+    }
+
+    ////////////////////////////// Movement methods //////////////////////////////
+
+
 
 }
