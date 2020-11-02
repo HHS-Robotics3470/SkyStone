@@ -63,7 +63,7 @@ public class HardwareUltimateGoal {
     public double robotWidth = 0.4572; //18" measured in meters
     // stats for the TorqueNADO motors
     public final double NADO_COUNTS_PER_MOTOR_REV = 1440;
-    public final double NADO_DRIVE_GEAR_REDUCTION = 32/24;  // This is < 1.0 if geared UP (to increase speed)
+    public final double NADO_DRIVE_GEAR_REDUCTION = 32.0/24.0;  // This is < 1.0 if geared UP (to increase speed)
     public final double NADO_WHEEL_DIAMETER_METERS= 0.1016; //(4") For figuring circumference
     public final double NADO_COUNTS_PER_METER      = (NADO_COUNTS_PER_MOTOR_REV * NADO_DRIVE_GEAR_REDUCTION) /
             (NADO_WHEEL_DIAMETER_METERS * Math.PI);
@@ -76,7 +76,7 @@ public class HardwareUltimateGoal {
             (NEVE_WHEEL_DIAMETER_METERS * Math.PI);
     public final double NEVE_METERS_PER_REV = NEVE_COUNTS_PER_METER / (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION);
 
-    public final double ELEVATOR_GEAR_REDUCTION = 16/24;    // This is < 1.0 if geared UP (to increase speed)
+    public final double ELEVATOR_GEAR_REDUCTION = 16.0/24.0;    // This is < 1.0 if geared UP (to increase speed)
 
     /* Constructor */
     public HardwareUltimateGoal(){
