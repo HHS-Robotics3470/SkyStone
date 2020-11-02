@@ -8,20 +8,13 @@ package org.firstinspires.ftc.teamcode;
  * parameters with a ? before the description may not be needed.
  *
  * param   rPosition         a double array with two indexs recording the position of the robot (x,y) relative to the starting position.
- * param   rHeading              the direction that the robot is facing relative to the starting direction.
- * param   rVelocity         ?the magnitude of the velocity of the robot
- * param   rAcceleration     ?the acceleration the robot is undergoing, needed to correct the aim of the turret to anticipate
- *                              the impact the robots acceleration will have on the arc of the projectile
- *                              (may not be needed if the robot stops before firing)
- *
- * param   tuHeading             ?the direction that the turret is facing relative to the robot
- * param   tuPitch          the pitch of the turret, relative to the horizontal plane (0), measured in degrees
+ * param   rHeading              the direction that the robot is facing relative to the starting direction. measured in radians
  *
  * param   tPosition         a double array with three indexes recording the position of the target (x,y,z(up))
  *
  *
  *
- * return headingToTarget          the heading that the turret needs to point to (relative to the robot) to face the target
+ * return headingToTarget          the heading that the turret needs to point to (relative to the field) to face the target
  * return pitchToTarget        the pitch that the turret needs to be at to hit the target.
  *
  * how the teleop will handle this
@@ -36,14 +29,14 @@ public class AimAssist {
 
     //variables defining the robots characteristics
     double[] robotPosition; // x, y, coords of robot, measured in meters
-    double robotHeading;        // direction the robot is facing relative to it's starting direction (90), measured in degrees
+    double robotHeading;        // direction the robot is facing relative to the field (where pi/2 is toward the wall with the goals), measured in radians
 
     //variables defining the targets characteristics
     double[] targetPosition; // x, y, z, coords of the robot, measured in meters
 
     //variables that are calculated
-    public double headingToTarget; // the direction that the turret needs to face relative to the front of the robot (90), measured in degrees
-    public double pitchToTarget; // the pitch that the turret needs to be at to hit the target, measured in degrees
+    public double headingToTarget; // the direction that the turret needs to face relative to the wall with the goals (pi/2), measured in radians
+    public double pitchToTarget; // the pitch that the turret needs to be at to hit the target, measured in radians
 
     ////////////////////////////// constructors //////////////////////////////
     /**constructor (tuHeading and tuPitch should both be zero, unless the robot starts in an awkward position**/
@@ -73,7 +66,7 @@ public class AimAssist {
     ////////////////////////////// calculating methods //////////////////////////////
     /**
      * the method to calculate the heading that the turret needs to point at in order to point to the target
-     * @return headingToTarget the heading to the target
+     * @return headingToTarget the heading to the target relative to the field
      */
     private double headingCalculation () {
         //x and y values of the robot
@@ -86,8 +79,8 @@ public class AimAssist {
         double x = tX - rX;
         double y = tY -rY;
 
-        // heading relative to the field (theta = 90 toward the goals)
-        double heading = Math.atan2(y,x) ;
+        // heading relative to the field (theta = pi/2 , means robot is pointing toward the wall with the goals)
+        double heading = Math.atan2(y,x); //calculated in radians, gives an accurate angle in the range (pi , -pi), with 0 being parrallel to the x-axis
         return heading;
     }
 
@@ -210,7 +203,7 @@ public class AimAssist {
     ////////////////////////////////// get methods ////////////////////////////////
     /**
      * method to get the pitch
-     * @return pitch returns the pitch the turret need to rotate, measured in degrees
+     * @return pitch returns the pitch the turret need to rotate, measured in radians
      */
     public double getPitchToTarget() {
         return pitchToTarget;

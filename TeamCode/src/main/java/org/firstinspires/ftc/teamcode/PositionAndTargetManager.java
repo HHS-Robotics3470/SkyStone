@@ -64,7 +64,7 @@ public class PositionAndTargetManager {
      */
     //initializes assuming it's on team red, in the constructor, values will be changed as needed if it's on team blue
     double[] robotPosition = new double[2]; //TODO: 10/18/2020 replace "new double[3];" with the array of the starting position if on red team
-    double robotHeading = 90.0; //heading relative to field, 90 = toward goals
+    double robotHeading = Math.PI / 2; //heading relative to field, pi/2 = toward goals
 
     double[] targetPosition = new double[3];
     int currentTarget;
@@ -131,7 +131,7 @@ public class PositionAndTargetManager {
         double positionChange;
         double headingChange = 0.0;
 
-        //new logic
+        //new logic for updating position and heading of the robot
         double s1 = leftRotations * metersPerRevolution; //distance the left wheel traveled (m)
         double s2 = rightRotations * metersPerRevolution; //distance the right wheel traveled (m)
         double r = 0.0;// = robotWidth; //for case 4
@@ -163,7 +163,7 @@ public class PositionAndTargetManager {
                 if (s1 == 0.0) {headingChange = s2 / r;}
                 r /= 2.0;// calculating r for position calculation
             }
-            positionChange = Math.sqrt( Math.pow((r)*Math.cos(Math.toRadians(robotHeading) + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(Math.toRadians(robotHeading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
+            positionChange = Math.sqrt( Math.pow((r)*Math.cos(robotHeading + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(robotHeading + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
         }
         else { // going in the same direction (case 1,3)
             positionChange = s1; //case 1
@@ -175,67 +175,13 @@ public class PositionAndTargetManager {
                     r = (robotWidth * s1) / (s2 + s1);
                     headingChange = s2/r; //calculating headingChange
                 }
-                positionChange = Math.sqrt( Math.pow((r)*Math.cos(Math.toRadians(robotHeading) + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(Math.toRadians(robotHeading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
+                positionChange = Math.sqrt( Math.pow((r)*Math.cos(robotHeading + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(robotHeading + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
             }
         }
         //store changes to position and heading
-        robotHeading += Math.toDegrees(headingChange);
+        robotHeading += headingChange;
         robotPosition[0] += Math.cos(robotHeading) * positionChange;
         robotPosition[1] += Math.sin(robotHeading) * positionChange;
-
-        /*old logic VVVVV
-        if ((float)leftRotations == (float)rightRotations) { // both sides going either forward or backward same speed;
-            positionChange = leftRotations * 2 * Math.PI * wheelRadius;
-        }
-        else if ( (leftRotations < 0 && rightRotations < 0) || (leftRotations > 0 && rightRotations > 0) ) { //both sides either going forward, or backward (different speed) (coded with forward in mind)
-            // variables
-            double s1 = leftRotations * 2 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
-            double s2 = rightRotations * 2 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
-            double r = 0; //radius of the inner circle
-
-            //calculate r, headingChange, and position change
-            if (s1 > s2) {
-                r = (s1 - s2) / (s2 * robotWidth); // calculating r
-                headingChange = s2/r;//https://www.desmos.com/calculator/r16kcermq2
-            }
-            else if (s1 < s2) {
-                r = (s2 - s1) / (s1 * robotWidth);// calculating r
-                headingChange = s1/r; //calculating headingChange
-            }
-            positionChange = Math.sqrt( Math.pow((r + robotWidth/2)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((r + robotWidth/2)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
-        }
-        else if ((float)leftRotations < 0 || (float)rightRotations < 0) { //one side going forward, other going backward
-            //variables
-            double s1 = leftRotations * 2 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
-            double s2 = rightRotations * 2 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
-            double r; //radius of the inner circle
-
-            //calculate r, headingChange, and position change
-            if (Math.abs(s1) > Math.abs(s2)) { //turning clockwise
-                r = (robotWidth * s2) / (s1 + s2);
-                headingChange = s1/r; //calculating headingChange
-            } else { //turning counter clockwise
-                r = (robotWidth * s1) / (s2 + s1);
-                headingChange = s2/r; //calculating headingChange
-            }
-            positionChange = Math.sqrt( Math.pow((robotWidth/2 -r)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((robotWidth/2 -r)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
-        }
-        else { //one side isn't moving
-            //variables
-            double s = leftRotations * 2 * Math.PI * wheelRadius; //distance the left wheel traveled (m)
-            if (s == 0) {
-                s = rightRotations * 2 * Math.PI * wheelRadius; //distance the right wheel traveled (m)
-            }
-            double r = robotWidth;
-            headingChange = s/r;
-            positionChange = Math.sqrt( Math.pow((robotWidth/2)*Math.cos(Math.toRadians(heading) + headingChange) - robotPosition[0], 2) + Math.pow((robotWidth/2)*Math.sin(Math.toRadians(heading) + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
-        }
-        //store changes to position and heading
-        heading += Math.toDegrees(headingChange);
-        robotPosition[0] += Math.cos(heading) * positionChange;
-        robotPosition[1] += Math.sin(heading) * positionChange;
-        //call a method to choose the best target at the moment
-        bestTargetPosition(timeElapsed); */
     }
 
     /**
@@ -268,7 +214,7 @@ public class PositionAndTargetManager {
 
     ////////////////////////////// get methods //////////////////////////////
     /**
-     * @return robotHeading:     the heading, in degrees, that the robot is facing
+     * @return robotHeading:     the heading, in radians, that the robot is facing
      */
     public double getRobotHeading() {
         return robotHeading;

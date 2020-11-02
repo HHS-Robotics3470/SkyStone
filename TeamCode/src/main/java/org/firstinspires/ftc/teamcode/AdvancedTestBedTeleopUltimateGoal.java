@@ -14,7 +14,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
     ElapsedTime runtime                 = new ElapsedTime();
     AimAssist aimMan                    = new AimAssist(robot, posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.bestTargetPosition(0));
 
-    double currentTurretHeading = 0;
+    double currentTurretHeading = robot.turretRotator.getPosition();
     double currentTurretPitch   = 0;
 
     @Override
@@ -23,6 +23,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         // declare some variables if needed
         double totalLeftCounts  = 0;
         double totalRightCounts = 0;
+
+        boolean abort = false; //variable to control whether or not it allows movement commands to go through
 
         /* Initialize the hardware variables.
          * The init() method of the hardware class does all the work here
@@ -40,17 +42,22 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         while (opModeIsActive())
         {
 
-            // controls and movement
+          // controls and movement
             totalLeftCounts     = robot.leftDrive.getCurrentPosition();
             totalRightCounts    = robot.rightDrive.getCurrentPosition();
             tankControls(gamepad1.right_stick_y, gamepad1.left_stick_y);
 
-            if (gamepad1.a) { // if driver presses A, change targets
+            if (gamepad1.a && !abort) { // if driver presses A, change targets
                 posTarMan.bestTargetPosition(runtime.seconds());
             }
 
+            //abort button
+            if (gamepad1.x) {
+                abort = !abort;
+            }
 
-            // update position and aim managers
+
+          // update position and aim managers
             double leftRevs     = (totalLeftCounts - robot.leftDrive.getCurrentPosition()) / robot.NADO_COUNTS_PER_MOTOR_REV; //left rotations since last count
             double rightRevs    = (totalRightCounts - robot.rightDrive.getCurrentPosition()) / robot.NADO_COUNTS_PER_MOTOR_REV; //right rotations since last count
             posTarMan.update(leftRevs, rightRevs);
@@ -61,7 +68,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             telemetry.addLine("position information");
             telemetry.addData("x", posTarMan.getRobotPosition()[0]);
             telemetry.addData("y", posTarMan.getRobotPosition()[1]);
-            telemetry.addData("heading", posTarMan.getRobotHeading());
+            telemetry.addData("heading", Math.toDegrees(posTarMan.getRobotHeading()));
 
             telemetry.addLine("turret information");
             telemetry.addData("heading", currentTurretHeading);
@@ -76,8 +83,11 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             telemetry.addData("z", posTarMan.getTargetPosition()[2]);
 
             telemetry.update();
-            // automated movement (turret)
-            //rotateTurretTo(aimMan.headingToTarget);
+
+          // automated movement (turret)
+            if (!abort) {
+                //rotateTurretTo(aimMan.headingToTarget);
+            }
         }
 
         //after opMode, save current position and heading for reasons
@@ -103,29 +113,33 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         robot.rightDrive.setPower(-right);
     }
 
-    public void rotateTurretTo(double degrees) {
+    /**
+     * given the angle relative to the field, convert to the angle relative to the robot (front = 0)
+     * @param angle angle relative to field
+     */
+    public void rotateTurretTo(double angle) {
         //TODO: 10/21/2020 update this to account for gear reduction and stuff, also, may need to change some things to adjust the target heading for robot heading
         double pos = robot.turretRotator.getPosition();
-        //correct for angles too big or too small
-        while(degrees > 180) degrees    -= 360;
-        while(degrees < -180) degrees   += 360;
+        // correct for angles too big or too small
+        //while(angle > Math.PI) angle    -= Math.PI;
+        //while(angle < -Math.PI) angle   += Math.PI;
+        currentTurretHeading = robot.turretRotator.getPosition() * 2 * Math.PI; //turret heading in radians relative to the robot
+        currentTurretHeading = posTarMan.getRobotHeading() - ( currentTurretHeading - (Math.PI/4) ); //turret heading relative to field
 
-        if (degrees > currentTurretHeading) {
-            currentTurretHeading    = ((robot.turretRotator.getPosition() - 0.5) * 360)/*turret heading*/ - posTarMan.robotHeading;
-            pos                     = ((degrees - currentTurretHeading) / 180) + 0.5;
+        if (angle > currentTurretHeading) {
+            pos                     = ((angle - currentTurretHeading) / (2*Math.PI));
 
-        } else if (degrees < currentTurretHeading) {
-            currentTurretHeading    = ((robot.turretRotator.getPosition() - 0.5) * 360)/*turret heading*/ - posTarMan.robotHeading;
-            pos                     = ((degrees + currentTurretHeading) / 180) + 0.5;
+        } else if (angle < currentTurretHeading) {
+            pos                     = ((angle + currentTurretHeading) / (2*Math.PI));
         }
         robot.turretRotator.setPosition(pos);
     }
-    public void elevateTurretTo(double degrees) {
+    public void elevateTurretTo(double angle) {
         //TODO: 10/21/2020 finish this, right now it's using a pulley or something
         double pos;
         //correct for angles too big or too small
-        while(degrees > 180) degrees -= 180;
-        while(degrees < 0) degrees += 180;
+        while(angle > Math.PI) angle -= Math.PI;
+        while(angle < 0) angle += Math.PI;
         //convert rotations to ticks of the encoder
         //adjust for
     }

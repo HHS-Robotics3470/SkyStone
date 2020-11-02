@@ -12,6 +12,15 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.io.File;
 
+/*
+    NOTE -conventions for the measurement of distances and anlges-
+    distances will be recorded and implemented in Standard units (meters), do not use the imperial system in your code
+        this is because the metric system is easier to convert and work with than imperial units
+    angles will be measured in radians
+        this is due to how the Trig functions operate in java (they expect input, and return, values measured in radians)
+ */
+
+
 /**
  * This is NOT an opmode.
  *
@@ -38,6 +47,7 @@ public class HardwareUltimateGoal {
 
     public DcMotor turretElevator = null;
     public Servo turretRotator = null;
+    public Servo turretLauncher = null;
 
     //public TouchSensor touch1 = null; //commented out bc it's not installed yet
     //public ColorSensor color1 = null; //commented out bc it's not installed yet
@@ -53,18 +63,20 @@ public class HardwareUltimateGoal {
     public double robotWidth = 0.4572; //18" measured in meters
     // stats for the TorqueNADO motors
     public final double NADO_COUNTS_PER_MOTOR_REV = 1440;
-    public final double NADO_DRIVE_GEAR_REDUCTION = 1.0;    // This is < 1.0 if geared UP
+    public final double NADO_DRIVE_GEAR_REDUCTION = 32/24;  // This is < 1.0 if geared UP (to increase speed)
     public final double NADO_WHEEL_DIAMETER_METERS= 0.1016; //(4") For figuring circumference
     public final double NADO_COUNTS_PER_METER      = (NADO_COUNTS_PER_MOTOR_REV * NADO_DRIVE_GEAR_REDUCTION) /
             (NADO_WHEEL_DIAMETER_METERS * Math.PI);
     public final double NADO_METERS_PER_REV = NADO_COUNTS_PER_METER / (NADO_COUNTS_PER_MOTOR_REV * NADO_DRIVE_GEAR_REDUCTION);
     // stats for the NeveRest motor
     public final double NEVE_COUNTS_PER_MOTOR_REV = 448; // 28 * 16(gear ratio)
-    public final double NEVE_DRIVE_GEAR_REDUCTION = 1.0;    // This is < 1.0 if geared UP
-    public final double NEVE_WHEEL_DIAMETER_METERS= 0.1016; //(4") For figuring circumference
+    public final double NEVE_DRIVE_GEAR_REDUCTION = 1;    // This is < 1.0 if geared UP
+    public final double NEVE_WHEEL_DIAMETER_METERS= 0.0762; //(3") For figuring circumference
     public final double NEVE_COUNTS_PER_METER      = (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION) /
             (NEVE_WHEEL_DIAMETER_METERS * Math.PI);
     public final double NEVE_METERS_PER_REV = NEVE_COUNTS_PER_METER / (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION);
+
+    public final double ELEVATOR_GEAR_REDUCTION = 16/24;    // This is < 1.0 if geared UP (to increase speed)
 
     /* Constructor */
     public HardwareUltimateGoal(){
@@ -79,8 +91,8 @@ public class HardwareUltimateGoal {
         // Define and Initialize Motors
         leftDrive   = hwMap.get(DcMotor.class, "leftDrive");
         rightDrive  = hwMap.get(DcMotor.class, "rightDrive");
-        leftDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
-        rightDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
+        rightDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
+        leftDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
 
         //flyWheel        = hwMap.get(DcMotor.class, "flywheel");
         //conveyor1       = hwMap.get(DcMotor.class, "conveyor1");
@@ -89,16 +101,25 @@ public class HardwareUltimateGoal {
         // Set all motors to zero power
         leftDrive.setPower(0);
         rightDrive.setPower(0);
+        turretElevator.setPower(0);
         //flyWheel.setPower(0);
         //conveyor1.setPower(0);
 
-        // May want to use RUN_WITHOUT_ENCODERS if encoders are not installed.
+        // Set run modes
+        //reset encoders
+        leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //set to run with encoder
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        turretElevator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Define and initialize ALL installed servos.
-        turretRotator = hwMap.get(Servo.class, "turretServo");
-        turretRotator.setPosition(0);
+        turretRotator = hwMap.get(Servo.class, "turretRotateServo");
+        turretLauncher = hwMap.get(Servo.class, "turretLaunchServo");
+        turretRotator.setPosition(0); // 0 should be pointing to the right side of the robot (when facing same direction as front)
+        turretLauncher.setPosition(0); // 0 should be fully open
 
         // Define and initialize ALL installed sensors.
         //touch1 = hwMap.touchSensor.get("touch_sensor");
