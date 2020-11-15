@@ -20,7 +20,8 @@ package org.firstinspires.ftc.teamcode;
  * how the teleop will handle this
  *
  */
-
+//todo: aimbot doesn't work, there are issues with the pitch to target calculations, and issues with heading to target calculations, goes infinite after slight movements
+// no changes have been made in response to this as the issue is assumed to be because of the PositionAndTargetManager
 public class AimAssist {
     double turretHeight;
 
@@ -28,11 +29,11 @@ public class AimAssist {
     final double g = 9.80655;
 
     //variables defining the robots characteristics
-    double[] robotPosition; // x, y, coords of robot, measured in meters
+    double[] robotPosition = new double[2]; // x, y, coords of robot, measured in meters
     double robotHeading;        // direction the robot is facing relative to the field (where pi/2 is toward the wall with the goals), measured in radians
 
     //variables defining the targets characteristics
-    double[] targetPosition; // x, y, z, coords of the robot, measured in meters
+    double[] targetPosition = new double[3]; // x, y, z, coords of the robot, measured in meters
 
     //variables that are calculated
     public double headingToTarget; // the direction that the turret needs to face relative to the wall with the goals (pi/2), measured in radians
@@ -41,10 +42,14 @@ public class AimAssist {
     ////////////////////////////// constructors //////////////////////////////
     /**constructor (tuHeading and tuPitch should both be zero, unless the robot starts in an awkward position**/
     public AimAssist(HardwareUltimateGoal robot, double[] rPosition, double rHeading, double[] tPosition) {
-        robotPosition = rPosition;
+        robotPosition[0] = rPosition[0];
+        robotPosition[1] = rPosition[1];
+
         robotHeading = rHeading;
 
-        targetPosition = tPosition;
+        targetPosition[0] = tPosition[0];
+        targetPosition[1] = tPosition[1];
+        targetPosition[2] = tPosition[2];
 
         turretHeight = robot.turretHeight;
     }
@@ -54,16 +59,23 @@ public class AimAssist {
      * method to update the the variables to the most recent values
      */
     public void update(double[] rPosition, double rHeading, double[] tPosition) {
-        robotPosition = rPosition;
+        robotPosition[0] = rPosition[0];
+        robotPosition[1] = rPosition[1];
+
         robotHeading = rHeading;
 
-        targetPosition = tPosition;
+        targetPosition[0] = tPosition[0];
+        targetPosition[1] = tPosition[1];
+        targetPosition[2] = tPosition[2];
 
         headingToTarget = headingCalculation();
         pitchToTarget = pitchCalculation();
     }
 
     ////////////////////////////// calculating methods //////////////////////////////
+    /* if this returns:
+    -1.0; there was an error in the atan2 calculation
+     */
     /**
      * the method to calculate the heading that the turret needs to point at in order to point to the target
      * @return headingToTarget the heading to the target relative to the field
@@ -84,25 +96,6 @@ public class AimAssist {
         return heading;
     }
 
-    /**
-     * the method to calculate the pitch that the turret needs to be at in order to point to the target
-     * @return pitchToTarget the heading to the target
-     */
-    // TODO: 10/14/2020 remove this when pitchCalculation() is working
-    private double pitchCalculationBasic() {
-        final double turretHeight = 0.30; //height from the floor of the field to the turret (measured in meters) //TODO 10/15/2020 update this when the robot is done
-
-        //calculate distance to target
-        double x = targetPosition[0] - robotPosition[0];
-        double y = targetPosition[1] - robotPosition[1];
-        double distance = Math.sqrt( x*x + y*y);
-
-        //calculate height to target
-        double height = targetPosition[2] - turretHeight;
-
-        //calculate pitch to target
-        return Math.atan(height / distance);
-    }
     /*
      * calculations for more accurate pitch calculations attempt 1
      *
@@ -158,6 +151,11 @@ public class AimAssist {
      *
      **/
     // TODO 10/14/2020 update calculation of launch speed (magnitude of velocity) by accounting for friction, then using the launch speed determined by Aaron
+
+    /* if this returns:
+    -1; required pitch would send ring out of bounds
+    -2; there was an error in the calculation, the try catch caught the error
+     */
     private double pitchCalculation() {
         //trajectory height and range caps
         final double heightCap = 1.524; //meters (5ft)
@@ -196,7 +194,7 @@ public class AimAssist {
         } catch (Exception e) {
             //return -1
             // TODO 10/14/2020 in teleOP and autonomous programs that use this, add a thing that sends the following message to the phone "out of range, move closer" when -1 is returned
-            return -1.0;
+            return -2.0;
         }
     }
 

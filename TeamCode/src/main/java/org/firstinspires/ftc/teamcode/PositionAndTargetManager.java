@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
-public class PositionAndTargetManager {
+
+//todo: position manager doesn't work, basically goes infinite as soon as there is any movement, heading is wack, but doesn't go infinite (change in recorded heading isn't realistic, doesn't change enough when rotation, changes when going straight
+// in response to the above issue, the update method was completely rewritten, these changes will be tested soon
+public class PositionAndTargetManager{
     /*info found: https://firstinspiresst01.blob.core.windows.net/first-game-changers/ftc/field-setup-guide.pdf starting page 8
      *        and: https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-2-remote-events.pdf starting page 26
      * Coords format: x,y,z
@@ -11,7 +14,7 @@ public class PositionAndTargetManager {
      * x+ = toward red alliance station (right from audience area perspective)
      * x- = toward blue alliance station
      * y+ = toward the tower goal and power shot targets
-     * x- = toward audience
+     * y- = toward audience
      *
      * position of red targets (center of volume) (x,y,z)
      *  - power shot 1:     +0.09525m,      +1.79705m,    +0.784225m
@@ -63,7 +66,7 @@ public class PositionAndTargetManager {
         r = 2, z
      */
     //initializes assuming it's on team red, in the constructor, values will be changed as needed if it's on team blue
-    double[] robotPosition = new double[2]; //TODO: 10/18/2020 replace "new double[3];" with the array of the starting position if on red team
+    double[] robotPosition = {1.79705, -1.79705};
     double robotHeading = Math.PI / 2; //heading relative to field, pi/2 = toward goals
 
     double[] targetPosition = new double[3];
@@ -71,10 +74,13 @@ public class PositionAndTargetManager {
 
     double launchZone = 2.06375-1.79705/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
 
-    double metersPerRevolution;
+    double metersPerCount;
     double robotWidth;
 
     byte powerShotsHit = 0;
+
+    int previousLeftCounts = 0;
+    int previousRightCounts = 0;
     ////////////////////////////// constructors //////////////////////////////
     /**
      * constructor for the PositionAndTargetManager class
@@ -85,11 +91,11 @@ public class PositionAndTargetManager {
      */
     public PositionAndTargetManager(HardwareUltimateGoal robot, boolean isTeamRed) {
         //take some variables from the robot
-        metersPerRevolution = robot.NADO_METERS_PER_REV;
+        metersPerCount = robot.NADO_METERS_PER_COUNT;
         robotWidth          = robot.robotWidth;
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
-            for (int r = 0; r < targets.length; r ++) {
+            for (int r = 0; r < targets.length; r++) {
                 targets[r][0] *= -1.0; //flip the x-axis if not on the red team
             }
 
@@ -107,7 +113,7 @@ public class PositionAndTargetManager {
      */
     public PositionAndTargetManager(HardwareUltimateGoal robot, double[] initPosition, double initHeading, boolean isTeamRed) {
         //take some variables from the robot
-        metersPerRevolution = robot.NADO_METERS_PER_REV;
+        metersPerCount = robot.NADO_METERS_PER_COUNT;
         robotWidth          = robot.robotWidth;
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
@@ -116,81 +122,55 @@ public class PositionAndTargetManager {
             }
         }
         //set position and heading to given values
-        robotPosition   = initPosition;
+        robotPosition[0]   = initPosition[0];
+        robotPosition[1]   = initPosition[1];
         robotHeading    = initHeading;
     }
 
     ////////////////////////////// update and calculate method //////////////////////////////
-    /**
-     * the update method takes the number of times that the two drive motors have rotated since the last update, using this it calculates the change in
-     * position and heading
-     * @param leftRotations     number of times the left motor has rotated since last update
-     * @param rightRotations    number of times the right motor has rotated since last update
-     */
-    public void update(double leftRotations, double rightRotations) {
-        double positionChange;
+    //TODO: currently, this only uses the encoders of the drive motors, once separate odometry systems are installed, rewrite this code, basing it on the ideas of team wizard https://www.youtube.com/watch?v=cpdPtN4BDug
+    public void update(int leftCounts, int rightCounts) {
         double headingChange = 0.0;
 
-        //new logic for updating position and heading of the robot
-        double s1 = leftRotations * metersPerRevolution; //distance the left wheel traveled (m)
-        double s2 = rightRotations * metersPerRevolution; //distance the right wheel traveled (m)
-        double r = 0.0;// = robotWidth; //for case 4
-        /*
-        4 cases:
-        1) equal in distance,       equal in direction      (both sides equal)
-        2) not equal in distance,   equal in direction      (both are same direction, one is greater than the other)
-        3) equal in distance,       not equal in direction  (one is forward, one is backward)
-        4) not equal in distance,   not equal in direction  (one is zero)
+        int leftChange = leftCounts - previousLeftCounts;
+        int rightChange = rightCounts - previousRightCounts;
 
-        order: 2,4,1,3
-         */
-        //TODO: 10/20/2020 check if this works when the robot is going backwards too
-        if (Math.abs(s1) != Math.abs(s2)) { //are the sides traveling different distances (case 2,4)
-            try { //try case 2, if it doesn't work (divide by zero), do case 4      // filters out cases where one side is positive and the other is 0
-                if (Math.abs(s1) > Math.abs(s2)) { //the abs should both: allow this to work when the robot is going backwards, and filter out cases where one side is negative and the other is 0
-                    r = (s1 - s2) / (s2 * robotWidth); //calculating r for heading calculation
-                    headingChange = s2/r;//https://www.desmos.com/calculator/r16kcermq2
-                }
-                else if (Math.abs(s1) < Math.abs(s2)) {
-                    r = (s2 - s1) / (s1 * robotWidth); //calculating r for heading calculation
-                    headingChange = s1/r; //calculating headingChange
-                }
-                r = r + robotWidth/2; // calculating r for position calculation
+        //positions
+        double s1 = leftChange * metersPerCount;  // distance the left wheel traveled (m) (delta s1)
+        double s2 = rightChange * metersPerCount; // distance the right wheel traveled (m) (delta s2)
+        double s = (s1 + s2) / 2.0; // average distance travelled between the two wheels
 
-            } catch (Exception e) { //case 4
-                r = robotWidth; //calculating r for heading calculation
-                headingChange = s1 / r;
-                if (s1 == 0.0) {headingChange = s2 / r;}
-                r /= 2.0;// calculating r for position calculation
-            }
-            positionChange = Math.sqrt( Math.pow((r)*Math.cos(robotHeading + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(robotHeading + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
-        }
-        else { // going in the same direction (case 1,3)
-            positionChange = s1; //case 1
-            if (s1 != s2) { //case 3
-                if (Math.abs(s1) > Math.abs(s2)) { //turning clockwise
-                    r = (robotWidth * s2) / (s1 + s2);
-                    headingChange = s1/r; //calculating headingChange
-                } else if (Math.abs(s1) < Math.abs(s2)) { //turning counter clockwise
-                    r = (robotWidth * s1) / (s2 + s1);
-                    headingChange = s2/r; //calculating headingChange
-                }
-                positionChange = Math.sqrt( Math.pow((r)*Math.cos(robotHeading + headingChange) - robotPosition[0], 2) + Math.pow((r)*Math.sin(robotHeading + headingChange) - robotPosition[1], 2) );//sqrt of (delta x)^2 + (delta y)^2
-            }
-        }
-        //store changes to position and heading
+        //Calculate Angle change, robot width may need to be adjusted, and must be accurate to a high degree
+        headingChange = (leftChange - rightChange) / (robotWidth);
+
+        //some house keeping
+        previousLeftCounts = leftCounts;
+        previousRightCounts = rightCounts;
+
+        //using a professors ideas https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-186-mobile-autonomous-systems-laboratory-january-iap-2005/study-materials/odomtutorial.pdf
+        robotPosition[0] += s * Math.cos(robotHeading);
+        robotPosition[1] += s * Math.sin(robotHeading);
         robotHeading += headingChange;
-        robotPosition[0] += Math.cos(robotHeading) * positionChange;
-        robotPosition[1] += Math.sin(robotHeading) * positionChange;
-    }
 
+        /*using Wizards ideas would involve,
+        replacing line 149 (robotPosition[0] += s * Math.cos(robotHeading);) with robotPosition[0] += (p*Math.sin(robotHeading) + n*Math.cos(robotHeading)) * metersPerCount;
+        line 150 (robotPosition[1] += s * Math.sin(robotHeading);
+        and putting 151 (robotHeading += headingChange;) after line 146 (previousRightCounts = rightCounts;
+
+        and putting these lines:
+            double p = (leftChange + rightChange) / 2.0; // average encoder ticks, tracking robot as whole rather than one side
+            double n = (leftChange-rightChange); //horizontalChange
+        before line 149
+         */
+
+    }
     /**
      * acts as an update method, that also returns the value it is setting the target position to
      * @param timeSeconds  time elapsed during match, measured in seconds, used to differentiate between mid game and end game targets
      * @return the position of the target selected, it also sets targetPosition to these coordinates
      */
     public double[] bestTargetPosition(double timeSeconds) {
-        double[] bestTarget;
+        double[] bestTarget = new double[3];
 
         int i = (int) (Math.random() * (targets.length - 1)); //random row of targets -1
         if (i < 3 || i >= 5) { //prevents the robot from shooting the powershots before endgame, and increased the chance of aiming to the high goal
@@ -200,15 +180,25 @@ public class PositionAndTargetManager {
         if (robotPosition[1] > launchZone) { // if the robot is outside of the launchZone
             i = 5; //target low goal
         }
-        bestTarget = targets[i];
+
+        bestTarget[0] = targets[i][0];
+        bestTarget[1] = targets[i][1];
+        bestTarget[2] = targets[i][2];
+
         currentTarget = i;
         if (timeSeconds >= 200 && (int) (Math.random()*3 + 1) == 2 && powerShotsHit <= 2) { //if it's the endgame,  and rng (1/3)
-            bestTarget = targets[powerShotsHit]; // cycle through the powershots
+            bestTarget[0] = targets[powerShotsHit][0]; // cycle through the powershots
+            bestTarget[1] = targets[powerShotsHit][1];
+            bestTarget[2] = targets[powerShotsHit][2];
+
             currentTarget = powerShotsHit;
             powerShotsHit ++;
         }
 
-        targetPosition = bestTarget;
+        targetPosition[0] = bestTarget[0];
+        targetPosition[1] = bestTarget[1];
+        targetPosition[2] = bestTarget[2];
+
         return targetPosition;
     }
 

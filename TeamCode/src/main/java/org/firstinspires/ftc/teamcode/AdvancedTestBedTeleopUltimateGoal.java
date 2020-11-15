@@ -9,20 +9,21 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp(name="TeleOP Test Bed Ultimate Goal", group="UltimateGoal")
 public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
     /* Declare OpMode members. initialize some classes */
-    HardwareUltimateGoal robot          = new HardwareUltimateGoal();
+    //TODO: remove "testing" from HardwareUltimateGoal Initializer, and uncomment the bit in line 14
+    HardwareUltimateGoal robot          = new HardwareUltimateGoal("testing");
     PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, HardwareUltimateGoal.readPosition(), HardwareUltimateGoal.readHeading(), true); //TODO: 10/21/2020 change true to false if on team blue
     ElapsedTime runtime                 = new ElapsedTime();
     AimAssist aimMan                    = new AimAssist(robot, posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.bestTargetPosition(0));
 
-    double currentTurretHeading = robot.turretRotator.getPosition();
+    double currentTurretHeading; //initialize after initializing robot hardware
     double currentTurretPitch   = 0;
 
     @Override
     public void runOpMode()
     {
         // declare some variables if needed
-        double totalLeftCounts  = 0;
-        double totalRightCounts = 0;
+        int leftCounts  = 0;
+        int rightCounts = 0;
 
         boolean abort = false; //variable to control whether or not it allows movement commands to go through
 
@@ -31,6 +32,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
          */
         robot.init(hardwareMap);
 
+        currentTurretHeading = robot.turretRotator.getPosition() * 2 * Math.PI; //turret heading in radians relative to the robot
+        currentTurretHeading = posTarMan.getRobotHeading() - ( currentTurretHeading - (Math.PI/4) ); //turret heading relative to field
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
@@ -43,13 +46,20 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         {
 
           // controls and movement
-            totalLeftCounts     = robot.leftDrive.getCurrentPosition();
-            totalRightCounts    = robot.rightDrive.getCurrentPosition();
             tankControls(gamepad1.right_stick_y, gamepad1.left_stick_y);
 
             if (gamepad1.a && !abort) { // if driver presses A, change targets
                 posTarMan.bestTargetPosition(runtime.seconds());
             }
+
+            if (gamepad1.b) {
+                telemetry.addLine("motor encoder counts");
+                telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
+                telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
+                telemetry.update();
+                sleep(2000);
+            }
+
 
             //abort button
             if (gamepad1.x) {
@@ -58,9 +68,9 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
 
           // update position and aim managers
-            double leftRevs     = (totalLeftCounts - robot.leftDrive.getCurrentPosition()) / robot.NADO_COUNTS_PER_MOTOR_REV; //left rotations since last count
-            double rightRevs    = (totalRightCounts - robot.rightDrive.getCurrentPosition()) / robot.NADO_COUNTS_PER_MOTOR_REV; //right rotations since last count
-            posTarMan.update(leftRevs, rightRevs);
+            leftCounts     = robot.leftDrive.getCurrentPosition(); //total left encoder counts
+            rightCounts    = robot.rightDrive.getCurrentPosition();//total right encoder counts
+            posTarMan.update(leftCounts, rightCounts);
 
             aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
@@ -91,7 +101,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         }
 
         //after opMode, save current position and heading for reasons
-        HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
+        //HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
     }
 
     public void basicStickControls(double x, double y) {
@@ -138,9 +148,19 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         //TODO: 10/21/2020 finish this, right now it's using a pulley or something
         double pos;
         //correct for angles too big or too small
-        while(angle > Math.PI) angle -= Math.PI;
-        while(angle < 0) angle += Math.PI;
+        while(angle > Math.PI/2) angle -= Math.PI/2;
+        while(angle < 0) angle += Math.PI/2;
         //convert rotations to ticks of the encoder
+
+        // first, adjust the degree relative to robot, to degree relative to turret
+
+        // x = encoder counts of motor, y = degrees of the elevator
+        // x/1440 * robot.ELEVATORGEARREDUCTION = y
+
+        //motor position [0,1], encoder counts [0,1440], degrees [0,45)
+
+
+
         //adjust for
     }
 }

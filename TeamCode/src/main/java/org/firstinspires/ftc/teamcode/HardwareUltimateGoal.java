@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -40,17 +42,21 @@ import java.io.File;
  */
 public class HardwareUltimateGoal {
     /* Public OpMode members. */
-    public DcMotor  leftDrive   = null;
-    public DcMotor  rightDrive  = null;
+    public DcMotor  leftDrive;
+    public DcMotor  rightDrive;
     //public DcMotor  flyWheel = null; //commented out bc it's not installed yet
     //public DcMotor  conveyor1 = null; //commented out bc it's not installed yet
 
-    public DcMotor turretElevator = null;
-    public Servo turretRotator = null;
-    public Servo turretLauncher = null;
+    public DcMotor turretElevator;
+    public Servo turretRotator;
+    public Servo turretLauncher;
 
     //public TouchSensor touch1 = null; //commented out bc it's not installed yet
     //public ColorSensor color1 = null; //commented out bc it's not installed yet
+
+
+    //IMU Sensor
+    public BNO055IMU imu;
 
 
     /* local OpMode members. */
@@ -67,20 +73,26 @@ public class HardwareUltimateGoal {
     public final double NADO_WHEEL_DIAMETER_METERS= 0.1016; //(4") For figuring circumference
     public final double NADO_COUNTS_PER_METER      = (NADO_COUNTS_PER_MOTOR_REV * NADO_DRIVE_GEAR_REDUCTION) /
             (NADO_WHEEL_DIAMETER_METERS * Math.PI);
-    public final double NADO_METERS_PER_REV = NADO_COUNTS_PER_METER / (NADO_COUNTS_PER_MOTOR_REV * NADO_DRIVE_GEAR_REDUCTION);
+    public final double NADO_METERS_PER_COUNT = 1.0 / NADO_COUNTS_PER_METER;
+
     // stats for the NeveRest motor
     public final double NEVE_COUNTS_PER_MOTOR_REV = 448; // 28 * 16(gear ratio)
     public final double NEVE_DRIVE_GEAR_REDUCTION = 1;    // This is < 1.0 if geared UP
     public final double NEVE_WHEEL_DIAMETER_METERS= 0.0762; //(3") For figuring circumference
     public final double NEVE_COUNTS_PER_METER      = (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION) /
             (NEVE_WHEEL_DIAMETER_METERS * Math.PI);
-    public final double NEVE_METERS_PER_REV = NEVE_COUNTS_PER_METER / (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION);
+    public final double NEVE_METERS_PER_REV = (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION) / NEVE_COUNTS_PER_METER;
 
     public final double ELEVATOR_GEAR_REDUCTION = 16.0/24.0;    // This is < 1.0 if geared UP (to increase speed)
 
     /* Constructor */
     public HardwareUltimateGoal(){
 
+    }
+
+    /*another constructor for testing, when there isn't an autonomous to write the heading and position files*/
+    public HardwareUltimateGoal(String writesFilesAsRedTeam){
+        writePositionHeading(new double[]{1.79705, -1.79705}, Math.PI/2);
     }
 
     /* Initialize standard Hardware interfaces */
@@ -114,6 +126,10 @@ public class HardwareUltimateGoal {
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         turretElevator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //set zero behavior
+        leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turretElevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Define and initialize ALL installed servos.
         turretRotator = hwMap.get(Servo.class, "turretRotateServo");
@@ -124,6 +140,22 @@ public class HardwareUltimateGoal {
         // Define and initialize ALL installed sensors.
         //touch1 = hwMap.touchSensor.get("touch_sensor");
         //color1 = hwMap.colorSensor.get("color1");
+
+
+
+
+        //Initialize IMU hardware map value. PLEASE UPDATE THIS VALUE TO MATCH YOUR CONFIGURATION
+        imu = hwMap.get(BNO055IMU.class, "imu");
+        //Initialize IMU parameters
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit           = BNO055IMU.AngleUnit.RADIANS;
+        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        parameters.loggingEnabled      = true;
+        parameters.loggingTag          = "IMU";
+        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+        imu.initialize(parameters);
+
     }
 
     ////////////////////////////// file for storing position and heading info after autonomous //////////////////////////////
@@ -160,8 +192,14 @@ public class HardwareUltimateGoal {
         return Double.parseDouble(ReadWriteFile.readFile(headingFile).trim());
     }
 
-    ////////////////////////////// Movement methods //////////////////////////////
-
+    ////////////////////////////// Movement and utility methods //////////////////////////////
+    /**
+     * Gets the orientation of the robot using the REV IMU
+     * @return the angle of the robot
+     */
+    public double getZAngle(){
+        return (-imu.getAngularOrientation().firstAngle);
+    }
 
 
 }
