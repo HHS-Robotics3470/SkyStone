@@ -107,7 +107,7 @@ public class HardwareUltimateGoal {
         leftDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
 
         flyWheel1   = hwMap.get(DcMotor.class, "flywheelLeft");
-        flyWheel2   = hwMap.get(DcMotor.class, "flyWheelRight");
+        flyWheel2   = hwMap.get(DcMotor.class, "flywheelRight");
         flyWheel1.setDirection(DcMotor.Direction.FORWARD);
         flyWheel2.setDirection(DcMotor.Direction.REVERSE);
         //conveyor1       = hwMap.get(DcMotor.class, "conveyor1");
