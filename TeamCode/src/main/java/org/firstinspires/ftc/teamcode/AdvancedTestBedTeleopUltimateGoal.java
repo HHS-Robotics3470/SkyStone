@@ -65,14 +65,21 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             if (gamepad1.x) {
                 abort = !abort;
             }
-
-
           // update position and aim managers
             leftCounts     = robot.leftDrive.getCurrentPosition(); //total left encoder counts
             rightCounts    = robot.rightDrive.getCurrentPosition();//total right encoder counts
             posTarMan.update(leftCounts, rightCounts);
 
             aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
+
+          // automated movement (turret), and fire?, and other controls
+            if (!abort) {
+                rotateTurretTo(aimMan.headingToTarget);
+            }
+
+            if(gamepad1.y) {
+                fireTurret();
+            }
 
             //telemetry
             telemetry.addLine("position information");
@@ -93,11 +100,6 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             telemetry.addData("z", posTarMan.getTargetPosition()[2]);
 
             telemetry.update();
-
-          // automated movement (turret)
-            if (!abort) {
-                //rotateTurretTo(aimMan.headingToTarget);
-            }
         }
 
         //after opMode, save current position and heading for reasons
@@ -126,42 +128,146 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
     /**
      * given the angle relative to the field, convert to the angle relative to the robot (front = 0)
      * @param angle angle relative to field
+     * @return if the target angle in in a dead zone, it returns -1, otherwise it returns 0 and rotates the turret to the needed position
      */
-    public void rotateTurretTo(double angle) {
-        //TODO: 10/21/2020 update this to account for gear reduction and stuff, also, may need to change some things to adjust the target heading for robot heading
-        double pos = robot.turretRotator.getPosition();
-        // correct for angles too big or too small
-        //while(angle > Math.PI) angle    -= Math.PI;
-        //while(angle < -Math.PI) angle   += Math.PI;
-        currentTurretHeading = robot.turretRotator.getPosition() * 2 * Math.PI; //turret heading in radians relative to the robot
-        currentTurretHeading = posTarMan.getRobotHeading() - ( currentTurretHeading - (Math.PI/4) ); //turret heading relative to field
+    public int rotateTurretTo(double angle) {
+        double pos = robot.turretRotator.getPosition(); //current position of the turret (from [0,1], representing [0,pi] degrees)
 
-        if (angle > currentTurretHeading) {
-            pos                     = ((angle - currentTurretHeading) / (2*Math.PI));
+        double robotHeading = posTarMan.getRobotHeading(); //heading of robot
+        if (robotHeading > Math.PI) {robotHeading -= 2*(robotHeading - Math.PI);}
+        //assume that position 0 is pointing to the right of the robot
 
-        } else if (angle < currentTurretHeading) {
-            pos                     = ((angle + currentTurretHeading) / (2*Math.PI));
+        //heading relative to robot
+        currentTurretHeading = pos * Math.PI; // angle = position * range of motion
+        //heading relative to field
+        currentTurretHeading += robotHeading - Math.PI/2;
+
+        //now, find the position the turret needs to go to, in order to point at the given angle
+        double changeInAngle = angle - currentTurretHeading; //final angle - current angle = required change in angle
+        pos += changeInAngle / Math.PI; // position + ( needed angle change / servo range of motion )
+
+        //check if target angle is in a deadzone
+        if (pos > 1 || pos < 0) {return -1;} //if target is in the deadzone, return -1
+        else { //if target is reachable, rotate to the target and return 0
+            robot.turretRotator.setPosition(pos);
+            return 0;
         }
-        robot.turretRotator.setPosition(pos);
     }
-    public void elevateTurretTo(double angle) {
-        //TODO: 10/21/2020 finish this, right now it's using a pulley or something
+    /**
+     * given the angle relative to the horizontal, move the turret to elevate to that pitch
+     * @param angle desired angle of pitch
+     * @return if the target angle in in a dead zone, it returns -1, otherwise it returns 0 and elevates the turret to the needed position
+     */
+    public double elevateTurretTo(double angle) {
+        double deadzone = Math.PI/3; // angles above this constrain cannot be rotated to because of hardware constraints
+
+        if (angle > deadzone) return -1;
+
         double pos;
-        //correct for angles too big or too small
-        while(angle > Math.PI/2) angle -= Math.PI/2;
-        while(angle < 0) angle += Math.PI/2;
-        //convert rotations to ticks of the encoder
+        pos = angle / Math.PI; //angle / range of motion
 
-        // first, adjust the degree relative to robot, to degree relative to turret
+        robot.turretElevator.setPosition(pos);
+        return 0;
+    }
 
-        // x = encoder counts of motor, y = degrees of the elevator
-        // x/1440 * robot.ELEVATORGEARREDUCTION = y
+    public void fireTurret() {
+        //steps: stop movement of the motors, get heading and pitch, (make sure target is in range), move to that heading and pitch (spin up the flywheel), launch
 
-        //motor position [0,1], encoder counts [0,1440], degrees [0,45)
+        //stop robot movement
+        robot.leftDrive.setPower(0);
+        robot.rightDrive.setPower(0);
+
+        //get heading and pitch (skip for now, probably not needed bc alot of what I would put here is redundant (already happens in the teleop))
+        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition());
+        aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
 
+        //test if out of range
+        /* coded as if statements
+        if (aimMan.getPitchToTarget() == -1) { //target out of range
+            telemetry.addLine("target out of range, move closer or change targets");
+            telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
+        } else if (aimMan.getPitchToTarget() == -2) { //target would require going over range/height cap
+            telemetry.addLine("hitting the current target would require going over the range / height cap");
+            telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
+        } else { //continue as normal
+            boolean error = false;
+            //move turret to aim at target
+            if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) {
+                //the target is in deadzone
+                telemetry.addLine("target is in turret dead zone, try rotating the robot");
+                error = true;
+            }
+            if (elevateTurretTo(aimMan.getPitchToTarget()) == -1) {
+                //the target is in the deadzone
+                telemetry.addLine("target is in elevator deadzone, try moving the robot closer");
+                error = true;
+            }
+            if (!error) {
+                elevateTurretTo(aimMan.getPitchToTarget());
 
-        //adjust for
+                //spin up flywheels and wait a bit to let everything move
+                robot.flyWheel1.setPower(0.9);
+                robot.flyWheel2.setPower(1.0);
+
+                //open launcher
+                robot.turretLauncher.setPosition(0);
+
+                sleep(500);
+
+                //launch ring, and go through reload sequence
+                robot.turretLauncher.setPosition(0.75);
+                sleep(250);
+
+                //reset/prep for next shot
+                elevateTurretTo(0);
+                sleep(250);
+                robot.flyWheel1.setPower(0);
+                robot.flyWheel2.setPower(0);
+            }*/
+        switch ((int) aimMan.getPitchToTarget()) {
+            case -1://target out of range
+                telemetry.addLine("target out of range, move closer or change targets");
+                telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
+                break;
+            case -2://target would require going over range/height cap
+                telemetry.addLine("hitting the current target would require going over the range / height cap");
+                telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
+                break;
+            default: //continue as normal
+                boolean error = false;
+                //move turret to aim at target
+                if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) {
+                    //the target is in deadzone
+                    telemetry.addLine("target is in turret dead zone, try rotating the robot");
+                    error = true;
+                }
+                if (elevateTurretTo(aimMan.getPitchToTarget()) == -1) {
+                    //the target is in the deadzone
+                    telemetry.addLine("target is in elevator deadzone, try moving the robot closer");
+                    error = true;
+                }
+                if (!error) {
+                    //spin up flywheels and wait a bit to let everything move
+                    robot.flyWheel1.setPower(0.9);
+                    robot.flyWheel2.setPower(1.0);
+
+                    //open launcher
+                    robot.turretLauncher.setPosition(0);
+
+                    sleep(500);
+
+                    //launch ring, and go through reload sequence
+                    robot.turretLauncher.setPosition(0.75);
+                    sleep(250);
+                    //reset/prep for next shot
+                    elevateTurretTo(0);
+                    sleep(250);
+                    robot.flyWheel1.setPower(0);
+                    robot.flyWheel2.setPower(0);
+                }
+
+        }
     }
 }
 

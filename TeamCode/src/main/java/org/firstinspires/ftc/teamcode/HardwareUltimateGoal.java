@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -44,10 +45,11 @@ public class HardwareUltimateGoal {
     /* Public OpMode members. */
     public DcMotor  leftDrive;
     public DcMotor  rightDrive;
-    //public DcMotor  flyWheel = null; //commented out bc it's not installed yet
+    public DcMotor  flyWheel1;
+    public DcMotor  flyWheel2;
     //public DcMotor  conveyor1 = null; //commented out bc it's not installed yet
 
-    public DcMotor turretElevator;
+    public Servo turretElevator;
     public Servo turretRotator;
     public Servo turretLauncher;
 
@@ -65,7 +67,7 @@ public class HardwareUltimateGoal {
 
 
     /* some variables for different measurements of the robot */ //TODO: keep up to date
-    public double turretHeight = 0;
+    public double turretHeight = 0.2023;
     public double robotWidth = 0.4572; //18" measured in meters
     // stats for the TorqueNADO motors
     public final double NADO_COUNTS_PER_MOTOR_REV = 1440;
@@ -82,8 +84,6 @@ public class HardwareUltimateGoal {
     public final double NEVE_COUNTS_PER_METER      = (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION) /
             (NEVE_WHEEL_DIAMETER_METERS * Math.PI);
     public final double NEVE_METERS_PER_REV = (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION) / NEVE_COUNTS_PER_METER;
-
-    public final double ELEVATOR_GEAR_REDUCTION = 16.0/24.0;    // This is < 1.0 if geared UP (to increase speed)
 
     /* Constructor */
     public HardwareUltimateGoal(){
@@ -106,36 +106,35 @@ public class HardwareUltimateGoal {
         rightDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
         leftDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
 
-        //flyWheel        = hwMap.get(DcMotor.class, "flywheel");
+        flyWheel1   = hwMap.get(DcMotor.class, "flywheelLeft");
+        flyWheel2   = hwMap.get(DcMotor.class, "flyWheelRight");
+        flyWheel1.setDirection(DcMotor.Direction.FORWARD);
+        flyWheel2.setDirection(DcMotor.Direction.REVERSE);
         //conveyor1       = hwMap.get(DcMotor.class, "conveyor1");
-        turretElevator  = hwMap.get(DcMotor.class, "turretElevator");
 
         // Set all motors to zero power
         leftDrive.setPower(0);
         rightDrive.setPower(0);
-        turretElevator.setPower(0);
-        //flyWheel.setPower(0);
-        //conveyor1.setPower(0);
+        flyWheel1.setPower(0);
+        flyWheel2.setPower(0);
 
         // Set run modes
         //reset encoders
         leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        turretElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //set to run with encoder
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        turretElevator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         //set zero behavior
         leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        turretElevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
         // Define and initialize ALL installed servos.
         turretRotator = hwMap.get(Servo.class, "turretRotateServo");
         turretLauncher = hwMap.get(Servo.class, "turretLaunchServo");
+        turretElevator  = hwMap.get(Servo.class, "turretElevator");
         turretRotator.setPosition(0); // 0 should be pointing to the right side of the robot (when facing same direction as front)
         turretLauncher.setPosition(0); // 0 should be fully open
+        turretElevator.setPosition(0);
 
         // Define and initialize ALL installed sensors.
         //touch1 = hwMap.touchSensor.get("touch_sensor");
