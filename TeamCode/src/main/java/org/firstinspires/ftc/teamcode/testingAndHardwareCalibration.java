@@ -13,5 +13,20 @@ public class testingAndHardwareCalibration extends LinearOpMode {
     {
         waitForStart();
         robot.init(hardwareMap);
+        while (opModeIsActive()) {
+            robot.turretLauncher.setPosition(0.5);
+            robot.turretRotator.setPosition(0.5);
+            robot.turretElevator.setPosition(0.5);
+
+            sleep(5000);
+
+            robot.turretLauncher.setPosition(0);
+            robot.turretRotator.setPosition(0);
+            robot.turretElevator.setPosition(0);
+
+            sleep(10000);
+
+            stop();
+        }
     }
 }
