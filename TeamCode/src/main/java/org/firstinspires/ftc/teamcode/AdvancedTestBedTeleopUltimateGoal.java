@@ -5,6 +5,10 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+/*
+debugging things will be on the d-pad, controls on the a,b,x,y buttons
+ */
+
 //TODO: 10/21/2020 eventually, change this from a testbed type thing (with all the telemetry), to a final product
 @TeleOp(name="TeleOP Test Bed Ultimate Goal", group="UltimateGoal")
 public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
@@ -17,6 +21,9 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
     double currentTurretHeading; //initialize after initializing robot hardware
     double currentTurretPitch   = 0;
+
+    double cooldownLength = 500;
+    double startOfCooldown = -cooldownLength; //so that normal telemetry starts immediately
 
     @Override
     public void runOpMode()
@@ -48,67 +55,78 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
           // controls and movement
             tankControls(gamepad1.right_stick_y, gamepad1.left_stick_y);
 
-            if (gamepad1.a && !abort) { // if driver presses A, change targets
-                posTarMan.bestTargetPosition(runtime.seconds());
-            }
-
-            if (gamepad1.b) {
-                telemetry.addLine("motor encoder counts");
-                telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
-                telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
-                telemetry.update();
-                sleep(2000);
-            }
-
-
-            //abort button
-            if (gamepad1.x) {
-                abort = !abort;
-            }
           // update position and aim managers
             leftCounts     = robot.leftDrive.getCurrentPosition(); //total left encoder counts
             rightCounts    = robot.rightDrive.getCurrentPosition();//total right encoder counts
             posTarMan.update(leftCounts, rightCounts);
-
             aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
+
           // automated movement (turret), and fire?, and other controls
-            if (!abort) {
-                rotateTurretTo(aimMan.headingToTarget);
+            //change targets, and name the new target
+            if (gamepad1.x && !abort) { // if driver presses A, change targets
+                posTarMan.bestTargetPosition(runtime.seconds());
+                telemetry.addLine("TARGET CHANGED");
+                telemetry.addData("new target", posTarMan.getCurrentTarget());
+                telemetry.update();
+                startOfCooldown = getRuntime();
             }
 
-            if(gamepad1.y) {
-                fireTurret();
+            //shows info about the motor encoders
+            if (gamepad1.dpad_up) {
+                telemetry.addLine("motor encoder counts");
+                telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
+                telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
+                telemetry.update();
+                startOfCooldown = getRuntime();
             }
+
+            //abort button
+            if (gamepad1.dpad_down) abort = !abort;
+            //auto heading adjustment
+            if (!abort)             rotateTurretTo(aimMan.headingToTarget);
+            //fire turret
+            if(gamepad1.a)          fireTurret();
 
             //telemetry
-            telemetry.addLine("position information");
-            telemetry.addData("x", posTarMan.getRobotPosition()[0]);
-            telemetry.addData("y", posTarMan.getRobotPosition()[1]);
-            telemetry.addData("heading", Math.toDegrees(posTarMan.getRobotHeading()));
-
-            telemetry.addLine("turret information");
-            telemetry.addData("heading", currentTurretHeading);
-            telemetry.addData("pitch", currentTurretPitch);
-            telemetry.addData("heading to target", aimMan.getHeadingToTarget());
-            telemetry.addData("pitch to target", aimMan.getPitchToTarget());
-
-            telemetry.addLine("target info");
-            telemetry.addData("target", posTarMan.getCurrentTarget());
-            telemetry.addData("x", posTarMan.getTargetPosition()[0]);
-            telemetry.addData("y", posTarMan.getTargetPosition()[1]);
-            telemetry.addData("z", posTarMan.getTargetPosition()[2]);
-
-            telemetry.update();
+            basicTelemetryManager();
         }
 
         //after opMode, save current position and heading for reasons
         //HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
     }
 
+    public void basicTelemetryManager() {
+        if (getRuntime() >= startOfCooldown + cooldownLength) {
+            telemetry.addLine("position information");
+            telemetry.addData("x"       , posTarMan.getRobotPosition()[0]);
+            telemetry.addData("y"       , posTarMan.getRobotPosition()[1]);
+            telemetry.addData("heading" , Math.toDegrees(posTarMan.getRobotHeading()));
+
+            telemetry.addLine("turret information");
+            telemetry.addData("heading"             , currentTurretHeading);
+            telemetry.addData("pitch"               , currentTurretPitch);
+            telemetry.addData("heading to target"   , aimMan.getHeadingToTarget());
+            telemetry.addData("pitch to target"     , aimMan.getPitchToTarget());
+
+            telemetry.addLine("target info");
+            telemetry.addData("target"  , posTarMan.getCurrentTarget());
+            telemetry.addData("x"       , posTarMan.getTargetPosition()[0]);
+            telemetry.addData("y"       , posTarMan.getTargetPosition()[1]);
+            telemetry.addData("z"       , posTarMan.getTargetPosition()[2]);
+
+            telemetry.update();
+        }
+    }
+
+
     public void basicStickControls(double x, double y) {
-        double leftPower    = -y;
-        double rightPower   = -y;
+        double leftPower  = 0;
+        double rightPower = 0;
+        if (y < -0.1 || y > 0.1){
+            leftPower     = -y;
+            rightPower    = -y;
+        }
         if (x > 0.1) { //turn clockwise
             leftPower   += x;
             rightPower  -= x;
@@ -229,10 +247,12 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             case -1://target out of range
                 telemetry.addLine("target out of range, move closer or change targets");
                 telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
+                startOfCooldown = getRuntime();
                 break;
             case -2://target would require going over range/height cap
                 telemetry.addLine("hitting the current target would require going over the range / height cap");
                 telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
+                startOfCooldown = getRuntime();
                 break;
             default: //continue as normal
                 boolean error = false;
@@ -240,11 +260,13 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) {
                     //the target is in deadzone
                     telemetry.addLine("target is in turret dead zone, try rotating the robot");
+                    startOfCooldown = getRuntime();
                     error = true;
                 }
                 if (elevateTurretTo(aimMan.getPitchToTarget()) == -1) {
                     //the target is in the deadzone
                     telemetry.addLine("target is in elevator deadzone, try moving the robot closer");
+                    startOfCooldown = getRuntime();
                     error = true;
                 }
                 if (!error) {
