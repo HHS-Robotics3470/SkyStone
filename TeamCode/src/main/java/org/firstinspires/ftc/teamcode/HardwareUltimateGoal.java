@@ -21,6 +21,10 @@ import java.io.File;
         this is because the metric system is easier to convert and work with than imperial units
     angles will be measured in radians
         this is due to how the Trig functions operate in java (they expect input, and return, values measured in radians)
+
+    angle 0:
+        for the robot, heading of 0 means that it's facing to the right (POV: looking toward the targets)
+        for the turret, heading of 0 means facing toward the front of the robot
  */
 
 
@@ -50,7 +54,7 @@ public class HardwareUltimateGoal {
     //public DcMotor  conveyor1 = null; //commented out bc it's not installed yet
 
     public Servo turretElevator;
-    public Servo turretRotator;
+    public DcMotor turretRotator;
     public Servo turretLauncher;
 
     //public TouchSensor touch1 = null; //commented out bc it's not installed yet
@@ -77,13 +81,10 @@ public class HardwareUltimateGoal {
             (NADO_WHEEL_DIAMETER_METERS * Math.PI);
     public final double NADO_METERS_PER_COUNT = 1.0 / NADO_COUNTS_PER_METER;
 
-    // stats for the NeveRest motor
-    public final double NEVE_COUNTS_PER_MOTOR_REV = 448; // 28 * 16(gear ratio)
-    public final double NEVE_DRIVE_GEAR_REDUCTION = 1;    // This is < 1.0 if geared UP
-    public final double NEVE_WHEEL_DIAMETER_METERS= 0.0762; //(3") For figuring circumference
-    public final double NEVE_COUNTS_PER_METER      = (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION) /
-            (NEVE_WHEEL_DIAMETER_METERS * Math.PI);
-    public final double NEVE_METERS_PER_REV = (NEVE_COUNTS_PER_MOTOR_REV * NEVE_DRIVE_GEAR_REDUCTION) / NEVE_COUNTS_PER_METER;
+    // stats for the Rev Core Hex motor
+    public final double CORE_HEX_COUNTS_PER_MOTOR_REV = 288;  // 4 * 72(gear ratio)
+    public final double CORE_HEX_DRIVE_GEAR_REDUCTION = 1;    // This is < 1.0 if geared UP
+    public final double CORE_HEX_RADIANS_PER_COUNTS   = (2 * Math.PI) / (CORE_HEX_COUNTS_PER_MOTOR_REV * CORE_HEX_DRIVE_GEAR_REDUCTION); //  radians per rotation / counts per rotation
 
     /* Constructor */
     public HardwareUltimateGoal(){
@@ -110,6 +111,8 @@ public class HardwareUltimateGoal {
         flyWheel2   = hwMap.get(DcMotor.class, "flywheelRight");
         flyWheel1.setDirection(DcMotor.Direction.FORWARD);
         flyWheel2.setDirection(DcMotor.Direction.REVERSE);
+
+        turretRotator = hwMap.get(DcMotor.class, "turretRotate");
         //conveyor1       = hwMap.get(DcMotor.class, "conveyor1");
 
         // Set all motors to zero power
@@ -117,6 +120,7 @@ public class HardwareUltimateGoal {
         rightDrive.setPower(0);
         flyWheel1.setPower(0);
         flyWheel2.setPower(0);
+        turretRotator.setPower(0);
 
         // Set run modes
         //reset encoders
@@ -125,14 +129,15 @@ public class HardwareUltimateGoal {
         //set to run with encoder
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        turretRotator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //set zero behavior
         leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turretRotator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         // Define and initialize ALL installed servos.
-        turretRotator = hwMap.get(Servo.class, "turretRotateServo");
         turretLauncher = hwMap.get(Servo.class, "turretLaunchServo");
         turretElevator  = hwMap.get(Servo.class, "turretElevator");
-        turretRotator.setPosition(0); // 0 should be pointing to the right side of the robot (when facing same direction as front)
         turretLauncher.setPosition(0); // 0 should be fully open
         turretElevator.setPosition(0);
 

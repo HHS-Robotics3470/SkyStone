@@ -39,8 +39,6 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
          */
         robot.init(hardwareMap);
 
-        currentTurretHeading = robot.turretRotator.getPosition() * 2 * Math.PI; //turret heading in radians relative to the robot
-        currentTurretHeading = posTarMan.getRobotHeading() - ( currentTurretHeading - (Math.PI/4) ); //turret heading relative to field
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
@@ -64,7 +62,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
           // automated movement (turret), and fire?, and other controls
             //change targets, and name the new target
-            if (gamepad1.x && !abort) { // if driver presses A, change targets
+            if (gamepad1.x && !abort) { // if driver presses X, change targets
                 posTarMan.bestTargetPosition(runtime.seconds());
                 telemetry.addLine("TARGET CHANGED");
                 telemetry.addData("new target", posTarMan.getCurrentTarget());
@@ -149,6 +147,29 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
      * @return if the target angle in in a dead zone, it returns -1, otherwise it returns 0 and rotates the turret to the needed position
      */
     public int rotateTurretTo(double angle) {
+        double pos = robot.turretRotator.getCurrentPosition();
+        double targetPosition;
+        double robotHeading = posTarMan.getRobotHeading();
+
+        //heading of turret relative to robot (convert encoder count of rotator to radians
+        currentTurretHeading = pos * robot.CORE_HEX_RADIANS_PER_COUNTS;
+        //heading of turret relative to field (with robot pov (angle 0 = parallel to x-axis, just like the angle being provided)
+        currentTurretHeading = currentTurretHeading + robotHeading; // turret heading + robot heading
+
+        //make sure headings are in the range [-pi,pi] instead of [0,2pi]
+
+
+        //find the position that the turret needs to rotate to
+        targetPosition = angle - currentTurretHeading; //in radians
+        targetPosition /= robot.CORE_HEX_RADIANS_PER_COUNTS; //in encoder counts
+
+        //check if it's in the deadzone (range of motion: 120degrees, so +- pi/3 radians from the zero of the turret)
+        if ( (pos + targetPosition) > robot.CORE_HEX_COUNTS_PER_MOTOR_REV / 2 / 3 || (pos + targetPosition) < - robot.CORE_HEX_COUNTS_PER_MOTOR_REV / 2 / 3) {
+            return -1;
+        }
+        robot.turretRotator.setTargetPosition((int) (pos + targetPosition));
+        return 0;
+        /* old code (for when it was using a servo instead of the core hex motor
         double pos = robot.turretRotator.getPosition(); //current position of the turret (from [0,1], representing [0,pi] degrees)
 
         double robotHeading = posTarMan.getRobotHeading(); //heading of robot
@@ -170,6 +191,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             robot.turretRotator.setPosition(pos);
             return 0;
         }
+         */
     }
     /**
      * given the angle relative to the horizontal, move the turret to elevate to that pitch
