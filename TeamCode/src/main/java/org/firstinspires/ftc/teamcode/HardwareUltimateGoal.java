@@ -2,13 +2,11 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
@@ -51,11 +49,14 @@ public class HardwareUltimateGoal {
     public DcMotor  rightDrive;
     public DcMotor  flyWheel1;
     public DcMotor  flyWheel2;
-    //public DcMotor  conveyor1 = null; //commented out bc it's not installed yet
+    public DcMotor  conveyor;
+    public DcMotor intakePulley;
+    public DcMotor turretRotator;
+
+    public CRServo turretLauncher;
 
     public Servo turretElevator;
-    public DcMotor turretRotator;
-    public Servo turretLauncher;
+    public Servo wobbleGrabber;
 
     //public TouchSensor touch1 = null; //commented out bc it's not installed yet
     //public ColorSensor color1 = null; //commented out bc it's not installed yet
@@ -113,7 +114,8 @@ public class HardwareUltimateGoal {
         flyWheel2.setDirection(DcMotor.Direction.REVERSE);
 
         turretRotator = hwMap.get(DcMotor.class, "turretRotate");
-        //conveyor1       = hwMap.get(DcMotor.class, "conveyor1");
+        conveyor       = hwMap.get(DcMotor.class, "conveyor");
+        intakePulley    = hwMap.get(DcMotor.class, "intakePulley");
 
         // Set all motors to zero power
         leftDrive.setPower(0);
@@ -121,25 +123,40 @@ public class HardwareUltimateGoal {
         flyWheel1.setPower(0);
         flyWheel2.setPower(0);
         turretRotator.setPower(0);
+        conveyor.setPower(0);
+        intakePulley.setPower(0);
 
         // Set run modes
         //reset encoders
         leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         //set to run with encoder
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        //set to run to position
         turretRotator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        intakePulley.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        //set to run without encoder
+        conveyor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        flyWheel1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        flyWheel2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         //set zero behavior
         leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         turretRotator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Define and initialize ALL installed servos.
-        turretLauncher = hwMap.get(Servo.class, "turretLaunchServo");
+        turretLauncher = hwMap.get(CRServo.class, "turretLaunchServo");
+        turretLauncher.setPower(0);
+
         turretElevator  = hwMap.get(Servo.class, "turretElevator");
-        turretLauncher.setPosition(0); // 0 should be fully open
-        turretElevator.setPosition(0);
+        wobbleGrabber   = hwMap.get(Servo.class, "wobbleGrabber");
+        turretElevator.setPosition(0); // should be at a position where the turret is level with the ground
+        wobbleGrabber.setPosition(0); //should be the open position
 
         // Define and initialize ALL installed sensors.
         //touch1 = hwMap.touchSensor.get("touch_sensor");

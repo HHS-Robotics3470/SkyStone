@@ -83,8 +83,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
             //abort button
             if (gamepad1.dpad_down) abort = !abort;
-            //auto heading adjustment
-            if (!abort)             rotateTurretTo(aimMan.headingToTarget);
+            //auto heading adjustment (disabled because the reloading mechanism now requires that the turret be pointing toward the front of the bot
+            //if (!abort)             rotateTurretTo(aimMan.headingToTarget);
             //fire turret
             if(gamepad1.a)          fireTurret();
 
@@ -143,6 +143,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         robot.rightDrive.setPower(-right);
     }
 
+    //TODO 12/25/2020 this should still work, as the mechanism to rotate the turret is still fundamentally the same, however it needs to be tested
     /**
      * given the angle relative to the field, convert to the angle relative to the robot (front = 0)
      * @param angle angle relative to field
@@ -171,45 +172,15 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         }
         robot.turretRotator.setTargetPosition((int) (pos + targetPosition));
         return 0;
-        /* old code (for when it was using a servo instead of the core hex motor
-        double pos = robot.turretRotator.getPosition(); //current position of the turret (from [0,1], representing [0,pi] degrees)
-
-        double robotHeading = posTarMan.getRobotHeading(); //heading of robot
-        if (robotHeading > Math.PI) {robotHeading -= 2*(robotHeading - Math.PI);}
-        //assume that position 0 is pointing to the right of the robot
-
-        //heading relative to robot
-        currentTurretHeading = pos * Math.PI; // angle = position * range of motion
-        //heading relative to field
-        currentTurretHeading += robotHeading - Math.PI/2;
-
-        //now, find the position the turret needs to go to, in order to point at the given angle
-        double changeInAngle = angle - currentTurretHeading; //final angle - current angle = required change in angle
-        pos += changeInAngle / Math.PI; // position + ( needed angle change / servo range of motion )
-
-        //check if target angle is in a deadzone
-        if (pos > 1 || pos < 0) {return -1;} //if target is in the deadzone, return -1
-        else { //if target is reachable, rotate to the target and return 0
-            robot.turretRotator.setPosition(pos);
-            return 0;
-        }
-         */
     }
+    //TODO 12/25/2020 update this class
     /**
      * given the angle relative to the horizontal, move the turret to elevate to that pitch
      * @param angle desired angle of pitch
      * @return if the target angle in in a dead zone, it returns -1, otherwise it returns 0 and elevates the turret to the needed position
      */
     public double elevateTurretTo(double angle) {
-        double deadzone = Math.PI/3; // angles above this constrain cannot be rotated to because of hardware constraints
-
-        if (angle > deadzone) return -1;
-
-        double pos;
-        pos = angle / Math.PI; //angle / range of motion
-
-        robot.turretElevator.setPosition(pos);
-        return 0;
+        return -1;
     }
 
     public void fireTurret() {
@@ -294,17 +265,19 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                     error = true;
                 }
                 if (!error) {
+                    //TODO 12/25/2020 update this, it's out of date, some lines have been commented out bc they were throwing errors
+
                     //spin up flywheels and wait a bit to let everything move
                     robot.flyWheel1.setPower(0.9);
                     robot.flyWheel2.setPower(1.0);
 
                     //open launcher
-                    robot.turretLauncher.setPosition(0);
+                    //robot.turretLauncher.setPosition(0);
 
                     sleep(500);
 
                     //launch ring, and go through reload sequence
-                    robot.turretLauncher.setPosition(0.75);
+                    //robot.turretLauncher.setPosition(0.75);
                     sleep(250);
                     //reset/prep for next shot
                     elevateTurretTo(0);
