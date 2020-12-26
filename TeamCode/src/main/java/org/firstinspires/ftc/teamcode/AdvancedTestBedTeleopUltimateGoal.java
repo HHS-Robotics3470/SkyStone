@@ -193,6 +193,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
          */
 
 
+
         return 0;
     }
 
@@ -263,6 +264,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                     //reset/prep other components for next shot
                     elevateTurretTo(0);
                     rotateTurretTo(0);
+
                     robot.flyWheel1.setPower(0);
                     robot.flyWheel2.setPower(0);
                 }

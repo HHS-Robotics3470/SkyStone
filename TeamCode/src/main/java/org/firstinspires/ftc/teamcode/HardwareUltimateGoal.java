@@ -52,10 +52,10 @@ public class HardwareUltimateGoal {
     public DcMotor  conveyor;
     public DcMotor intakePulley;
     public DcMotor turretRotator;
+    public DcMotor turretElevator; //go bilda 53:1
 
     public CRServo turretLauncher;
 
-    public Servo turretElevator;
     public Servo wobbleGrabber;
 
     //public TouchSensor touch1 = null; //commented out bc it's not installed yet
@@ -72,9 +72,10 @@ public class HardwareUltimateGoal {
 
 
     /* some variables for different measurements of the robot */ //TODO: keep up to date
-    public double turretHeight = 0.2023; //out of date
-    public double robotWidth = 0.4572; //18" measured in meters //out of date
+    public double turretHeight = 0.2023; //5 + (13/16) inches, from the floor to the launch platform at rest, up to date but not 100% accurate
+    public double robotWidth = 0.3429;  // 13.5 inches, up to date, but not 100% accurate
     public long launcherTimeToRotate = 100; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
+
     // stats for the TorqueNADO motors
     public final double NADO_COUNTS_PER_MOTOR_REV = 1440;
     public final double NADO_DRIVE_GEAR_REDUCTION = 32.0/24.0;  // This is < 1.0 if geared UP (to increase speed)
@@ -104,19 +105,20 @@ public class HardwareUltimateGoal {
         hwMap = ahwMap;
 
         // Define and Initialize Motors
-        leftDrive   = hwMap.get(DcMotor.class, "leftDrive");
-        rightDrive  = hwMap.get(DcMotor.class, "rightDrive");
+        leftDrive   = hwMap.get(DcMotor.class, "leftDrive"); //main hub, motor port 0
+        rightDrive  = hwMap.get(DcMotor.class, "rightDrive"); //main hub, motor port 1
         rightDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
         leftDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
 
-        flyWheel1   = hwMap.get(DcMotor.class, "flywheelLeft");
-        flyWheel2   = hwMap.get(DcMotor.class, "flywheelRight");
+        flyWheel1   = hwMap.get(DcMotor.class, "flywheelLeft"); //second hub, motor port 0
+        flyWheel2   = hwMap.get(DcMotor.class, "flywheelRight"); //second hub, motor port 1
         flyWheel1.setDirection(DcMotor.Direction.FORWARD);
         flyWheel2.setDirection(DcMotor.Direction.REVERSE);
 
-        turretRotator = hwMap.get(DcMotor.class, "turretRotate");
-        conveyor       = hwMap.get(DcMotor.class, "conveyor");
-        intakePulley    = hwMap.get(DcMotor.class, "intakePulley");
+        turretRotator = hwMap.get(DcMotor.class, "turretRotate"); //main hub, motor port 3
+        turretElevator = hwMap.get(DcMotor.class, "turretElevator"); //main hub, motor port 2, needs an encoder wire
+        conveyor       = hwMap.get(DcMotor.class, "conveyor"); //second hub, motor port 3
+        intakePulley    = hwMap.get(DcMotor.class, "intakePulley"); //second hub, motor port 2, needs an encoder wire
 
         // Set all motors to zero power
         leftDrive.setPower(0);
@@ -124,6 +126,7 @@ public class HardwareUltimateGoal {
         flyWheel1.setPower(0);
         flyWheel2.setPower(0);
         turretRotator.setPower(0);
+        turretElevator.setPower(0);
         conveyor.setPower(0);
         intakePulley.setPower(0);
 
@@ -133,12 +136,13 @@ public class HardwareUltimateGoal {
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         //set to run with encoder
-        leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);  //torqueNADO motor
+        rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //torqueNADO motor
 
         //set to run to position
-        turretRotator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        intakePulley.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        turretRotator.setMode(DcMotor.RunMode.RUN_TO_POSITION); //core hex motor
+        turretElevator.setMode(DcMotor.RunMode.RUN_TO_POSITION); // go bilda 53:1
+        intakePulley.setMode(DcMotor.RunMode.RUN_TO_POSITION); //torqueNADO motor
 
         //set to run without encoder
         conveyor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -149,15 +153,14 @@ public class HardwareUltimateGoal {
         leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         turretRotator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intakePulley.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Define and initialize ALL installed servos.
-        turretLauncher = hwMap.get(CRServo.class, "turretLaunchServo");
+        turretLauncher = hwMap.get(CRServo.class, "turretLaunchServo"); ///main hub servo port 1
         turretLauncher.setPower(0);
 
-        turretElevator  = hwMap.get(Servo.class, "turretElevator");
-        wobbleGrabber   = hwMap.get(Servo.class, "wobbleGrabber");
-        turretElevator.setPosition(0); // should be at a position where the turret is level with the ground
-        wobbleGrabber.setPosition(0); //should be the open position
+        wobbleGrabber   = hwMap.get(Servo.class, "wobbleGrabber"); //main hub servo port 0
+        wobbleGrabber.setPosition(0); //should be the open position, closed position is half a full rotation from open
 
         // Define and initialize ALL installed sensors.
         //touch1 = hwMap.touchSensor.get("touch_sensor");
