@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 /*
 debugging things will be on the d-pad, controls on the a,b,x,y buttons
  */
+//TODO: 12/21/2020 TODO LIST: code for the goal grabber, code conveyor belt, code reloading sequence, code turret elevation adjustment, code turret heading adjustment
+
 
 //TODO: 10/21/2020 eventually, change this from a testbed type thing (with all the telemetry), to a final product
 @TeleOp(name="TeleOP Test Bed Ultimate Goal", group="UltimateGoal")

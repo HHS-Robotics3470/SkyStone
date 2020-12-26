@@ -223,6 +223,9 @@ public class PositionAndTargetManager{
     public double[] getTargetPosition() {
         return targetPosition;
     }
+    public double[] getTargetPosition(int i) {
+        return targets[i];
+    }
 
     /**
      * @return a description of the current target
