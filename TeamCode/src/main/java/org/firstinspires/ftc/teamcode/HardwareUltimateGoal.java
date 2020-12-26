@@ -72,8 +72,9 @@ public class HardwareUltimateGoal {
 
 
     /* some variables for different measurements of the robot */ //TODO: keep up to date
-    public double turretHeight = 0.2023;
-    public double robotWidth = 0.4572; //18" measured in meters
+    public double turretHeight = 0.2023; //out of date
+    public double robotWidth = 0.4572; //18" measured in meters //out of date
+    public long launcherTimeToRotate = 100; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
     // stats for the TorqueNADO motors
     public final double NADO_COUNTS_PER_MOTOR_REV = 1440;
     public final double NADO_DRIVE_GEAR_REDUCTION = 32.0/24.0;  // This is < 1.0 if geared UP (to increase speed)

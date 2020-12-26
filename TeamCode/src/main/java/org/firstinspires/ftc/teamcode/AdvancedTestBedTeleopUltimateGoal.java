@@ -180,7 +180,20 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
      * @return if the target angle in in a dead zone, it returns -1, otherwise it returns 0 and elevates the turret to the needed position
      */
     public double elevateTurretTo(double angle) {
-        return -1;
+        /* basic layout
+        -return -1 if something went wrong, or the desired angle is impossible
+        -elevate to position
+        -return 0, to show that nothing went wrong
+
+        more detail
+        -get the needed pitch to the target from the AimManager
+        -calculate what position the elevation servo needs to rotate to in order the acheive that pitch (trig)
+        -if that position is a deadzone, would be blocked by other parts of the robot, or is otherwise not safe to move toward, return -1, terminating this process
+        -if that position is able to be rotated to, then do that, and return 0
+         */
+
+
+        return 0;
     }
 
     public void fireTurret() {
@@ -194,50 +207,6 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition());
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
-
-        //test if out of range
-        /* coded as if statements
-        if (aimMan.getPitchToTarget() == -1) { //target out of range
-            telemetry.addLine("target out of range, move closer or change targets");
-            telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
-        } else if (aimMan.getPitchToTarget() == -2) { //target would require going over range/height cap
-            telemetry.addLine("hitting the current target would require going over the range / height cap");
-            telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
-        } else { //continue as normal
-            boolean error = false;
-            //move turret to aim at target
-            if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) {
-                //the target is in deadzone
-                telemetry.addLine("target is in turret dead zone, try rotating the robot");
-                error = true;
-            }
-            if (elevateTurretTo(aimMan.getPitchToTarget()) == -1) {
-                //the target is in the deadzone
-                telemetry.addLine("target is in elevator deadzone, try moving the robot closer");
-                error = true;
-            }
-            if (!error) {
-                elevateTurretTo(aimMan.getPitchToTarget());
-
-                //spin up flywheels and wait a bit to let everything move
-                robot.flyWheel1.setPower(0.9);
-                robot.flyWheel2.setPower(1.0);
-
-                //open launcher
-                robot.turretLauncher.setPosition(0);
-
-                sleep(500);
-
-                //launch ring, and go through reload sequence
-                robot.turretLauncher.setPosition(0.75);
-                sleep(250);
-
-                //reset/prep for next shot
-                elevateTurretTo(0);
-                sleep(250);
-                robot.flyWheel1.setPower(0);
-                robot.flyWheel2.setPower(0);
-            }*/
         switch ((int) aimMan.getPitchToTarget()) {
             case -1://target out of range
                 telemetry.addLine("target out of range, move closer or change targets");
@@ -251,37 +220,49 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 break;
             default: //continue as normal
                 boolean error = false;
+                //rotate the launch servo enough to lock the ring into place before aiming
+                robot.turretLauncher.setPower(1);
+                sleep(robot.launcherTimeToRotate * 1); ///this number will change with testing
+                robot.turretLauncher.setPower(0);
+
                 //move turret to aim at target
-                if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) {
+                if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) { //executes the rotation method, and if there is an error, runs the body of the IF statement, delcaring an error, and aborting launch
                     //the target is in deadzone
                     telemetry.addLine("target is in turret dead zone, try rotating the robot");
                     startOfCooldown = getRuntime();
                     error = true;
                 }
-                if (elevateTurretTo(aimMan.getPitchToTarget()) == -1) {
+
+                // rotate the launch servo enough so that the pusher is at the back of the ring, ready to push it into the flywheels
+                robot.turretLauncher.setPower(1);
+                sleep(robot.launcherTimeToRotate * 1); ///this number WILL change with testing
+                robot.turretLauncher.setPower(0);
+
+                if (elevateTurretTo(aimMan.getPitchToTarget()) == -1) { //same deal as before, just applied to the elevator
                     //the target is in the deadzone
                     telemetry.addLine("target is in elevator deadzone, try moving the robot closer");
                     startOfCooldown = getRuntime();
                     error = true;
                 }
+
                 if (!error) {
                     //TODO 12/25/2020 update this, it's out of date, some lines have been commented out bc they were throwing errors
 
-                    //spin up flywheels and wait a bit to let everything move
+                    //spin up flywheels and wait a bit to let everything move up to speed
                     robot.flyWheel1.setPower(0.9);
                     robot.flyWheel2.setPower(1.0);
-
-                    //open launcher
-                    //robot.turretLauncher.setPosition(0);
 
                     sleep(500);
 
                     //launch ring, and go through reload sequence
-                    //robot.turretLauncher.setPosition(0.75);
-                    sleep(250);
-                    //reset/prep for next shot
+                    // rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
+                    robot.turretLauncher.setPower(1);
+                    sleep(robot.launcherTimeToRotate * 1); ///this number will change with testing
+                    robot.turretLauncher.setPower(0);
+
+                    //reset/prep other components for next shot
                     elevateTurretTo(0);
-                    sleep(250);
+                    rotateTurretTo(0);
                     robot.flyWheel1.setPower(0);
                     robot.flyWheel2.setPower(0);
                 }

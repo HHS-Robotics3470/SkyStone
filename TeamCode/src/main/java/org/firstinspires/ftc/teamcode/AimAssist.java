@@ -174,7 +174,8 @@ public class AimAssist {
             double angle;
             double a1;
             double a2;
-            // the launch speed TODO update this when Aaron finishes the experiment to determine launch speed
+            // the launch speed
+            // TODO 12/25/2020 update this when Aaron finishes the experiment to determine launch speed
             final double v = 5.08;
 
             a1 = Math.atan( ( (v*v) + Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );//+
