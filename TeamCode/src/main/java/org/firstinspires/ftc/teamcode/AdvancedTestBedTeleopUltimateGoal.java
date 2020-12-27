@@ -63,6 +63,16 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
 
           // automated movement (turret), and fire?, and other controls
+            /* for controls: (as of 12/26/2020)
+            a,b,x,y pad will have turret controls
+
+            bumpers and triggers will be debug things
+
+            thumbsticks will control movement
+
+            d-pad will control the intake and wobble grabber (up and down, move intake up/down; right, toggle conveyor; left, toggle grabber
+             */
+
             //change targets, and name the new target
             if (gamepad1.x && !abort) { // if driver presses X, change targets
                 posTarMan.bestTargetPosition(runtime.seconds());
@@ -71,22 +81,29 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 telemetry.update();
                 startOfCooldown = getRuntime();
             }
+            //fire turret
+            if(gamepad1.a)          fireTurret();
 
             //shows info about the motor encoders
-            if (gamepad1.dpad_up) {
+            if (gamepad1.left_trigger > 0.5) {
                 telemetry.addLine("motor encoder counts");
                 telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
                 telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
                 telemetry.update();
                 startOfCooldown = getRuntime();
             }
-
             //abort button
-            if (gamepad1.dpad_down) abort = !abort;
-            //auto heading adjustment (disabled because the reloading mechanism now requires that the turret be pointing toward the front of the bot
-            //if (!abort)             rotateTurretTo(aimMan.headingToTarget);
-            //fire turret
-            if(gamepad1.a)          fireTurret();
+            if (gamepad1.left_bumper) abort = !abort;
+
+            //d up and down, move intake up/down
+            if (gamepad1.dpad_up && robot.intakePulley.getPower() <= 1)     robot.intakePulley.setPower(robot.intakePulley.getPower() + 1);
+            if (gamepad1.dpad_down && robot.intakePulley.getPower() >=-1)   robot.intakePulley.setPower(robot.intakePulley.getPower() - 1);
+            //d right, toggle conveyor
+            if (gamepad1.dpad_right)                                        robot.conveyor.setPower(-1 * (robot.conveyor.getPower() - 0.5) + 0.5);
+                                                                            //power should only ever be 0 or 1; -(0 - 0.5) + 0.5 = 1; -(1 - 0.5) + 0.5 = 0
+            //d left, toggle grabber
+            if (gamepad1.dpad_left)                                         robot.wobbleGrabber.setPosition(-1 * (robot.wobbleGrabber.getPosition() - 0.5) + 0.5);
+                                                                            //position should only ever be 0 or 1, same deal as before
 
             //telemetry
             basicTelemetryManager();
@@ -166,14 +183,14 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         targetPosition = angle - currentTurretHeading; //in radians
         targetPosition /= robot.CORE_HEX_RADIANS_PER_COUNTS; //in encoder counts
 
-        //check if it's in the deadzone (range of motion: 120degrees, so +- pi/3 radians from the zero of the turret)
+        //check if it's in the deadzone (range of motion: 120degrees, so +- pi/3 radians from the zero of the turret, the /3 represents the dead zone btw)
         if ( (pos + targetPosition) > robot.CORE_HEX_COUNTS_PER_MOTOR_REV / 2 / 3 || (pos + targetPosition) < - robot.CORE_HEX_COUNTS_PER_MOTOR_REV / 2 / 3) {
             return -1;
         }
-        robot.turretRotator.setTargetPosition((int) (pos + targetPosition));
+        robot.runMotorToPosition(robot.turretRotator,(int) (pos + targetPosition), 1);
         return 0;
     }
-    //TODO 12/25/2020 update this class
+    //TODO 12/25/2020 update this class, need to do some math to figure out how rotating the motor translates to elevation
     /**
      * given the angle relative to the horizontal, move the turret to elevate to that pitch
      * @param angle desired angle of pitch
@@ -197,6 +214,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         return 0;
     }
 
+    boolean firingError = false;
     public void fireTurret() {
         //steps: stop movement of the motors, get heading and pitch, (make sure target is in range), move to that heading and pitch (spin up the flywheel), launch
 
@@ -220,34 +238,37 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 startOfCooldown = getRuntime();
                 break;
             default: //continue as normal
-                boolean error = false;
-                //rotate the launch servo enough to lock the ring into place before aiming
-                robot.turretLauncher.setPower(1);
-                sleep(robot.launcherTimeToRotate * 1); ///this number will change with testing
-                robot.turretLauncher.setPower(0);
+
+                if (!firingError) { // if there wasn't a firing error last attempt (there is not a ring already in launch position), put a ring in launch position
+                    //rotate the launch servo enough to lock the ring into place before aiming
+                    robot.turretLauncher.setPower(1);
+                    sleep(robot.launcherTimeToRotate / 8); //subject to chance, but should be close enough
+                    robot.turretLauncher.setPower(-1);
+                    sleep(robot.launcherTimeToRotate / 16); //servo is now at 1/16th a rotation
+
+                    // rotate the launch servo enough so that the pusher is at the back of the ring, ready to push it into the flywheels, and holding it in place
+                    robot.turretLauncher.setPower(1);
+                    sleep(robot.launcherTimeToRotate * 15 / 16); ///this number WILL change with testing
+                    robot.turretLauncher.setPower(0); //has now done one full rotation in total, securing a ring in the process
+                } // if there was a firing error, it'll simply skip, and try to aim again
 
                 //move turret to aim at target
                 if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) { //executes the rotation method, and if there is an error, runs the body of the IF statement, delcaring an error, and aborting launch
                     //the target is in deadzone
                     telemetry.addLine("target is in turret dead zone, try rotating the robot");
                     startOfCooldown = getRuntime();
-                    error = true;
-                }
-
-                // rotate the launch servo enough so that the pusher is at the back of the ring, ready to push it into the flywheels
-                robot.turretLauncher.setPower(1);
-                sleep(robot.launcherTimeToRotate * 1); ///this number WILL change with testing
-                robot.turretLauncher.setPower(0);
+                    firingError = true;
+                } else firingError = false;
 
                 if (elevateTurretTo(aimMan.getPitchToTarget()) == -1) { //same deal as before, just applied to the elevator
                     //the target is in the deadzone
                     telemetry.addLine("target is in elevator deadzone, try moving the robot closer");
                     startOfCooldown = getRuntime();
-                    error = true;
-                }
+                    firingError = true;
+                } else firingError = false;
 
-                if (!error) {
-                    //TODO 12/25/2020 update this, it's out of date, some lines have been commented out bc they were throwing errors
+                if (!firingError) {
+                    //TODO 12/25/2020 this should work, but i need to figure out what launcherTimeToRotate should be, and i'll need a actual continuous servo
 
                     //spin up flywheels and wait a bit to let everything move up to speed
                     robot.flyWheel1.setPower(0.9);

@@ -125,8 +125,8 @@ public class HardwareUltimateGoal {
         rightDrive.setPower(0);
         flyWheel1.setPower(0);
         flyWheel2.setPower(0);
-        turretRotator.setPower(0);
         turretElevator.setPower(0);
+        turretRotator.setPower(0);
         conveyor.setPower(0);
         intakePulley.setPower(0);
 
@@ -138,11 +138,10 @@ public class HardwareUltimateGoal {
         //set to run with encoder
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);  //torqueNADO motor
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //torqueNADO motor
+        turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //core hex motor //will run using a target position
+        turretElevator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);// GoBilda 5201 series 53:1 //will run using a target position
+        intakePulley.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //torqueNADO motor //will run using a target position
 
-        //set to run to position
-        turretRotator.setMode(DcMotor.RunMode.RUN_TO_POSITION); //core hex motor
-        turretElevator.setMode(DcMotor.RunMode.RUN_TO_POSITION); // go bilda 53:1
-        intakePulley.setMode(DcMotor.RunMode.RUN_TO_POSITION); //torqueNADO motor
 
         //set to run without encoder
         conveyor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -153,14 +152,18 @@ public class HardwareUltimateGoal {
         leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         turretRotator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turretElevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         intakePulley.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Define and initialize ALL installed servos.
         turretLauncher = hwMap.get(CRServo.class, "turretLaunchServo"); ///main hub servo port 1
-        turretLauncher.setPower(0);
+        turretLauncher.setPower(0.5);
+        //power 0 = full reverse; power 0.5 = stop; power 1 = full forward
+        //position 0.5 = open for reload, position
 
         wobbleGrabber   = hwMap.get(Servo.class, "wobbleGrabber"); //main hub servo port 0
-        wobbleGrabber.setPosition(0); //should be the open position, closed position is half a full rotation from open
+        wobbleGrabber.setPosition(0.5); //should be the open position, closed position is half a full rotation from open
+        //position 0 = closed, position 1 = open?
 
         // Define and initialize ALL installed sensors.
         //touch1 = hwMap.touchSensor.get("touch_sensor");
@@ -226,5 +229,24 @@ public class HardwareUltimateGoal {
         return (-imu.getAngularOrientation().firstAngle);
     }
 
+    /**
+     * runs a given motor (that has an encoder) to a given position, at a given power
+     * @param motor the motor to move
+     * @param targetPosition    the position to move to
+     * @param power the power to move at (must be positive)
+     */
+    public void runMotorToPosition(DcMotor motor, int targetPosition, double power) {
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setTargetPosition(targetPosition);
+        motor.setPower(0);
+        if (targetPosition > motor.getCurrentPosition()) motor.setPower(power);
+        else if (targetPosition < motor.getCurrentPosition()) motor.setPower(-power);
 
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        while (motor.isBusy() && (period.milliseconds() < 120000)) {} //let the motor run to that position
+
+        motor.setPower(0);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
 }
