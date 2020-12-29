@@ -214,20 +214,33 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         2 options, find a function to calculate the required angle, or use iteration https://www.desmos.com/calculator/omowmwxgj2
          */
         //iteration
-        double targetAngle = - angle;
-        double step = 1;
-        double guess = 0;
         //logic statement to make sure that the given target angle of the turret is possible, code in when range of motion is known (if (out of bounds) return -1;
 
-        //first step
-        while (elevationCalculation(targetAngle,guess) > 0) {
-            guess += step;
-        }
-        step /= 10;
-
+        //iterate and save
+        double targetPosRad = elevationCalculationIteration(angle);
+        //reset the global values that control the iteration
+        elevationStep = 1;
+        elevationLastGuess = 0;
+        elevationGuessOffset = 1;
         return 0;
     }
-    public double elevationCalculation (double targetAngle, double currentGuess) {
+    double elevationStep = 1;
+    double elevationLastGuess = 0;
+    double elevationGuessOffset = 1;
+    public double elevationCalculationIteration (double targetAngle) {
+        while (elevationGuessOffsetCalculation(-targetAngle, elevationLastGuess) > 0) {
+            elevationLastGuess += elevationStep;
+        }
+        //check if end condition is met, if so, return the angle, if not, modify step and iterate
+        if (Math.abs(elevationGuessOffset) > 0.000001) { // if the offset is close enough to zero
+            return elevationLastGuess;
+        } else {
+            elevationStep /= 10;
+            elevationCalculationIteration(targetAngle);
+            return -1;
+        }
+    }
+    public double elevationGuessOffsetCalculation (double targetAngle, double currentGuess) {
         double x1 = Math.sin(targetAngle) * .02;
         double y1 = Math.cos(targetAngle) * .02;
         double x2 = Math.sin(currentGuess) * .02 + 0.0762;
@@ -235,7 +248,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         double x3 = Math.cos(currentGuess) * .09525 + x2;
         double y3 = -Math.sin(currentGuess) * .09525 + y2;
 
-        return (y1 / x1) + ((x1-x3) / (y1-y3));
+        elevationGuessOffset = (y1 / x1) + ((x1-x3) / (y1-y3));
+        return elevationGuessOffset;
     }
 
 
