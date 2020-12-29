@@ -217,11 +217,21 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         //logic statement to make sure that the given target angle of the turret is possible, code in when range of motion is known (if (out of bounds) return -1;
 
         //iterate and save
-        double targetPosRad = elevationCalculationIteration(angle);
+        double targetPos = elevationCalculationIteration(angle); // in radians
+
+        //if something weird happened, it'll return -1
+        if (targetPos == -1) return -1;
+
         //reset the global values that control the iteration
         elevationStep = 1;
         elevationLastGuess = 0;
         elevationGuessOffset = 1;
+
+        //convert the target pos to a value in encoder counts
+        targetPos /= robot.GO_BILDA_RADIANS_PER_COUNTS; // in encoder counts
+
+        robot.runMotorToPosition(robot.turretElevator, (int) targetPos, 0.1);
+
         return 0;
     }
     double elevationStep = 1;
