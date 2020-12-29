@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.service.autofill.ImageTransformation;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -8,7 +10,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 /*
 debugging things will be on the d-pad, controls on the a,b,x,y buttons
  */
-//TODO: 12/21/2020 TODO LIST: code for the goal grabber, code conveyor belt, code reloading sequence, code turret elevation adjustment, code turret heading adjustment
+//TODO: 12/21/2020 TODO LIST: test code for the goal grabber, test code conveyor belt, code reloading sequence, code turret elevation adjustment, code turret heading adjustment
 
 
 //TODO: 10/21/2020 eventually, change this from a testbed type thing (with all the telemetry), to a final product
@@ -208,11 +210,34 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         -if that position is a deadzone, would be blocked by other parts of the robot, or is otherwise not safe to move toward, return -1, terminating this process
         -if that position is able to be rotated to, then do that, and return 0
          */
+        /*
+        2 options, find a function to calculate the required angle, or use iteration https://www.desmos.com/calculator/omowmwxgj2
+         */
+        //iteration
+        double targetAngle = - angle;
+        double step = 1;
+        double guess = 0;
+        //logic statement to make sure that the given target angle of the turret is possible, code in when range of motion is known (if (out of bounds) return -1;
 
-
+        //first step
+        while (elevationCalculation(targetAngle,guess) > 0) {
+            guess += step;
+        }
+        step /= 10;
 
         return 0;
     }
+    public double elevationCalculation (double targetAngle, double currentGuess) {
+        double x1 = Math.sin(targetAngle) * .02;
+        double y1 = Math.cos(targetAngle) * .02;
+        double x2 = Math.sin(currentGuess) * .02 + 0.0762;
+        double y2 = Math.cos(currentGuess) * .02;
+        double x3 = Math.cos(currentGuess) * .09525 + x2;
+        double y3 = -Math.sin(currentGuess) * .09525 + y2;
+
+        return (y1 / x1) + ((x1-x3) / (y1-y3));
+    }
+
 
     boolean firingError = false;
     public void fireTurret() {
