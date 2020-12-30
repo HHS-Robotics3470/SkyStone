@@ -1,11 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.service.autofill.ImageTransformation;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import java.math.BigDecimal;
+import java.math.MathContext;
 
 /*
 debugging things will be on the d-pad, controls on the a,b,x,y buttons
@@ -214,41 +215,46 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         2 options, find a function to calculate the required angle, or use iteration https://www.desmos.com/calculator/omowmwxgj2
          */
         //iteration
+
         //logic statement to make sure that the given target angle of the turret is possible, code in when range of motion is known (if (out of bounds) return -1;
+        if (angle > Math.PI/4 || angle < 0) return -1; // if the angle is greater than 45 degrees, or less than zero, stop and return -1,
 
         //iterate and save
-        double targetPos = elevationCalculationIteration(angle); // in radians
-
-        //if something weird happened, it'll return -1
-        if (targetPos == -1) return -1;
+        BigDecimal targetPos = elevationCalculationIteration(angle); // in radians
 
         //reset the global values that control the iteration
         elevationStep = 1;
-        elevationLastGuess = 0;
+        elevationLastGuessDegrees = BigDecimal.ZERO;
         elevationGuessOffset = 1;
 
         //convert the target pos to a value in encoder counts
-        targetPos /= robot.GO_BILDA_RADIANS_PER_COUNTS; // in encoder counts
+        targetPos = targetPos.divide(BigDecimal.valueOf(robot.GO_BILDA_RADIANS_PER_COUNTS), elevationMC); // in encoder counts
 
-        robot.runMotorToPosition(robot.turretElevator, (int) targetPos, 0.1);
-
+        robot.runMotorToPosition(robot.turretElevator, targetPos.intValueExact(), 0.1);
         return 0;
     }
     double elevationStep = 1;
-    double elevationLastGuess = 0;
+    MathContext elevationMC = new MathContext(16);
+    BigDecimal elevationLastGuessDegrees = new BigDecimal("00.0000", elevationMC);
     double elevationGuessOffset = 1;
-    public double elevationCalculationIteration (double targetAngle) {
-        while (elevationGuessOffsetCalculation(-targetAngle, elevationLastGuess) > 0) {
-            elevationLastGuess += elevationStep;
+    /**
+     * this function uses iteration to find the optimal position to move the elevator motor to in order to elevate the turret to a given angle,
+     * this function works best when working with degrees so it takes an input and gives an output in radians, while using degrees for internal calculations
+     * @param targetAngle the angle, in radians
+     * @return the angle to move the elevator to, in radians
+     */
+    public BigDecimal elevationCalculationIteration (double targetAngle) {
+        while (elevationGuessOffsetCalculation(-targetAngle, Math.toRadians(-elevationLastGuessDegrees.doubleValue())) > 0) { //convert the target angle, and the guess, to radians in the call to the elevationGuessOffsetCalculation() method, this is because trig in java is done in radians
+            elevationLastGuessDegrees = elevationLastGuessDegrees.add(BigDecimal.valueOf(elevationStep), elevationMC);
         }
-        //check if end condition is met, if so, return the angle, if not, modify step and iterate
-        if (Math.abs(elevationGuessOffset) > 0.000001) { // if the offset is close enough to zero
-            return elevationLastGuess;
-        } else {
+        elevationLastGuessDegrees = elevationLastGuessDegrees.subtract(BigDecimal.valueOf(elevationStep), elevationMC);
+
+        if (!(Math.abs(elevationGuessOffset) < 0.00001 || elevationStep < 0.0001)) { //skip iteration if the offset is close enough to zero, or it has iterated past 4 decimal places
             elevationStep /= 10;
             elevationCalculationIteration(targetAngle);
-            return -1;
         }
+
+        return (elevationLastGuessDegrees.multiply(BigDecimal.valueOf(Math.PI), elevationMC)).divide(BigDecimal.valueOf(180), elevationMC);
     }
     public double elevationGuessOffsetCalculation (double targetAngle, double currentGuess) {
         double x1 = Math.sin(targetAngle) * .02;
@@ -289,6 +295,13 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             default: //continue as normal
 
                 if (!firingError) { // if there wasn't a firing error last attempt (there is not a ring already in launch position), put a ring in launch position
+                    //move forward until ring almost hits the flywheels, then move back to both drop the ring, and give space for the kick that will happen after the turret aims
+                    robot.turretLauncher.setPower(.7);
+                    sleep(100);
+                    robot.turretLauncher.setPower(.1);
+                    sleep(100);
+
+                    /* this was for a continuous servo, which we don't have, if we get one, use this, still need to find what the actual time to rotate was
                     //rotate the launch servo enough to lock the ring into place before aiming
                     robot.turretLauncher.setPower(1);
                     sleep(robot.launcherTimeToRotate / 8); //subject to chance, but should be close enough
@@ -299,6 +312,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                     robot.turretLauncher.setPower(1);
                     sleep(robot.launcherTimeToRotate * 15 / 16); ///this number WILL change with testing
                     robot.turretLauncher.setPower(0); //has now done one full rotation in total, securing a ring in the process
+                     */
                 } // if there was a firing error, it'll simply skip, and try to aim again
 
                 //move turret to aim at target
@@ -317,7 +331,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 } else firingError = false;
 
                 if (!firingError) {
-                    //TODO 12/25/2020 this should work, but i need to figure out what launcherTimeToRotate should be, and i'll need a actual continuous servo
+                    //TODO 12/25/2020 this should work, but i need to figure out what launcherTimeToRotate should be, and i'll need a actual continuous servo, recode to work for a standard servo
 
                     //spin up flywheels and wait a bit to let everything move up to speed
                     robot.flyWheel1.setPower(0.9);
