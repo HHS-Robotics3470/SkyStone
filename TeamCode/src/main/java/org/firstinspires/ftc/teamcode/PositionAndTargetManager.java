@@ -66,7 +66,7 @@ public class PositionAndTargetManager{
         r = 2, z
      */
     //initializes assuming it's on team red, in the constructor, values will be changed as needed if it's on team blue
-    double[] robotPosition = {1.79705, -1.79705};
+    double[] robotPosition = {1.79705, -1.79705}; //TODO: update these coords when they are known to a more accurate degree
     double robotHeading = Math.PI / 2; //heading relative to field, pi/2 = toward goals
 
     double[] targetPosition = new double[3];
@@ -173,40 +173,26 @@ public class PositionAndTargetManager{
 
     }
     /**
-     * acts as an update method, that also returns the value it is setting the target position to
+     * acts as an update method, that also returns the value it is setting the target position to, works by cycling targets
      * @param timeSeconds  time elapsed during match, measured in seconds, used to differentiate between mid game and end game targets
      * @return the position of the target selected, it also sets targetPosition to these coordinates
      */
     public double[] bestTargetPosition(double timeSeconds) {
-        double[] bestTarget = new double[3];
+        int curTar = currentTarget;
+        //cycle targets
+        curTar ++;
+        //make sure it stays in bounds
+        if (curTar > 5) curTar=0;
 
-        int i = (int) (Math.random() * (targets.length - 1)); //random row of targets -1
-        if (i < 3 || i >= 5) { //prevents the robot from shooting the powershots before endgame, and increased the chance of aiming to the high goal
-            i = 3;
-        } // at this point, i should be either 3 or 4
-        //TODO: 10/19/2020 change the > to < depending on what the launch zone actually is
-        if (robotPosition[1] > launchZone) { // if the robot is outside of the launchZone
-            i = 5; //target low goal
-        }
+        //if the robot is out of launch area, it can only target the low goal (5)
+        if (robotPosition[1] > launchZone && curTar != 5) curTar = 5;  //TODO: 10/19/2020 change the > to < depending on what the launch zone actually is
+        // if it's not the endgame, stop it from aiming at a power shot
+        else if (timeSeconds <= 200 && curTar <= 2) curTar += 3;
+        //otherwise, it's the endgame, and it is able to aim at anything, so do no further modifications
 
-        bestTarget[0] = targets[i][0];
-        bestTarget[1] = targets[i][1];
-        bestTarget[2] = targets[i][2];
-
-        currentTarget = i;
-        if (timeSeconds >= 200 && (int) (Math.random()*3 + 1) == 2 && powerShotsHit <= 2) { //if it's the endgame,  and rng (1/3)
-            bestTarget[0] = targets[powerShotsHit][0]; // cycle through the powershots
-            bestTarget[1] = targets[powerShotsHit][1];
-            bestTarget[2] = targets[powerShotsHit][2];
-
-            currentTarget = powerShotsHit;
-            powerShotsHit ++;
-        }
-
-        targetPosition[0] = bestTarget[0];
-        targetPosition[1] = bestTarget[1];
-        targetPosition[2] = bestTarget[2];
-
+        //actually change the target
+        currentTarget = curTar;
+        targetPosition = getTargetPosition(curTar);
         return targetPosition;
     }
 
