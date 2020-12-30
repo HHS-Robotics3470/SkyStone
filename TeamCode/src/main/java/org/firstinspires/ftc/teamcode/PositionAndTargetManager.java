@@ -152,6 +152,14 @@ public class PositionAndTargetManager{
         robotPosition[1] += s * Math.sin(robotHeading);
         robotHeading += headingChange;
 
+        //make sure robotHeading is in the range [pi,-pi] not [2pi, 0]
+        double twoPI = 2 * Math.PI;
+        if (robotHeading > Math.PI) {
+            robotHeading = -twoPI + robotHeading;
+        } else if (robotHeading < -Math.PI){
+            robotHeading = twoPI + robotHeading;
+        }
+
         /*using Wizards ideas would involve,
         replacing line 149 (robotPosition[0] += s * Math.cos(robotHeading);) with robotPosition[0] += (p*Math.sin(robotHeading) + n*Math.cos(robotHeading)) * metersPerCount;
         line 150 (robotPosition[1] += s * Math.sin(robotHeading);

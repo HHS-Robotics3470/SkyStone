@@ -85,7 +85,7 @@ public class HardwareUltimateGoal {
     public final double NADO_METERS_PER_COUNT = 1.0 / NADO_COUNTS_PER_METER;
 
     // stats for the Rev Core Hex motor
-    public final double CORE_HEX_COUNTS_PER_MOTOR_REV = 288 * 4;  // 4 * 72(gear ratio) == cycles per rev * 4 = counts per rev
+    public final double CORE_HEX_COUNTS_PER_MOTOR_REV = 288;  // 4 * 72(gear ratio) == cycles per rev * 4 = counts per rev
     public final double CORE_HEX_DRIVE_GEAR_REDUCTION = 1;    // This is < 1.0 if geared UP
     public final double CORE_HEX_RADIANS_PER_COUNTS   = (2 * Math.PI) / (CORE_HEX_COUNTS_PER_MOTOR_REV * CORE_HEX_DRIVE_GEAR_REDUCTION); //  radians per rotation / effective counts per rotation
 

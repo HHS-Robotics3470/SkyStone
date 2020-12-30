@@ -163,34 +163,27 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         robot.rightDrive.setPower(-right);
     }
 
-    //TODO 12/25/2020 this should still work, as the mechanism to rotate the turret is still fundamentally the same, however it needs to be tested
     /**
-     * given the angle relative to the field, convert to the angle relative to the robot (front = 0)
+     * given the angle relative to the field, convert to the angle relative to the robot (front = 0), then move the turret to that angle
      * @param angle angle relative to field
      * @return if the target angle in in a dead zone, it returns -1, otherwise it returns 0 and rotates the turret to the needed position
      */
     public int rotateTurretTo(double angle) {
-        double pos = robot.turretRotator.getCurrentPosition();
         double targetPosition;
         double robotHeading = posTarMan.getRobotHeading();
 
-        //heading of turret relative to robot (convert encoder count of rotator to radians
-        currentTurretHeading = pos * robot.CORE_HEX_RADIANS_PER_COUNTS;
-        //heading of turret relative to field (with robot pov (angle 0 = parallel to x-axis, just like the angle being provided)
-        currentTurretHeading = currentTurretHeading + robotHeading; // turret heading + robot heading
+        //heading relative to field -> heading relative to the robot
+        targetPosition = angle - robotHeading;
+        telemetry.addData("target angle", Math.toDegrees(targetPosition));
+        //check if heading rel. to robot is in the deadzone, if so, return -1
+        if (targetPosition > Math.toRadians(45) || targetPosition < -Math.toRadians(45)) return -1;
+        //convert the heading rel. to robot into the needed encoder counts
+        targetPosition /= robot.CORE_HEX_RADIANS_PER_COUNTS;
+        telemetry.addData("target encoder position", targetPosition);
+        //make sure that the robot rotates the best direction to reach goal
 
-        //make sure headings are in the range [-pi,pi] instead of [0,2pi]
-
-
-        //find the position that the turret needs to rotate to
-        targetPosition = angle - currentTurretHeading; //in radians
-        targetPosition /= robot.CORE_HEX_RADIANS_PER_COUNTS; //in encoder counts
-
-        //check if it's in the deadzone (range of motion: 120degrees, so +- pi/3 radians from the zero of the turret, the /3 represents the dead zone btw)
-        if ( (pos + targetPosition) > robot.CORE_HEX_COUNTS_PER_MOTOR_REV / 2 / 3 || (pos + targetPosition) < - robot.CORE_HEX_COUNTS_PER_MOTOR_REV / 2 / 3) {
-            return -1;
-        }
-        robot.runMotorToPosition(robot.turretRotator,(int) (pos + targetPosition), .1);
+        //rotate to that position and return 0
+        robot.runMotorToPosition(robot.turretRotator, (int) targetPosition, 0.1);
         return 0;
     }
     /**
@@ -227,7 +220,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         //convert the target pos to a value in encoder counts
         targetPos = targetPos.divide(BigDecimal.valueOf(robot.GO_BILDA_RADIANS_PER_COUNTS), elevationMC); // in encoder counts
 
-        robot.runMotorToPosition(robot.turretElevator, targetPos.intValueExact(), 0.1);
+        robot.runMotorToPosition(robot.turretElevator, targetPos.intValue(), 0.1);
         return 0;
     }
     double elevationStep = 1;
