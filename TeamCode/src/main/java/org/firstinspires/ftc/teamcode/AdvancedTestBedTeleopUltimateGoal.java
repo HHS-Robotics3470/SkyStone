@@ -190,10 +190,9 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         if ( (pos + targetPosition) > robot.CORE_HEX_COUNTS_PER_MOTOR_REV / 2 / 3 || (pos + targetPosition) < - robot.CORE_HEX_COUNTS_PER_MOTOR_REV / 2 / 3) {
             return -1;
         }
-        robot.runMotorToPosition(robot.turretRotator,(int) (pos + targetPosition), 1);
+        robot.runMotorToPosition(robot.turretRotator,(int) (pos + targetPosition), .1);
         return 0;
     }
-    //TODO 12/25/2020 update this class, need to do some math to figure out how rotating the motor translates to elevation
     /**
      * given the angle relative to the horizontal, move the turret to elevate to that pitch
      * @param angle desired angle of pitch
@@ -215,17 +214,15 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         2 options, find a function to calculate the required angle, or use iteration https://www.desmos.com/calculator/omowmwxgj2
          */
         //iteration
-
-        //logic statement to make sure that the given target angle of the turret is possible, code in when range of motion is known (if (out of bounds) return -1;
-        if (angle > Math.PI/4 || angle < 0) return -1; // if the angle is greater than 45 degrees, or less than zero, stop and return -1,
-
-        //iterate and save
-        BigDecimal targetPos = elevationCalculationIteration(angle); // in radians
-
         //reset the global values that control the iteration
         elevationStep = 1;
         elevationLastGuessDegrees = BigDecimal.ZERO;
         elevationGuessOffset = 1;
+        //logic statement to make sure that the given target angle of the turret is possible, code in when range of motion is known (if (out of bounds) return -1;
+        if (angle > Math.toRadians(40) || angle < 0) return -1; // if the angle is greater than 40 degrees, or less than zero, stop and return -1,
+
+        //iterate and save
+        BigDecimal targetPos = elevationCalculationIteration(angle); // in radians
 
         //convert the target pos to a value in encoder counts
         targetPos = targetPos.divide(BigDecimal.valueOf(robot.GO_BILDA_RADIANS_PER_COUNTS), elevationMC); // in encoder counts
@@ -295,24 +292,18 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             default: //continue as normal
 
                 if (!firingError) { // if there wasn't a firing error last attempt (there is not a ring already in launch position), put a ring in launch position
-                    //move forward until ring almost hits the flywheels, then move back to both drop the ring, and give space for the kick that will happen after the turret aims
-                    robot.turretLauncher.setPower(.7);
-                    sleep(100);
-                    robot.turretLauncher.setPower(.1);
-                    sleep(100);
+                    elevateTurretTo(Math.toRadians(15)); //elevate the turret slightly to assist with the reload
 
-                    /* this was for a continuous servo, which we don't have, if we get one, use this, still need to find what the actual time to rotate was
-                    //rotate the launch servo enough to lock the ring into place before aiming
-                    robot.turretLauncher.setPower(1);
-                    sleep(robot.launcherTimeToRotate / 8); //subject to chance, but should be close enough
-                    robot.turretLauncher.setPower(-1);
-                    sleep(robot.launcherTimeToRotate / 16); //servo is now at 1/16th a rotation
+                    //wiggle the launching thing around a bit
+                    robot.turretLauncher.setPower(-0.3);
+                    sleep(300);
+                    robot.turretLauncher.setPower(0);
+                    sleep(100);
+                    robot.turretLauncher.setPower(-.5);
+                    sleep(300); //adjust timing
+                    robot.turretLauncher.setPower(0.15);
 
-                    // rotate the launch servo enough so that the pusher is at the back of the ring, ready to push it into the flywheels, and holding it in place
-                    robot.turretLauncher.setPower(1);
-                    sleep(robot.launcherTimeToRotate * 15 / 16); ///this number WILL change with testing
-                    robot.turretLauncher.setPower(0); //has now done one full rotation in total, securing a ring in the process
-                     */
+                    elevateTurretTo(0);
                 } // if there was a firing error, it'll simply skip, and try to aim again
 
                 //move turret to aim at target
@@ -330,27 +321,30 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                     firingError = true;
                 } else firingError = false;
 
+                //wait for the turret to finish aiming
+                while(robot.turretElevator.isBusy() || robot.turretRotator.isBusy()) sleep(10);
+
                 if (!firingError) {
                     //TODO 12/25/2020 this should work, but i need to figure out what launcherTimeToRotate should be, and i'll need a actual continuous servo, recode to work for a standard servo
 
-                    //spin up flywheels and wait a bit to let everything move up to speed
+                    //spin up flywheels and wait a bit to let everything move up to speed, the flywheels are not the same speed in order to create a spin
                     robot.flyWheel1.setPower(0.9);
                     robot.flyWheel2.setPower(1.0);
 
                     sleep(500);
 
-                    //launch ring, and go through reload sequence
+
+                    //launch ring.
                     // rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
-                    robot.turretLauncher.setPower(1);
-                    sleep(robot.launcherTimeToRotate * 1); ///this number will change with testing
-                    robot.turretLauncher.setPower(0);
+                    robot.turretLauncher.setPower(-1);
+                    sleep(500); ///this number will change with testing
 
                     //reset/prep other components for next shot
-                    elevateTurretTo(0);
-                    rotateTurretTo(0);
-
                     robot.flyWheel1.setPower(0);
                     robot.flyWheel2.setPower(0);
+                    elevateTurretTo(0);
+                    rotateTurretTo(0);
+                    robot.turretLauncher.setPower(0.5);
                 }
 
         }

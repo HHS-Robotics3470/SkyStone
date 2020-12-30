@@ -90,7 +90,7 @@ public class HardwareUltimateGoal {
     public final double CORE_HEX_RADIANS_PER_COUNTS   = (2 * Math.PI) / (CORE_HEX_COUNTS_PER_MOTOR_REV * CORE_HEX_DRIVE_GEAR_REDUCTION); //  radians per rotation / effective counts per rotation
 
     // stats for the goBilda series 5201 53:1 motor
-    public final double GO_BILDA_COUNTS_PER_MOTOR_REV   = 374.325;
+    public final double GO_BILDA_COUNTS_PER_MOTOR_REV   = 1497.325;
     public final double GO_BILDA_DRIVE_GEAR_REDUCTION   = 1; // This is < 1.0 if geared UP
     public final double GO_BILDA_RADIANS_PER_COUNTS     = (2 * Math.PI) / (GO_BILDA_COUNTS_PER_MOTOR_REV * GO_BILDA_DRIVE_GEAR_REDUCTION); //  radians per rotation / effective counts per rotation
 
@@ -140,6 +140,9 @@ public class HardwareUltimateGoal {
         //reset encoders
         leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        intakePulley.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         //set to run with encoder
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);  //torqueNADO motor
@@ -250,7 +253,7 @@ public class HardwareUltimateGoal {
 
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while (motor.isBusy() && (period.milliseconds() < 120000)) {} //let the motor run to that position
+        while (motor.isBusy()) {} //let the motor run to that position
 
         motor.setPower(0);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
