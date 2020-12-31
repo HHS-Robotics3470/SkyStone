@@ -23,12 +23,21 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
     PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, HardwareUltimateGoal.readPosition(), HardwareUltimateGoal.readHeading(), true); //TODO: 10/21/2020 change true to false if on team blue
     ElapsedTime runtime                 = new ElapsedTime();
     AimAssist aimMan                    = new AimAssist(robot, posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.bestTargetPosition(0));
-
-    double currentTurretHeading; //initialize after initializing robot hardware
+    //variables for telemetry
+    double currentTurretHeading = 0;
     double currentTurretPitch   = 0;
-
-    double cooldownLength = 500;
+    double cooldownLength = 500;//duration that an error will display
     double startOfCooldown = -cooldownLength; //so that normal telemetry starts immediately
+    //variables for the firing sequence, to prevent it from repeating steps unnecessarily
+    boolean loaded = false;
+    boolean firingError = false;
+    //variables for the elevation iteration algorithm
+    double elevationStep = 1;
+    MathContext elevationMC = new MathContext(16);
+    BigDecimal elevationLastGuessDegrees = new BigDecimal("00.0000", elevationMC);
+    double elevationGuessOffset = 1;
+
+    boolean abort = false; //variable to control whether or not it allows movement commands to go through
 
     @Override
     public void runOpMode()
@@ -36,8 +45,6 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         // declare some variables if needed
         int leftCounts  = 0;
         int rightCounts = 0;
-
-        boolean abort = false; //variable to control whether or not it allows movement commands to go through
 
         /* Initialize the hardware variables.
          * The init() method of the hardware class does all the work here
@@ -65,9 +72,13 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
 
-          // automated movement (turret), and fire?, and other controls
+          //controls
             /* for controls: (as of 12/26/2020)
             a,b,x,y pad will have turret controls
+                a-fire (will reload if needed)
+                b-reload
+                x-change target
+                y-unassigned
 
             bumpers and triggers will be debug things
 
@@ -77,7 +88,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
              */
 
             //change targets, and name the new target
-            if (gamepad1.x && !abort) { // if driver presses X, change targets
+            if (gamepad1.x /*&& !abort*/) { // if driver presses X, change targets
                 posTarMan.bestTargetPosition(runtime.seconds());
                 telemetry.addLine("TARGET CHANGED");
                 telemetry.addData("new target", posTarMan.getCurrentTarget());
@@ -86,6 +97,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             }
             //fire turret
             if(gamepad1.a)          fireTurret();
+            //reload/clear
+            if(gamepad1.b)          reloadTurret();
 
             //shows info about the motor encoders
             if (gamepad1.left_trigger > 0.5) {
@@ -96,7 +109,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 startOfCooldown = getRuntime();
             }
             //abort button
-            if (gamepad1.left_bumper) abort = !abort;
+            if (gamepad1.left_bumper) abort = !abort; //still unsure what this will be used for, but most likely to enable manual turret control
 
             //d up and down, move intake up/down
             if (gamepad1.dpad_up && robot.intakePulley.getPower() <= 1)     robot.intakePulley.setPower(robot.intakePulley.getPower() + 1);
@@ -118,6 +131,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
     public void basicTelemetryManager() {
         if (getRuntime() >= startOfCooldown + cooldownLength) {
+            telemetry.addData("in abort mode?", abort);
             telemetry.addLine("position information");
             telemetry.addData("x"       , posTarMan.getRobotPosition()[0]);
             telemetry.addData("y"       , posTarMan.getRobotPosition()[1]);
@@ -139,7 +153,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         }
     }
 
-
+    //////////////////////////////robot control//////////////////////////////
     public void basicStickControls(double x, double y) {
         double leftPower  = 0;
         double rightPower = 0;
@@ -162,7 +176,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         robot.leftDrive.setPower(-left);
         robot.rightDrive.setPower(-right);
     }
-
+    //////////////////////////////turret stuff//////////////////////////////
     /**
      * given the angle relative to the field, convert to the angle relative to the robot (front = 0), then move the turret to that angle
      * @param angle angle relative to field
@@ -174,12 +188,11 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
         //heading relative to field -> heading relative to the robot
         targetPosition = angle - robotHeading;
-        telemetry.addData("target angle", Math.toDegrees(targetPosition));
         //check if heading rel. to robot is in the deadzone, if so, return -1
         if (targetPosition > Math.toRadians(45) || targetPosition < -Math.toRadians(45)) return -1;
+        currentTurretHeading = Math.toDegrees(targetPosition);
         //convert the heading rel. to robot into the needed encoder counts
         targetPosition /= robot.CORE_HEX_RADIANS_PER_COUNTS;
-        telemetry.addData("target encoder position", targetPosition);
         //make sure that the robot rotates the best direction to reach goal
 
         //rotate to that position and return 0
@@ -216,17 +229,13 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
         //iterate and save
         BigDecimal targetPos = elevationCalculationIteration(angle); // in radians
-
+        currentTurretPitch = Math.toDegrees(targetPos.doubleValue());
         //convert the target pos to a value in encoder counts
         targetPos = targetPos.divide(BigDecimal.valueOf(robot.GO_BILDA_RADIANS_PER_COUNTS), elevationMC); // in encoder counts
 
         robot.runMotorToPosition(robot.turretElevator, targetPos.intValue(), 0.1);
         return 0;
     }
-    double elevationStep = 1;
-    MathContext elevationMC = new MathContext(16);
-    BigDecimal elevationLastGuessDegrees = new BigDecimal("00.0000", elevationMC);
-    double elevationGuessOffset = 1;
     /**
      * this function uses iteration to find the optimal position to move the elevator motor to in order to elevate the turret to a given angle,
      * this function works best when working with degrees so it takes an input and gives an output in radians, while using degrees for internal calculations
@@ -257,16 +266,10 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         elevationGuessOffset = (y1 / x1) + ((x1-x3) / (y1-y3));
         return elevationGuessOffset;
     }
-
-
-    boolean firingError = false;
     public void fireTurret() {
-        //steps: stop movement of the motors, get heading and pitch, (make sure target is in range), move to that heading and pitch (spin up the flywheel), launch
-
         //stop robot movement
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
-
         //get heading and pitch (skip for now, probably not needed bc alot of what I would put here is redundant (already happens in the teleop))
         posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition());
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
@@ -283,20 +286,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 startOfCooldown = getRuntime();
                 break;
             default: //continue as normal
-
-                if (!firingError) { // if there wasn't a firing error last attempt (there is not a ring already in launch position), put a ring in launch position
-                    elevateTurretTo(Math.toRadians(15)); //elevate the turret slightly to assist with the reload
-
-                    //wiggle the launching thing around a bit
-                    robot.turretLauncher.setPower(-0.3);
-                    sleep(300);
-                    robot.turretLauncher.setPower(0);
-                    sleep(100);
-                    robot.turretLauncher.setPower(-.5);
-                    sleep(300); //adjust timing
-                    robot.turretLauncher.setPower(0.15);
-
-                    elevateTurretTo(0);
+                if (!firingError && !loaded) { // if there wasn't a firing error last attempt (there is not a ring already in launch position), put a ring in launch position
+                    reloadTurret();
                 } // if there was a firing error, it'll simply skip, and try to aim again
 
                 //move turret to aim at target
@@ -312,12 +303,13 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                     telemetry.addLine("target is in elevator deadzone, try moving the robot closer");
                     startOfCooldown = getRuntime();
                     firingError = true;
-                } else firingError = false;
+                } else if (firingError) elevateTurretTo(0); //this triggers if the turret couldn't rotate to the target, but could elevate, it just sets the turret to elevate back to zero
+                else firingError = false;
 
                 //wait for the turret to finish aiming
                 while(robot.turretElevator.isBusy() || robot.turretRotator.isBusy()) sleep(10);
 
-                if (!firingError) {
+                if (!firingError && loaded) {
                     //TODO 12/25/2020 this should work, but i need to figure out what launcherTimeToRotate should be, and i'll need a actual continuous servo, recode to work for a standard servo
 
                     //spin up flywheels and wait a bit to let everything move up to speed, the flywheels are not the same speed in order to create a spin
@@ -338,8 +330,43 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                     elevateTurretTo(0);
                     rotateTurretTo(0);
                     robot.turretLauncher.setPower(0.5);
+                    loaded = false;
                 }
 
+        }
+    }
+
+    /**
+     * this will reload a ring if needed, or clear the turret otherwise (if there was a jam for instance)
+     */
+    public void reloadTurret() {
+        //make sure turret is aligned
+        rotateTurretTo(0);
+        elevateTurretTo(0);
+        if (loaded) { //if loaded, unload
+            //set the conveyors to reverse
+            robot.conveyor.setPower(-1);
+            //clear turret
+            robot.turretLauncher.setPower(.5);
+            sleep(500);
+            //stop conveyors
+            robot.conveyor.setPower(0);
+            loaded = false;
+        } else { //if unloaded, load
+            //set the conveyors to forward
+            robot.conveyor.setPower(1);
+            elevateTurretTo(Math.toRadians(15)); //elevate the turret slightly to assist with the reload
+            //wiggle the launching thing around a bit
+            robot.turretLauncher.setPower(-0.3);
+            robot.conveyor.setPower(0);
+            sleep(300);
+            robot.turretLauncher.setPower(0);
+            sleep(100);
+            robot.turretLauncher.setPower(-.5);
+            sleep(300); //adjust timing
+            robot.turretLauncher.setPower(0.15);
+            elevateTurretTo(0);
+            loaded = true;
         }
     }
 }
