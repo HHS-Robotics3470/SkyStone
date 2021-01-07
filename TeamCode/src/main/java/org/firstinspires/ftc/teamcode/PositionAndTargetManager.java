@@ -141,7 +141,7 @@ public class PositionAndTargetManager{
         double s = (s1 + s2) / 2.0; // average distance travelled between the two wheels
 
         //Calculate Angle change, robot width may need to be adjusted, and must be accurate to a high degree
-        headingChange = (leftChange - rightChange) / (robotWidth);
+        headingChange = Math.toRadians((leftChange - rightChange) / (robotWidth));
 
         //some house keeping
         previousLeftCounts = leftCounts;

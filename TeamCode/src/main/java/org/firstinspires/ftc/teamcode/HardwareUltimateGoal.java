@@ -4,6 +4,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -113,8 +114,8 @@ public class HardwareUltimateGoal {
         // Define and Initialize Motors
         leftDrive   = hwMap.get(DcMotor.class, "leftDrive"); //main hub, motor port 0
         rightDrive  = hwMap.get(DcMotor.class, "rightDrive"); //main hub, motor port 1
-        rightDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
-        leftDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
+        rightDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftDrive.setDirection(DcMotor.Direction.FORWARD);
 
         flyWheel1   = hwMap.get(DcMotor.class, "flywheelLeft"); //second hub, motor port 0
         flyWheel2   = hwMap.get(DcMotor.class, "flywheelRight"); //second hub, motor port 1
@@ -125,6 +126,7 @@ public class HardwareUltimateGoal {
         turretElevator = hwMap.get(DcMotor.class, "turretElevator"); //main hub, motor port 2, needs an encoder wire
         conveyor       = hwMap.get(DcMotor.class, "conveyor"); //second hub, motor port 3
         intakePulley    = hwMap.get(DcMotor.class, "intakePulley"); //second hub, motor port 2, needs an encoder wire
+        conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Set all motors to zero power
         leftDrive.setPower(0);

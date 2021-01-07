@@ -11,7 +11,15 @@ import java.math.MathContext;
 /*
 debugging things will be on the d-pad, controls on the a,b,x,y buttons
  */
-//TODO: 12/21/2020 TODO LIST: test code for the goal grabber, test code conveyor belt, code reloading sequence, code turret elevation adjustment, code turret heading adjustment
+/*TODO: 12/21/2020 TODO LIST: telemetry timer taking too long, or maybe not working
+heading tracking is not working (should be fixed, needs testing
+firing sequence may be having issues too (hold, may just be heading issue)
+fixed: drives backwards (reverse motor direction, if that causes issues with the encoders, flip directions again, and )
+fixed: conveyor elevators are being wierd, maybe add a delay (same with other input buttons)
+reloading isn't moving forward enough (last push)
+    fixed: conveyor moves the wrong way too (wrong way throughout code, change in hw class
+ */
+
 
 
 //TODO: 10/21/2020 eventually, change this from a testbed type thing (with all the telemetry), to a final product
@@ -26,7 +34,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
     //variables for telemetry
     double currentTurretHeading = 0;
     double currentTurretPitch   = 0;
-    double cooldownLength = 500;//duration that an error will display
+    double cooldownLength = 200;//duration that an error will display
     double startOfCooldown = -cooldownLength; //so that normal telemetry starts immediately
     //variables for the firing sequence, to prevent it from repeating steps unnecessarily
     boolean loaded = false;
@@ -92,33 +100,41 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 posTarMan.bestTargetPosition(runtime.seconds());
                 telemetry.addLine("TARGET CHANGED");
                 telemetry.addData("new target", posTarMan.getCurrentTarget());
-                telemetry.update();
+                //telemetry.update();
                 startOfCooldown = getRuntime();
+                sleep(50);
             }
             //fire turret
-            if(gamepad1.a)          fireTurret();
+            if(gamepad1.a) {
+                fireTurret();
+                sleep(100);
+            }
             //reload/clear
-            if(gamepad1.b)          reloadTurret();
+            if(gamepad1.b) {
+                reloadTurret();
+                sleep(100);
+            }
 
             //shows info about the motor encoders
             if (gamepad1.left_trigger > 0.5) {
                 telemetry.addLine("motor encoder counts");
                 telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
                 telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
-                telemetry.update();
+                //telemetry.update();
                 startOfCooldown = getRuntime();
+                sleep(50);
             }
             //abort button
             if (gamepad1.left_bumper) abort = !abort; //still unsure what this will be used for, but most likely to enable manual turret control
 
             //d up and down, move intake up/down
-            if (gamepad1.dpad_up && robot.intakePulley.getPower() <= 1)     robot.intakePulley.setPower(robot.intakePulley.getPower() + 1);
-            if (gamepad1.dpad_down && robot.intakePulley.getPower() >=-1)   robot.intakePulley.setPower(robot.intakePulley.getPower() - 1);
+            if (gamepad1.dpad_up && robot.intakePulley.getPower() <= 1)     {robot.intakePulley.setPower(robot.intakePulley.getPower() + 1); sleep(50);}
+            if (gamepad1.dpad_down && robot.intakePulley.getPower() >=-1)   {robot.intakePulley.setPower(robot.intakePulley.getPower() - 1); sleep(50);}
             //d right, toggle conveyor
-            if (gamepad1.dpad_right)                                        robot.conveyor.setPower(-1 * (robot.conveyor.getPower() - 0.5) + 0.5);
+            if (gamepad1.dpad_right)                                        {robot.conveyor.setPower(-1 * (robot.conveyor.getPower() - 0.5) + 0.5); sleep(50);}
                                                                             //power should only ever be 0 or 1; -(0 - 0.5) + 0.5 = 1; -(1 - 0.5) + 0.5 = 0
             //d left, toggle grabber
-            if (gamepad1.dpad_left)                                         robot.wobbleGrabber.setPosition(-1 * (robot.wobbleGrabber.getPosition() - 0.5) + 0.5);
+            if (gamepad1.dpad_left)                                         {robot.wobbleGrabber.setPosition(-1 * (robot.wobbleGrabber.getPosition() - 0.5) + 0.5); sleep(50);}
                                                                             //position should only ever be 0 or 1, same deal as before
 
             //telemetry
