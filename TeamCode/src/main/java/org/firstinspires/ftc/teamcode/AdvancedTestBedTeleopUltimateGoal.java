@@ -100,9 +100,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 posTarMan.bestTargetPosition(runtime.seconds());
                 telemetry.addLine("TARGET CHANGED");
                 telemetry.addData("new target", posTarMan.getCurrentTarget());
-                //telemetry.update();
-                startOfCooldown = getRuntime();
-                sleep(50);
+                telemetry.update();
+                sleep(100);
             }
             //fire turret
             if(gamepad1.a) {
@@ -120,24 +119,35 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 telemetry.addLine("motor encoder counts");
                 telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
                 telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
-                //telemetry.update();
-                startOfCooldown = getRuntime();
-                sleep(50);
+                telemetry.update();
             }
             //abort button
-            if (gamepad1.left_bumper) abort = !abort; //still unsure what this will be used for, but most likely to enable manual turret control
+            if (gamepad1.left_bumper) {abort = !abort; sleep(50);} // changes the d-pad to control the turrets movement, also makes the fire button stop moving the turret
 
-            //d up and down, move intake up/down
-            if (gamepad1.dpad_up && robot.intakePulley.getPower() <= 1)     {robot.intakePulley.setPower(robot.intakePulley.getPower() + 1); sleep(50);}
-            if (gamepad1.dpad_down && robot.intakePulley.getPower() >=-1)   {robot.intakePulley.setPower(robot.intakePulley.getPower() - 1); sleep(50);}
-            //d right, toggle conveyor
-            if (gamepad1.dpad_right)                                        {robot.conveyor.setPower(-1 * (robot.conveyor.getPower() - 0.5) + 0.5); sleep(50);}
-                                                                            //power should only ever be 0 or 1; -(0 - 0.5) + 0.5 = 1; -(1 - 0.5) + 0.5 = 0
+
+
+            //d up and down, move intake up/down (if not in abort mode, if in abort, elevate turret up/down
+            if (gamepad1.dpad_up && robot.intakePulley.getPower() <= 1)     {
+                if (!abort) {robot.intakePulley.setPower(robot.intakePulley.getPower() + 1); sleep(50);} //in normal mode, move intake up
+                else robot.runMotorToPosition(robot.turretElevator, robot.turretElevator.getCurrentPosition() + 10, 0.1); //in abort mode, mode turret up
+            }
+            if (gamepad1.dpad_down && robot.intakePulley.getPower() >=-1 && !abort)   {
+                if (!abort) {robot.intakePulley.setPower(robot.intakePulley.getPower() - 1); sleep(50);} //in normal mode, move intake down
+                else robot.runMotorToPosition(robot.turretElevator, robot.turretElevator.getCurrentPosition() - 10, 0.1); //in abort mode, mode turret down
+            }
+            //d right and left, toggle conveyor and grabber respectively (in normal mode, in abort mode, rotate turret right / left)
+            if (gamepad1.dpad_right)                                        {
+                if (!abort) {robot.conveyor.setPower(-1 * (robot.conveyor.getPower() - 0.5) + 0.5); sleep(50);} //power should only ever be 0 or 1; -(0 - 0.5) + 0.5 = 1; -(1 - 0.5) + 0.5 = 0
+                else {robot.runMotorToPosition(robot.turretRotator, robot.turretRotator.getCurrentPosition() + 10, 0.1);} //in abort mode, rotate turret to the right
+            }
             //d left, toggle grabber
-            if (gamepad1.dpad_left)                                         {robot.wobbleGrabber.setPosition(-1 * (robot.wobbleGrabber.getPosition() - 0.5) + 0.5); sleep(50);}
-                                                                            //position should only ever be 0 or 1, same deal as before
+            if (gamepad1.dpad_left)                                         {
+                if (!abort) {robot.wobbleGrabber.setPosition(-1 * (robot.wobbleGrabber.getPosition() - 0.5) + 0.5); sleep(50);}//position should only ever be 0 or 1, same deal as before
+                else {robot.runMotorToPosition(robot.turretRotator, robot.turretRotator.getCurrentPosition() - 10, 0.1);} //in abort mode, rotate turret to the left
+            }
 
             //telemetry
+            if (!(gamepad1.left_trigger > 0.5))
             basicTelemetryManager();
         }
 
@@ -146,27 +156,28 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
     }
 
     public void basicTelemetryManager() {
-        if (getRuntime() >= startOfCooldown + cooldownLength) {
-            telemetry.addData("in abort mode?", abort);
-            telemetry.addLine("position information");
-            telemetry.addData("x"       , posTarMan.getRobotPosition()[0]);
-            telemetry.addData("y"       , posTarMan.getRobotPosition()[1]);
-            telemetry.addData("heading" , Math.toDegrees(posTarMan.getRobotHeading()));
 
-            telemetry.addLine("turret information");
-            telemetry.addData("heading"             , currentTurretHeading);
-            telemetry.addData("pitch"               , currentTurretPitch);
-            telemetry.addData("heading to target"   , aimMan.getHeadingToTarget());
-            telemetry.addData("pitch to target"     , aimMan.getPitchToTarget());
+        telemetry.addData("in abort mode?", abort);
+        telemetry.addLine("position information");
+        telemetry.addData("x"       , posTarMan.getRobotPosition()[0]);
+        telemetry.addData("y"       , posTarMan.getRobotPosition()[1]);
+        telemetry.addData("heading" , Math.toDegrees(posTarMan.getRobotHeading()));
 
-            telemetry.addLine("target info");
-            telemetry.addData("target"  , posTarMan.getCurrentTarget());
-            telemetry.addData("x"       , posTarMan.getTargetPosition()[0]);
-            telemetry.addData("y"       , posTarMan.getTargetPosition()[1]);
-            telemetry.addData("z"       , posTarMan.getTargetPosition()[2]);
+        telemetry.addLine("turret information");
+        telemetry.addData("heading"             , currentTurretHeading);
+        telemetry.addData("pitch"               , currentTurretPitch);
+        telemetry.addData("target"              , posTarMan.getCurrentTarget());
+        telemetry.addData("heading to target"   , aimMan.getHeadingToTarget());
+        telemetry.addData("pitch to target"     , aimMan.getPitchToTarget());
 
-            telemetry.update();
-        }
+        telemetry.addLine("target info");
+        telemetry.addData("target"  , posTarMan.getCurrentTarget());
+        telemetry.addData("x"       , posTarMan.getTargetPosition()[0]);
+        telemetry.addData("y"       , posTarMan.getTargetPosition()[1]);
+        telemetry.addData("z"       , posTarMan.getTargetPosition()[2]);
+
+        telemetry.update();
+
     }
 
     //////////////////////////////robot control//////////////////////////////
@@ -307,14 +318,14 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 } // if there was a firing error, it'll simply skip, and try to aim again
 
                 //move turret to aim at target
-                if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) { //executes the rotation method, and if there is an error, runs the body of the IF statement, delcaring an error, and aborting launch
+                if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1 && !abort) { //executes the rotation method, and if there is an error, runs the body of the IF statement, delcaring an error, and aborting launch
                     //the target is in deadzone
                     telemetry.addLine("target is in turret dead zone, try rotating the robot");
                     startOfCooldown = getRuntime();
                     firingError = true;
                 } else firingError = false;
 
-                if (elevateTurretTo(aimMan.getPitchToTarget()) == -1) { //same deal as before, just applied to the elevator
+                if (elevateTurretTo(aimMan.getPitchToTarget()) == -1 && !abort) { //same deal as before, just applied to the elevator
                     //the target is in the deadzone
                     telemetry.addLine("target is in elevator deadzone, try moving the robot closer");
                     startOfCooldown = getRuntime();

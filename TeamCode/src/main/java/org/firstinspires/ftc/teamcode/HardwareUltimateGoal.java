@@ -74,7 +74,7 @@ public class HardwareUltimateGoal {
 
     /* some variables for different measurements of the robot */ //TODO: keep up to date
     public double turretHeight = 0.2023; //5 + (13/16) inches, from the floor to the launch platform at rest, up to date but not 100% accurate
-    public double robotWidth = 0.3429;  // 13.5 inches, up to date, but not 100% accurate
+    public double robotWidth = 0.345;  // 34.5cm, up to date, but not 100% accurate
     public long launcherTimeToRotate = 100; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
 
     // stats for the TorqueNADO motors
@@ -114,8 +114,8 @@ public class HardwareUltimateGoal {
         // Define and Initialize Motors
         leftDrive   = hwMap.get(DcMotor.class, "leftDrive"); //main hub, motor port 0
         rightDrive  = hwMap.get(DcMotor.class, "rightDrive"); //main hub, motor port 1
-        rightDrive.setDirection(DcMotor.Direction.REVERSE);
-        leftDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftDrive.setDirection(DcMotor.Direction.REVERSE);
 
         flyWheel1   = hwMap.get(DcMotor.class, "flywheelLeft"); //second hub, motor port 0
         flyWheel2   = hwMap.get(DcMotor.class, "flywheelRight"); //second hub, motor port 1

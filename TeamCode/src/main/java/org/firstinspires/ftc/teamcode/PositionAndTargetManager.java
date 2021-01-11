@@ -1,8 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 
-//todo: position manager doesn't work, basically goes infinite as soon as there is any movement, heading is wack, but doesn't go infinite (change in recorded heading isn't realistic, doesn't change enough when rotation, changes when going straight
-// in response to the above issue, the update method was completely rewritten, these changes will be tested soon
+//todo: position manager doesn't work, heading is having issues again,
+// 3 posible solutions:
+// 1: conversion error
 public class PositionAndTargetManager{
     /*info found: https://firstinspiresst01.blob.core.windows.net/first-game-changers/ftc/field-setup-guide.pdf starting page 8
      *        and: https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-2-remote-events.pdf starting page 26
@@ -138,10 +139,13 @@ public class PositionAndTargetManager{
         //positions
         double s1 = leftChange * metersPerCount;  // distance the left wheel traveled (m) (delta s1)
         double s2 = rightChange * metersPerCount; // distance the right wheel traveled (m) (delta s2)
-        double s = (s1 + s2) / 2.0; // average distance travelled between the two wheels
+        double s = (s1 + s2) / 2.0; // average distance travelled between the two wheels; also the length of the arc the robot moved
 
         //Calculate Angle change, robot width may need to be adjusted, and must be accurate to a high degree
-        headingChange = Math.toRadians((leftChange - rightChange) / (robotWidth));
+        //this part is broken most likely
+        //headingChange = Math.toRadians(-(leftChange - rightChange) / (robotWidth)); //attempted fix 1
+        headingChange = (s2 - s1) / robotWidth; //attempted fix 2
+        // attempted fix 3
 
         //some house keeping
         previousLeftCounts = leftCounts;
