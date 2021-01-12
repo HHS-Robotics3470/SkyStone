@@ -15,7 +15,7 @@ debugging things will be on the d-pad, controls on the a,b,x,y buttons
 heading tracking is not working (should be fixed, needs testing
 firing sequence may be having issues too (hold, may just be heading issue)
 fixed: drives backwards (reverse motor direction, if that causes issues with the encoders, flip directions again, and )
-fixed: conveyor elevators are being wierd, maybe add a delay (same with other input buttons)
+fixed: conveyor elevators are being weird, maybe add a delay (same with other input buttons)
 reloading isn't moving forward enough (last push)
     fixed: conveyor moves the wrong way too (wrong way throughout code, change in hw class
  */
@@ -127,11 +127,11 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
 
             //d up and down, move intake up/down (if not in abort mode, if in abort, elevate turret up/down
-            if (gamepad1.dpad_up && robot.intakePulley.getPower() <= 1)     {
+            if (gamepad1.dpad_up && robot.intakePulley.getPower() < 1)     {
                 if (!abort) {robot.intakePulley.setPower(robot.intakePulley.getPower() + 1); sleep(50);} //in normal mode, move intake up
                 else robot.runMotorToPosition(robot.turretElevator, robot.turretElevator.getCurrentPosition() + 10, 0.1); //in abort mode, mode turret up
             }
-            if (gamepad1.dpad_down && robot.intakePulley.getPower() >=-1 && !abort)   {
+            if (gamepad1.dpad_down && robot.intakePulley.getPower() > -1)   {
                 if (!abort) {robot.intakePulley.setPower(robot.intakePulley.getPower() - 1); sleep(50);} //in normal mode, move intake down
                 else robot.runMotorToPosition(robot.turretElevator, robot.turretElevator.getCurrentPosition() - 10, 0.1); //in abort mode, mode turret down
             }
@@ -167,8 +167,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         telemetry.addData("heading"             , currentTurretHeading);
         telemetry.addData("pitch"               , currentTurretPitch);
         telemetry.addData("target"              , posTarMan.getCurrentTarget());
-        telemetry.addData("heading to target"   , aimMan.getHeadingToTarget());
-        telemetry.addData("pitch to target"     , aimMan.getPitchToTarget());
+        telemetry.addData("heading to target"   , Math.toDegrees(aimMan.getHeadingToTarget()));
+        telemetry.addData("pitch to target"     , Math.toDegrees(aimMan.getPitchToTarget()));
 
         telemetry.addLine("target info");
         telemetry.addData("target"  , posTarMan.getCurrentTarget());
@@ -318,14 +318,14 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 } // if there was a firing error, it'll simply skip, and try to aim again
 
                 //move turret to aim at target
-                if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1 && !abort) { //executes the rotation method, and if there is an error, runs the body of the IF statement, delcaring an error, and aborting launch
+                if (!abort && rotateTurretTo(aimMan.getHeadingToTarget()) == -1) { //executes the rotation method, and if there is an error, runs the body of the IF statement, delcaring an error, and aborting launch
                     //the target is in deadzone
                     telemetry.addLine("target is in turret dead zone, try rotating the robot");
                     startOfCooldown = getRuntime();
                     firingError = true;
                 } else firingError = false;
 
-                if (elevateTurretTo(aimMan.getPitchToTarget()) == -1 && !abort) { //same deal as before, just applied to the elevator
+                if (!abort && elevateTurretTo(aimMan.getPitchToTarget()) == -1) { //same deal as before, just applied to the elevator //commented out the abort thing so that it pitches for you no matter what
                     //the target is in the deadzone
                     telemetry.addLine("target is in elevator deadzone, try moving the robot closer");
                     startOfCooldown = getRuntime();

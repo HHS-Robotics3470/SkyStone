@@ -56,7 +56,7 @@ public class PositionAndTargetManager{
             {0.28575,1.79705,0.784225},     /*power shot 2*/
             {0.47625,1.79705,0.784225},     /*power shot 3*/
             {0.8905875,1.79705,0.911225},   /*high goal*/
-            {-0.8905875,1.79705,0.6873875}, /*medium goal*/
+            {0.8905875,1.79705,0.6873875}, /*medium goal*/ //flip x value for in person events
             {0.8905875,1.79705,0.4318}      /*low goal*/
     };
 
@@ -67,7 +67,7 @@ public class PositionAndTargetManager{
         r = 2, z
      */
     //initializes assuming it's on team red, in the constructor, values will be changed as needed if it's on team blue
-    double[] robotPosition = {1.79705, -1.79705}; //TODO: update these coords when they are known to a more accurate degree
+    double[] robotPosition = new double[2]; //TODO: update these coords when they are known to a more accurate degree
     double robotHeading = Math.PI / 2; //heading relative to field, pi/2 = toward goals
 
     double[] targetPosition = new double[3];
@@ -94,6 +94,7 @@ public class PositionAndTargetManager{
         //take some variables from the robot
         metersPerCount = robot.NADO_METERS_PER_COUNT;
         robotWidth          = robot.robotWidth;
+        robotPosition = new double[]{1.79705 - robotWidth / 2, -1.79705};
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
             for (int r = 0; r < targets.length; r++) {
