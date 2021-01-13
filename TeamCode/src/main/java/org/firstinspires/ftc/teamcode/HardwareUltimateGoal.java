@@ -127,6 +127,7 @@ public class HardwareUltimateGoal {
         conveyor       = hwMap.get(DcMotor.class, "conveyor"); //second hub, motor port 3
         intakePulley    = hwMap.get(DcMotor.class, "intakePulley"); //second hub, motor port 2, needs an encoder wire
         conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
+        turretRotator.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Set all motors to zero power
         leftDrive.setPower(0);

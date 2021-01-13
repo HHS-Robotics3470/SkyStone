@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Double.isNaN;
+
 /*
  * this will be the main class for the aim assist.
  * it should be able to take an input consisting of the robots position, heading, velocity(?), acceleration(?), and the position
@@ -180,7 +182,7 @@ public class AimAssist {
 
             a1 = Math.atan( ( (v*v) + Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );//+
             a2 = Math.atan( ( (v*v) - Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );//-
-
+            // TODO do isNAN on these, throw exception if it is
             //decide the optimal angle
             angle = a2;
             if (a1 < a2)
@@ -191,6 +193,11 @@ public class AimAssist {
             //make sure that the height and length of the trajectory stay within bounds
             // height || range
             if ( (((v*v * Math.sin(angle) * Math.sin(angle)) / (2 * g)) >= (heightCap - turretHeight)) || (((v*v * Math.sin(2 * angle)) / (g)) >= rangeCap) )  return -2.0;
+
+            //check if something is wack, return negative 1 (the error value)
+            if (isNaN(a1) || isNaN(a2)) {
+                return -1;
+            }
 
             return angle;
         } catch (Exception e) {
