@@ -40,7 +40,23 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         runtime.reset();
         // Step through each leg of the path,
 
-        /*
+        /* new idea
+        (while doing these steps, make sure to update the robots position frequently)
+
+        step 1: move forward to right before the launch line, infront of the starting stack, without knocking them over
+
+        step 2: fire the 2 rings we preloaded (either the high goal, or the power shots, we need to test the robots accuracy to figure out which is optimal
+
+        step 3: move to the starting stack, and reload 1 ring from the starting stack
+
+        step 4: move back to (right before) the launch line (optional), and fire the ring we just picked up
+
+        step 5: (if we figure out that we'll have time, and be able to (if the stack gets scattered too much in step 4 this won't be possible), repeat steps 3-4 until we have fired 3 rings from the starting stack
+
+        step 6: move ON TOP OFF the launch line, and end autonomous, (in the end step, make sure to accurately store the robots position and heading using the writePositionHeading(double[] position, double heading) method of the HardwareUltimateGoal.java class
+         */
+
+        /* old:
         step 1: pick up and store the rings in the starter stack
             (if we get a way to know how many rings where in the starter stack, do this before doing step 2)
             step 1.5: wobble goal stuff

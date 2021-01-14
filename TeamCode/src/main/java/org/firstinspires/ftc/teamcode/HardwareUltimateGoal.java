@@ -261,4 +261,5 @@ public class HardwareUltimateGoal {
         motor.setPower(0);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+    //TODO: maybe overload this method so that it's more usable for the autonomous
 }

@@ -306,11 +306,13 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 telemetry.addLine("target out of range, move closer or change targets");
                 telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
                 telemetry.update();
+                sleep(100);
                 break;
             case -2://target would require going over range/height cap
                 telemetry.addLine("hitting the current target would require going over the range / height cap");
                 telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
                 telemetry.update();
+                sleep(100);
                 break;
             default: //continue as normal
                 if (!firingError && !loaded && !abort) { // if there wasn't a firing error last attempt (there is not a ring already in launch position), put a ring in launch position
@@ -337,8 +339,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 } else if (firingError) elevateTurretTo(0); //this triggers if the turret couldn't rotate to the target, but could elevate, it just sets the turret to elevate back to zero
                 else firingError = false;
 
-                //wait for the turret to finish aiming
-                while(robot.turretElevator.isBusy() || robot.turretRotator.isBusy()) sleep(10);
+                //wait for the turret to finish aiming (unneeded, the methods used to rotate the turrets already wait
+                //while(robot.turretElevator.isBusy() || robot.turretRotator.isBusy()) sleep(10);
 
                 if (!firingError && loaded) {
                     //TODO 12/25/2020 this should work, but i need to figure out what launcherTimeToRotate should be, and i'll need a actual continuous servo, recode to work for a standard servo
