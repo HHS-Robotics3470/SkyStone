@@ -10,6 +10,9 @@ import com.qualcomm.robotcore.util.Hardware;
 
 import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+
 /**
  * basic autonomous, will probably be dead reckoning.
  *
@@ -32,6 +35,8 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
          */
         robot.init(hardwareMap);
 
+        long timeToLowerIntake = 1000; //needs testing
+
         //set up other things
         robot.leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -46,36 +51,62 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         //---------------------------------------------------------------------------------------\\
 
         // PARAMETER VALUES ARE TENTATIVE AS EXPERIMENTATION IS NEEDED TO FINE TUNE AND ADJUST THESE VALUES \\
-
+        posTarMan.setTarget(3); //set the target to be the the high goal
         //move forward to right before the launch line
-        robot.leftDrive.setPower(0.5);
+        encoderDrive(robot.leftDrive,robot.rightDrive,1.8, 1);
+        /*robot.leftDrive.setPower(0.5);
         robot.rightDrive.setPower(0.5);
         sleep(2000);
         robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);
+        robot.rightDrive.setPower(0);*/
+
+        robot.intakePulley.setPower(-1);
+        sleep(timeToLowerIntake);
+        robot.intakePulley.setPower(0);
 
         //turn left
-        robot.leftDrive.setPower(-0.5);
+        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(90), 1);
+        /*robot.leftDrive.setPower(-0.5);
         robot.rightDrive.setPower(0.5);
         sleep(1000);
         robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);
+        robot.rightDrive.setPower(0);*/
 
         //move forward, where the starting stack is now to the left of the robot
-        robot.leftDrive.setPower(0.5);
+        encoderDrive(robot.leftDrive,robot.rightDrive,0.28575, 1);
+        /*robot.leftDrive.setPower(0.5);
         robot.rightDrive.setPower(0.5);
         sleep(500);
         robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);
+        robot.rightDrive.setPower(0);*/
 
         //turn right, where the starting stack is now behind the robot
-        robot.leftDrive.setPower(0.5);
+        encoderTurn(robot.leftDrive,robot.rightDrive,-Math.toRadians(90),1);
+        /*robot.leftDrive.setPower(0.5);
         robot.rightDrive.setPower(-0.5);
         sleep(1000);
         robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);
+        robot.rightDrive.setPower(0);*/
 
-        //shoot ring 1 into the high goal
+        //fire twice:
+        aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
+        //  fire loaded ring
+        fireTurret();
+        //  reload
+        reloadTurret();
+        //  fire again
+        fireTurret();
+
+        //TODO: if we end up having enough time, put the next bit into a for loop that repeats at most 3 times
+        //pick up another ring, then fire it
+        encoderDrive(robot.leftDrive,robot.rightDrive,0.5382 - 0.0034,-1);
+        robot.conveyor.setPower(1);
+        encoderDrive(robot.leftDrive,robot.rightDrive,0.3,-0.2);
+        sleep(4000);
+        reloadTurret();
+        encoderDrive(robot.leftDrive,robot.rightDrive,0.8382,1);
+        fireTurret();
+        /*//shoot ring 1 into the high goal
         robot.flyWheel1.setPower(1);
         robot.flyWheel2.setPower(1);
         sleep(500);
@@ -135,7 +166,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.rightDrive.setPower(0.5);
         sleep(500);
         robot.leftDrive.setPower(0.5);
-        robot.rightDrive.setPower(0.5);
+        robot.rightDrive.setPower(0.5);*/
 
         //Saves the robot's position and heading
         HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
@@ -284,5 +315,151 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         right.setPower(0);
         left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         right.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    //////////////////////////////turret stuff//////////////////////////////
+    //variables for the elevation iteration algorithm
+    double elevationStep = 1;
+    MathContext elevationMC = new MathContext(16);
+    BigDecimal elevationLastGuessDegrees = new BigDecimal("00.0000", elevationMC);
+    double elevationGuessOffset = 1;
+    boolean firingError = false;
+    boolean loaded = true;
+    /**
+     * given the angle relative to the field, convert to the angle relative to the robot (front = 0), then move the turret to that angle
+     * @param angle angle relative to field
+     * @return if the target angle in in a dead zone, it returns -1, otherwise it returns 0 and rotates the turret to the needed position
+     */
+    public int rotateTurretTo(double angle) {
+        double targetPosition;
+        double robotHeading = posTarMan.getRobotHeading();
+
+        //heading relative to field -> heading relative to the robot
+        targetPosition = angle - robotHeading;
+        //check if heading rel. to robot is in the deadzone, if so, return -1
+        if (targetPosition > Math.toRadians(45) || targetPosition < -Math.toRadians(45)) return -1;
+        //convert the heading rel. to robot into the needed encoder counts
+        targetPosition /= robot.CORE_HEX_RADIANS_PER_COUNTS;
+        //make sure that the robot rotates the best direction to reach goal
+
+        //rotate to that position and return 0
+        robot.runMotorToPosition(robot.turretRotator, (int) targetPosition, 0.5);
+        return 0;
+    }
+    /**
+     * given the angle relative to the horizontal, move the turret to elevate to that pitch
+     * @param angle desired angle of pitch
+     * @return if the target angle in in a dead zone, it returns -1, otherwise it returns 0 and elevates the turret to the needed position
+     */
+    public double elevateTurretTo(double angle) {
+        //iteration
+        //reset the global values that control the iteration
+        elevationStep = 1;
+        elevationLastGuessDegrees = BigDecimal.ZERO;
+        elevationGuessOffset = 1;
+        //logic statement to make sure that the given target angle of the turret is possible, code in when range of motion is known (if (out of bounds) return -1;
+        if (angle > Math.toRadians(40) || angle < 0) return -1; // if the angle is greater than 40 degrees, or less than zero, stop and return -1,
+
+        //iterate and save
+        BigDecimal targetPos = elevationCalculationIteration(angle); // in radians
+        //convert the target pos to a value in encoder counts
+        targetPos = targetPos.divide(BigDecimal.valueOf(robot.GO_BILDA_RADIANS_PER_COUNTS), elevationMC); // in encoder counts
+
+        robot.runMotorToPosition(robot.turretElevator, targetPos.intValue(), 0.5);
+        return 0;
+    }
+    /**
+     * this function uses iteration to find the optimal position to move the elevator motor to in order to elevate the turret to a given angle,
+     * this function works best when working with degrees so it takes an input and gives an output in radians, while using degrees for internal calculations
+     * @param targetAngle the angle, in radians
+     * @return the angle to move the elevator to, in radians
+     */
+    public BigDecimal elevationCalculationIteration (double targetAngle) {
+        while (elevationGuessOffsetCalculation(-targetAngle, Math.toRadians(-elevationLastGuessDegrees.doubleValue())) > 0) { //convert the target angle, and the guess, to radians in the call to the elevationGuessOffsetCalculation() method, this is because trig in java is done in radians
+            elevationLastGuessDegrees = elevationLastGuessDegrees.add(BigDecimal.valueOf(elevationStep), elevationMC);
+        }
+        elevationLastGuessDegrees = elevationLastGuessDegrees.subtract(BigDecimal.valueOf(elevationStep), elevationMC);
+
+        if (!(Math.abs(elevationGuessOffset) < 0.00001 || elevationStep < 0.0001)) { //skip iteration if the offset is close enough to zero, or it has iterated past 4 decimal places
+            elevationStep /= 10;
+            elevationCalculationIteration(targetAngle);
+        }
+
+        return (elevationLastGuessDegrees.multiply(BigDecimal.valueOf(Math.PI), elevationMC)).divide(BigDecimal.valueOf(180), elevationMC);
+    }
+    public double elevationGuessOffsetCalculation (double targetAngle, double currentGuess) {
+        double x1 = Math.sin(targetAngle) * .02;
+        double y1 = Math.cos(targetAngle) * .02;
+        double x2 = Math.sin(currentGuess) * .02 + 0.0762;
+        double y2 = Math.cos(currentGuess) * .02;
+        double x3 = Math.cos(currentGuess) * .09525 + x2;
+        double y3 = -Math.sin(currentGuess) * .09525 + y2;
+
+        elevationGuessOffset = (y1 / x1) + ((x1-x3) / (y1-y3));
+        return elevationGuessOffset;
+    }
+    public void fireTurret() {
+        //stop robot movement
+        robot.leftDrive.setPower(0);
+        robot.rightDrive.setPower(0);
+        //get heading and pitch (skip for now, probably not needed bc alot of what I would put here is redundant (already happens in the teleop))
+        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition());
+        aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
+
+        //move turret to aim at target
+        if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) rotateTurretTo(Math.toRadians(0)); //try to aim to whatever the aim manager thinks it needs to, if that doesn't work, point forward
+        if (elevateTurretTo(aimMan.getPitchToTarget()) == -1)  rotateTurretTo(Math.toRadians(40));//same as above, just pitch instead of heading
+
+        //spin up flywheels and wait a bit to let everything move up to speed, the flywheels are not the same speed in order to create a spin
+        robot.flyWheel1.setPower(0.9);
+        robot.flyWheel2.setPower(1.0);
+
+        sleep(500);
+
+        //launch ring.
+        // rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
+        robot.turretLauncher.setPower(-1);
+        sleep(500); ///this number will change with testing
+
+        //reset/prep other components for next shot
+        robot.flyWheel1.setPower(0);
+        robot.flyWheel2.setPower(0);
+        elevateTurretTo(0);
+        rotateTurretTo(0);
+        robot.turretLauncher.setPower(0.5);
+        loaded = false;
+    }
+    /**
+     * this will reload a ring if needed, or clear the turret otherwise (if there was a jam for instance)
+     */
+    public void reloadTurret() {
+        //make sure turret is aligned
+        rotateTurretTo(0);
+        elevateTurretTo(0);
+        if (loaded) { //if loaded, unload
+            //set the conveyors to reverse
+            robot.conveyor.setPower(-1);
+            //clear turret
+            robot.turretLauncher.setPower(.5);
+            sleep(500);
+            //stop conveyors
+            robot.conveyor.setPower(0);
+            loaded = false;
+        } else { //if unloaded, load
+            //set the conveyors to forward
+            robot.conveyor.setPower(1);
+            elevateTurretTo(Math.toRadians(15)); //elevate the turret slightly to assist with the reload
+            //wiggle the launching thing around a bit
+            robot.turretLauncher.setPower(-0.3);
+            robot.conveyor.setPower(0);
+            sleep(300);
+            robot.turretLauncher.setPower(0);
+            sleep(100);
+            robot.turretLauncher.setPower(-.5);
+            sleep(300); //adjust timing
+            robot.turretLauncher.setPower(0.15);
+            elevateTurretTo(0);
+            loaded = true;
+        }
     }
 }

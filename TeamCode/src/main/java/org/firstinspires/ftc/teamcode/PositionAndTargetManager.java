@@ -4,7 +4,7 @@ package org.firstinspires.ftc.teamcode;
 //todo: position manager doesn't work, heading is having issues again,
 // 3 posible solutions:
 // 1: conversion error
-public class PositionAndTargetManager{
+public class PositionAndTargetManager {
     /*info found: https://firstinspiresst01.blob.core.windows.net/first-game-changers/ftc/field-setup-guide.pdf starting page 8
      *        and: https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-2-remote-events.pdf starting page 26
      * Coords format: x,y,z
@@ -52,12 +52,12 @@ public class PositionAndTargetManager{
     //initializes assuming it's on team red, in the constructor, values will be changed as needed if it's on team blue
     double[][] targets = {
             /*x,y,z*/
-            {0.09525,1.79705,0.784225},     /*power shot 1*/
-            {0.28575,1.79705,0.784225},     /*power shot 2*/
-            {0.47625,1.79705,0.784225},     /*power shot 3*/
-            {0.8905875,1.79705,0.911225},   /*high goal*/
-            {0.8905875,1.79705,0.6873875}, /*medium goal*/ //flip x value for in person events
-            {0.8905875,1.79705,0.4318}      /*low goal*/
+            {0.09525, 1.79705, 0.784225},     /*power shot 1*/
+            {0.28575, 1.79705, 0.784225},     /*power shot 2*/
+            {0.47625, 1.79705, 0.784225},     /*power shot 3*/
+            {0.8905875, 1.79705, 0.911225},   /*high goal*/
+            {0.8905875, 1.79705, 0.6873875}, /*medium goal*/ //flip x value for in person events
+            {0.8905875, 1.79705, 0.4318}      /*low goal*/
     };
 
     /*
@@ -73,7 +73,7 @@ public class PositionAndTargetManager{
     double[] targetPosition = new double[3];
     int currentTarget;
 
-    double launchZone = 2.06375-1.79705/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
+    double launchZone = 2.06375 - 1.79705/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
 
     double metersPerCount;
     double robotWidth;
@@ -83,18 +83,20 @@ public class PositionAndTargetManager{
     int previousLeftCounts = 0;
     int previousRightCounts = 0;
     ////////////////////////////// constructors //////////////////////////////
+
     /**
      * constructor for the PositionAndTargetManager class
      * use this constructor if no autonomous was run
      * this constructor assumes that the robot is in the corner, facing toward the wall with the goal targets
+     *
      * @param robot     passed to allow for some calculations, and access to certain robot dimensions
      * @param isTeamRed true if on team red, false otherwise, used to personalize the target array, and initial position for what team the robot is on
      */
     public PositionAndTargetManager(HardwareUltimateGoal robot, boolean isTeamRed) {
         //take some variables from the robot
         metersPerCount = robot.NADO_METERS_PER_COUNT;
-        robotWidth          = robot.robotWidth;
-        robotPosition = new double[]{1.79705 - robotWidth / 2, -1.79705};
+        robotWidth = robot.robotWidth;
+        robotPosition = new double[]{1.79705 - 0.57785, -1.79705 + 0.4572 / 2}; //0.57785 is the distance from the right wall, 0.4572 is the length of the robot
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
             for (int r = 0; r < targets.length; r++) {
@@ -108,25 +110,26 @@ public class PositionAndTargetManager{
     /**
      * constructor for the PositionAndTargetManager class
      * use this constructor if an autonomous was run
-     * @param robot         passed to allow for some calculations, and access to certain robot dimensions
-     * @param initPosition  this array should be given by the readPosition() method of HardwareUltimateGoal
-     * @param initHeading   this should be given by the readHeading() method of HardwareUltimateGoal
-     * @param isTeamRed     true if on team red, false otherwise, used to personalize the target array for what team the robot is on
+     *
+     * @param robot        passed to allow for some calculations, and access to certain robot dimensions
+     * @param initPosition this array should be given by the readPosition() method of HardwareUltimateGoal
+     * @param initHeading  this should be given by the readHeading() method of HardwareUltimateGoal
+     * @param isTeamRed    true if on team red, false otherwise, used to personalize the target array for what team the robot is on
      */
     public PositionAndTargetManager(HardwareUltimateGoal robot, double[] initPosition, double initHeading, boolean isTeamRed) {
         //take some variables from the robot
         metersPerCount = robot.NADO_METERS_PER_COUNT;
-        robotWidth          = robot.robotWidth;
+        robotWidth = robot.robotWidth;
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
-            for (int r = 0; r < targets.length; r ++) {
+            for (int r = 0; r < targets.length; r++) {
                 targets[r][0] *= -1.0; //flip the x-axis if not on the red team
             }
         }
         //set position and heading to given values
-        robotPosition[0]   = initPosition[0];
-        robotPosition[1]   = initPosition[1];
-        robotHeading    = initHeading;
+        robotPosition[0] = initPosition[0];
+        robotPosition[1] = initPosition[1];
+        robotHeading = initHeading;
     }
 
     ////////////////////////////// update and calculate method //////////////////////////////
@@ -161,7 +164,7 @@ public class PositionAndTargetManager{
         double twoPI = 2 * Math.PI;
         if (robotHeading > Math.PI) {
             robotHeading = -twoPI + robotHeading;
-        } else if (robotHeading < -Math.PI){
+        } else if (robotHeading < -Math.PI) {
             robotHeading = twoPI + robotHeading;
         }
 
@@ -177,21 +180,24 @@ public class PositionAndTargetManager{
          */
 
     }
+
     /**
      * acts as an update method, that also returns the value it is setting the target position to, works by cycling targets
-     * @param timeSeconds  time elapsed during match, measured in seconds, used to differentiate between mid game and end game targets
+     *
+     * @param timeSeconds time elapsed during match, measured in seconds, used to differentiate between mid game and end game targets
      * @return the position of the target selected, it also sets targetPosition to these coordinates
      */
     public double[] bestTargetPosition(double timeSeconds) {
         int curTar = currentTarget;
         //cycle targets
-        curTar ++;
+        curTar++;
         //make sure it stays in bounds
-        if (curTar > 5) curTar=0;
+        if (curTar > 5) curTar = 0;
 
         //if the robot is out of launch area, it can only target the low goal (5)
-        if (robotPosition[1] > launchZone && curTar != 5) curTar = 5;  //TODO: 10/19/2020 change the > to < depending on what the launch zone actually is
-        // if it's not the endgame, stop it from aiming at a power shot
+        if (robotPosition[1] > launchZone && curTar != 5)
+            curTar = 5;  //TODO: 10/19/2020 change the > to < depending on what the launch zone actually is
+            // if it's not the endgame, stop it from aiming at a power shot
         else if (timeSeconds <= 200 && curTar <= 2) curTar += 3;
         //otherwise, it's the endgame, and it is able to aim at anything, so do no further modifications
 
@@ -202,6 +208,7 @@ public class PositionAndTargetManager{
     }
 
     ////////////////////////////// get methods //////////////////////////////
+
     /**
      * @return robotHeading:     the heading, in radians, that the robot is facing
      */
@@ -222,6 +229,7 @@ public class PositionAndTargetManager{
     public double[] getTargetPosition() {
         return targetPosition;
     }
+
     public double[] getTargetPosition(int i) {
         return targets[i];
     }
@@ -263,5 +271,11 @@ public class PositionAndTargetManager{
                 break;
         }
         return description;
+    }
+    ////////////////////////////// set methods //////////////////////////////
+    public void setTarget(int i) {
+        if (i > 5 || i < 0) i=3;
+        currentTarget = 3;
+        targetPosition = getTargetPosition(i);
     }
 }
