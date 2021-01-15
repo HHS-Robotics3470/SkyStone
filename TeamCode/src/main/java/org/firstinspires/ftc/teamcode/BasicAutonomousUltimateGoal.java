@@ -41,6 +41,8 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         waitForStart();
         runtime.reset();
 
+        // Step through each leg of the path,
+
         //---------------------------------------------------------------------------------------\\
 
         // PARAMETER VALUES ARE TENTATIVE AS EXPERIMENTATION IS NEEDED TO FINE TUNE AND ADJUST THESE VALUES \\
@@ -131,12 +133,9 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.rightDrive.setPower(0.5);
 
         //Saves the robot's position and heading
-        HardwareUltimateGoal.writePositionHeading(double[] position; double heading;)
+        HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
 
         //---------------------------------------------------------------------------------------\\
-
-        // Step through each leg of the path,
-
         /* new idea
         (while doing these steps, make sure to update the robots position frequently)
 
@@ -170,5 +169,115 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 
         step 6: move the robot over the launch line (on top of launch line), and save the robots heading and position
          */
+    }
+    //TODO: eventually make a program that lets the robot move in arcs or something
+    /**
+     * drives the robot forward a given distance, to go in reverse, give a negative value for power
+     * @param left the motor on the left
+     * @param right the motor on the right
+     * @param distance the distance the robot should move, meters, always positive, IMPORTANT, You're passing the desired change, not a desired place (this makes more sense with the turn method)
+     * @param power the power the robot should move at
+     */
+    public void encoderDrive(DcMotor left, DcMotor right, double distance, double power) {
+        distance *= robot.NADO_COUNTS_PER_METER; //converts the desired distance into encoder ticks
+        //if they want to move backwards, invert distance
+        if (power < 0) {
+            distance *= -1;
+        }
+
+        //set up right and left to run to position
+        left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        left.setTargetPosition((int) (left.getCurrentPosition() + distance));
+        left.setPower(0);
+        right.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        right.setTargetPosition((int) (right.getCurrentPosition() + distance));
+        right.setPower(0);
+
+        //set to RunToPosition
+        left.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        right.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        left.setPower(power);
+        right.setPower(power);
+
+        // while the motors are busy, update the positionTargetManager
+        int countOffset = left.getCurrentPosition() - right.getCurrentPosition();
+        boolean leftBigger = true;
+        if (countOffset < 0) {
+            leftBigger = false;
+            countOffset *= -1;
+        }
+        while (right.isBusy() || left.isBusy()) {
+            int leftPos = left.getCurrentPosition();
+            int rightPos = right.getCurrentPosition();
+            posTarMan.update(left.getCurrentPosition(), right.getCurrentPosition());
+
+            // pid type stuff i think
+            if (leftBigger) leftPos -= countOffset;
+            else            rightPos -=countOffset;
+
+            if (leftPos > rightPos) {
+                left.setPower(power - 0.05);
+                right.setPower(power + 0.05);
+            } else if (leftPos < rightPos) {
+                left.setPower(power + 0.05);
+                right.setPower(power - 0.05);
+            } else {
+                left.setPower(power);
+                right.setPower(power);
+            }
+        }
+
+        //stop running to position
+        left.setPower(0);
+        right.setPower(0);
+        left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        right.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    /**
+     *
+     * @param left the motor on the left
+     * @param right the motor on the right
+     * @param angle the desired change in angle, in radians, positive angles turn ccw, negative angles turn cw
+     * @param power the power the motors should move at, should always be positive
+     */
+    public void encoderTurn(DcMotor left, DcMotor right, double angle, double power) {
+        double wheelCircumference = robot.NADO_WHEEL_DIAMETER_METERS * Math.PI;
+        double turnCircumference = robot.robotWidth * Math.PI;
+
+        double angleCircumference = angle * robot.robotWidth;//in meters
+        angleCircumference *= robot.NADO_COUNTS_PER_METER; // in encoder ticks
+
+        //set up right and left to run to position
+        left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        left.setTargetPosition((int) (left.getCurrentPosition() - angleCircumference));
+        left.setPower(0);
+        right.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        right.setTargetPosition((int) (right.getCurrentPosition() + angleCircumference));
+        right.setPower(0);
+
+        //set to RunToPosition
+        left.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        right.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        //make sure the set powers will make the robot turn properly
+        if (angle > 0) {
+            left.setPower(-power);
+            right.setPower(power);
+        } else {
+            left.setPower(power);
+            right.setPower(-power);
+        }
+        // while the motors are busy, update the positionTargetManager
+        while (right.isBusy() || left.isBusy()) {
+            posTarMan.update(left.getCurrentPosition(), right.getCurrentPosition());
+        }
+
+        //stop running to position
+        left.setPower(0);
+        right.setPower(0);
+        left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        right.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 }
