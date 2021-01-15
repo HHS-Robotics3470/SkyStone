@@ -223,7 +223,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         //make sure that the robot rotates the best direction to reach goal
 
         //rotate to that position and return 0
-        robot.runMotorToPosition(robot.turretRotator, (int) targetPosition, 0.1);
+        robot.runMotorToPosition(robot.turretRotator, (int) targetPosition, 0.25);
         return 0;
     }
     /**
@@ -260,7 +260,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         //convert the target pos to a value in encoder counts
         targetPos = targetPos.divide(BigDecimal.valueOf(robot.GO_BILDA_RADIANS_PER_COUNTS), elevationMC); // in encoder counts
 
-        robot.runMotorToPosition(robot.turretElevator, targetPos.intValue(), 0.1);
+        robot.runMotorToPosition(robot.turretElevator, targetPos.intValue(), 0.25);
         return 0;
     }
     /**
@@ -365,6 +365,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                     robot.turretLauncher.setPower(0.5);
                     loaded = false;
                 }
+                break;
         }
     }
 
