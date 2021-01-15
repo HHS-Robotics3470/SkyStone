@@ -152,13 +152,13 @@ public class HardwareUltimateGoal {
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //torqueNADO motor
         turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //core hex motor //will run using a target position
         turretElevator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);// GoBilda 5201 series 53:1 //will run using a target position
-        intakePulley.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //torqueNADO motor //will run using a target position
-
 
         //set to run without encoder
         conveyor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         flyWheel1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         flyWheel2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intakePulley.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
 
         //set zero behavior
         leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

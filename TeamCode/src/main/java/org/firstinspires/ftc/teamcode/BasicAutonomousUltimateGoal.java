@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Hardware;
 
 import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 
@@ -35,15 +36,111 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
+
+        //---------------------------------------------------------------------------------------\\
+
+        // PARAMETER VALUES ARE TENTATIVE AS EXPERIMENTATION IS NEEDED TO FINE TUNE AND ADJUST THESE VALUES \\
+
+        //move forward to right before the launch line
+        robot.leftDrive.setPower(0.5);
+        robot.rightDrive.setPower(0.5);
+        sleep(2000);
+        robot.leftDrive.setPower(0);
+        robot.rightDrive.setPower(0);
+
+        //turn left
+        robot.leftDrive.setPower(-0.5);
+        robot.rightDrive.setPower(0.5);
+        sleep(1000);
+        robot.leftDrive.setPower(0);
+        robot.rightDrive.setPower(0);
+
+        //move forward, where the starting stack is now to the left of the robot
+        robot.leftDrive.setPower(0.5);
+        robot.rightDrive.setPower(0.5);
+        sleep(500);
+        robot.leftDrive.setPower(0);
+        robot.rightDrive.setPower(0);
+
+        //turn right, where the starting stack is now behind the robot
+        robot.leftDrive.setPower(0.5);
+        robot.rightDrive.setPower(-0.5);
+        sleep(1000);
+        robot.leftDrive.setPower(0);
+        robot.rightDrive.setPower(0);
+
+        //shoot ring 1 into the high goal
+        robot.flyWheel1.setPower(1);
+        robot.flyWheel2.setPower(1);
+        sleep(500);
+        robot.flyWheel1.setPower(0);
+        robot.flyWheel2.setPower(0);
+
+        //reloads ring 2 into the chamber
+        robot.conveyor.setPower(1);
+        sleep(2000);
+        robot.conveyor.setPower(0);
+
+        //shoot ring 2 into the high goal
+        robot.flyWheel1.setPower(1);
+        robot.flyWheel2.setPower(1);
+        sleep(500);
+        robot.flyWheel1.setPower(0);
+        robot.flyWheel2.setPower(0);
+
+        for(int step = 0; step < 3; step++) {
+
+            //back up and take in a ring from the starting stack
+            robot.intakePulley.setPower(1);
+            robot.leftDrive.setPower(-0.25);
+            robot.rightDrive.setPower(-0.25);
+            sleep(1000);
+            robot.intakePulley.setPower(1);
+            robot.leftDrive.setPower(0);
+            robot.rightDrive.setPower(0);
+
+            //move forward, to right behind the launch line
+            robot.leftDrive.setPower(0.5);
+            robot.rightDrive.setPower(0.5);
+            sleep(500);
+            robot.leftDrive.setPower(0);
+            robot.rightDrive.setPower(0);
+
+            //reloads a ring from the starting stack into the chamber
+            robot.conveyor.setPower(1);
+            sleep(2000);
+            robot.conveyor.setPower(0);
+
+            //shoot ring into the high goal
+            robot.flyWheel1.setPower(1);
+            robot.flyWheel2.setPower(1);
+            sleep(500);
+            robot.flyWheel1.setPower(0);
+            robot.flyWheel2.setPower(0);
+        }
+
+        //drive over the launch line
+        robot.leftDrive.setPower(0.5);
+        robot.rightDrive.setPower(0.5);
+        sleep(500);
+        robot.leftDrive.setPower(0.5);
+        robot.rightDrive.setPower(0.5);
+
+        //Saves the robot's position and heading
+        HardwareUltimateGoal.writePositionHeading(double[] position; double heading;)
+
+        //---------------------------------------------------------------------------------------\\
+
         // Step through each leg of the path,
 
         /* new idea
         (while doing these steps, make sure to update the robots position frequently)
 
-        step 1: move forward to right before the launch line, infront of the starting stack, without knocking them over
+        step 1: move forward to right before the launch line, in front of the starting stack, without knocking them over
 
         step 2: fire the 2 rings we preloaded (either the high goal, or the power shots, we need to test the robots accuracy to figure out which is optimal
 
