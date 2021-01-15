@@ -94,6 +94,11 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.flyWheel1.setPower(0);
         robot.flyWheel2.setPower(0);
 
+        //put down the intake pulley to enable the robot to take in rings from the starter stack
+        robot.intakePulley.setPower(-1);
+        sleep(3000);
+        robot.intakePulley.setPower(0);
+
         for(int step = 0; step < 3; step++) {
 
             //back up and take in a ring from the starting stack
