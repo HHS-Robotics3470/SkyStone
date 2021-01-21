@@ -23,7 +23,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 {
     /* Declare OpMode members. */
     HardwareUltimateGoal robot          = new HardwareUltimateGoal("testing");
-    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, HardwareUltimateGoal.readPosition(), HardwareUltimateGoal.readHeading(), true); //TODO: 10/21/2020 change true to false if on team blue
+    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, true); //TODO: 10/21/2020 change true to false if on team blue
     ElapsedTime runtime                 = new ElapsedTime();
     AimAssist aimMan                    = new AimAssist(robot, posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.bestTargetPosition(0));
 
@@ -35,7 +35,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
          */
         robot.init(hardwareMap);
 
-        long timeToLowerIntake = 1000; //needs testing
+        long timeToLowerIntake = 500; //needs testing
 
         //set up other things
         robot.leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -52,41 +52,25 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 
         // PARAMETER VALUES ARE TENTATIVE AS EXPERIMENTATION IS NEEDED TO FINE TUNE AND ADJUST THESE VALUES \\
         posTarMan.setTarget(3); //set the target to be the the high goal
-        //move forward to right before the launch line
-        encoderDrive(robot.leftDrive,robot.rightDrive,1.8, 1);
-        /*robot.leftDrive.setPower(0.5);
-        robot.rightDrive.setPower(0.5);
-        sleep(2000);
-        robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);*/
 
+        //move forward, and lower the intake arm
+        encoderDrive(robot.leftDrive, robot.rightDrive, 0.2, 1);
         robot.intakePulley.setPower(-1);
         sleep(timeToLowerIntake);
         robot.intakePulley.setPower(0);
 
+        //move forward to right before the launch line (middle of the field
+        encoderDrive(robot.leftDrive,robot.rightDrive, Math.abs(posTarMan.getRobotPosition()[1]) - 0.2, 1);
+
         //turn left
-        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(90), 1);
-        /*robot.leftDrive.setPower(-0.5);
-        robot.rightDrive.setPower(0.5);
-        sleep(1000);
-        robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);*/
+        //encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(90), 1);
 
         //move forward, where the starting stack is now to the left of the robot
-        encoderDrive(robot.leftDrive,robot.rightDrive,0.28575, 1);
-        /*robot.leftDrive.setPower(0.5);
-        robot.rightDrive.setPower(0.5);
-        sleep(500);
-        robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);*/
+        //encoderDrive(robot.leftDrive,robot.rightDrive,0.28575, 1);
+
 
         //turn right, where the starting stack is now behind the robot
-        encoderTurn(robot.leftDrive,robot.rightDrive,-Math.toRadians(90),1);
-        /*robot.leftDrive.setPower(0.5);
-        robot.rightDrive.setPower(-0.5);
-        sleep(1000);
-        robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);*/
+        //encoderTurn(robot.leftDrive,robot.rightDrive,-Math.toRadians(90),1);
 
         //fire twice:
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
@@ -98,7 +82,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         fireTurret();
 
         //TODO: if we end up having enough time, put the next bit into a for loop that repeats at most 3 times
-        //pick up another ring, then fire it
+        /*/pick up another ring, then fire it
         encoderDrive(robot.leftDrive,robot.rightDrive,0.5382 - 0.0034,-1);
         robot.conveyor.setPower(1);
         encoderDrive(robot.leftDrive,robot.rightDrive,0.3,-0.2);
@@ -106,62 +90,10 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         reloadTurret();
         encoderDrive(robot.leftDrive,robot.rightDrive,0.8382,1);
         fireTurret();
-        /*//shoot ring 1 into the high goal
-        robot.flyWheel1.setPower(1);
-        robot.flyWheel2.setPower(1);
-        sleep(500);
-        robot.flyWheel1.setPower(0);
-        robot.flyWheel2.setPower(0);
-
-        //reloads ring 2 into the chamber
-        robot.conveyor.setPower(1);
-        sleep(2000);
-        robot.conveyor.setPower(0);
-
-        //shoot ring 2 into the high goal
-        robot.flyWheel1.setPower(1);
-        robot.flyWheel2.setPower(1);
-        sleep(500);
-        robot.flyWheel1.setPower(0);
-        robot.flyWheel2.setPower(0);
-
-        for(int step = 0; step < 3; step++) {
-
-            //back up and take in a ring from the starting stack
-            robot.intakePulley.setPower(1);
-            robot.leftDrive.setPower(-0.25);
-            robot.rightDrive.setPower(-0.25);
-            sleep(1000);
-            robot.intakePulley.setPower(1);
-            robot.leftDrive.setPower(0);
-            robot.rightDrive.setPower(0);
-
-            //move forward, to right behind the launch line
-            robot.leftDrive.setPower(0.5);
-            robot.rightDrive.setPower(0.5);
-            sleep(500);
-            robot.leftDrive.setPower(0);
-            robot.rightDrive.setPower(0);
-
-            //reloads a ring from the starting stack into the chamber
-            robot.conveyor.setPower(1);
-            sleep(2000);
-            robot.conveyor.setPower(0);
-
-            //shoot ring into the high goal
-            robot.flyWheel1.setPower(1);
-            robot.flyWheel2.setPower(1);
-            sleep(500);
-            robot.flyWheel1.setPower(0);
-            robot.flyWheel2.setPower(0);
-        }
+         */
 
         //drive over the launch line
-        robot.leftDrive.setPower(0.5);
-        robot.rightDrive.setPower(0.5);
-        sleep(500);
-        robot.leftDrive.setPower(0.5);
-        robot.rightDrive.setPower(0.5);*/
+        encoderDrive(robot.leftDrive, robot.rightDrive, posTarMan.launchZone /*- posTarMan.getRobotPosition()[1]*/, 1);
 
         //Saves the robot's position and heading
         HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
