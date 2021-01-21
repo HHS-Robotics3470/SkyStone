@@ -27,7 +27,7 @@ public class testingAndHardwareCalibration extends LinearOpMode {
         sleep(300);
         robot.turretLauncher.setPower(0);
         sleep(100);
-        robot.turretLauncher.setPower(-.5);
+        robot.turretLauncher.setPower(-.75);
         sleep(300); //adjust timing
         robot.turretLauncher.setPower(0.15);
         elevateTurretTo(0);
