@@ -18,6 +18,9 @@ import java.math.MathContext;
  *
  * after every step of the autonomous, make a call to update the position manager
  */
+
+//TODO: issue: fires, then aims, should do aim then fire
+
 @Autonomous(name="Basic Autonomous Ultimate Goal", group="UltimateGoal")
 public class BasicAutonomousUltimateGoal extends LinearOpMode
 {
@@ -35,7 +38,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
          */
         robot.init(hardwareMap);
 
-        long timeToLowerIntake = 500; //needs testing
+        long timeToLowerIntake = 1000; //needs testing
 
         //set up other things
         robot.leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -189,6 +192,9 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
                 left.setPower(power);
                 right.setPower(power);
             }
+            telemetry.addData("left encoder count", robot.leftDrive.getCurrentPosition());
+            telemetry.addData("right encoder count", robot.rightDrive.getCurrentPosition());
+            telemetry.update();
         }
 
         //stop running to position
@@ -235,6 +241,9 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         // while the motors are busy, update the positionTargetManager
         while (right.isBusy() || left.isBusy()) {
             posTarMan.update(left.getCurrentPosition(), right.getCurrentPosition());
+            telemetry.addData("left encoder count", robot.leftDrive.getCurrentPosition());
+            telemetry.addData("right encoder count", robot.rightDrive.getCurrentPosition());
+            telemetry.update();
         }
 
         //stop running to position
@@ -337,6 +346,8 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) rotateTurretTo(Math.toRadians(0)); //try to aim to whatever the aim manager thinks it needs to, if that doesn't work, point forward
         if (elevateTurretTo(aimMan.getPitchToTarget()) == -1)  rotateTurretTo(Math.toRadians(40));//same as above, just pitch instead of heading
 
+
+
         //spin up flywheels and wait a bit to let everything move up to speed, the flywheels are not the same speed in order to create a spin
         robot.flyWheel1.setPower(0.9);
         robot.flyWheel2.setPower(1.0);
@@ -382,9 +393,9 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
             sleep(300);
             robot.turretLauncher.setPower(0);
             sleep(100);
-            robot.turretLauncher.setPower(-.5);
+            robot.turretLauncher.setPower(-.75);
             sleep(300); //adjust timing
-            robot.turretLauncher.setPower(0.15);
+            robot.turretLauncher.setPower(0.1);
             elevateTurretTo(0);
             loaded = true;
         }

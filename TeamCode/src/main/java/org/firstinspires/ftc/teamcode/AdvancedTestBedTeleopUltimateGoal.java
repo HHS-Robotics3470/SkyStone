@@ -135,21 +135,21 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
             //d up and down, move intake up/down (if not in abort mode, if in abort, elevate turret up/down
             if (gamepad1.dpad_up)     {
-                if (!abort) {robot.intakePulley.setPower(1);} //in normal mode, move intake up
+                if (!abort) {robot.intakePulley.setPower(.5);} //in normal mode, move intake up
                 else elevateTurretTo(Math.toRadians(currentTurretPitch - 5)); //in abort mode, mode turret up
             } else robot.intakePulley.setPower(0);
             if (gamepad1.dpad_down)   {
-                if (!abort) {robot.intakePulley.setPower(-1);} //in normal mode, move intake down
+                if (!abort) {robot.intakePulley.setPower(-.5);} //in normal mode, move intake down
                 else elevateTurretTo(Math.toRadians(currentTurretPitch + 5)); //in abort mode, mode turret down
             } else robot.intakePulley.setPower(0);
             //d right and left, toggle conveyor and grabber respectively (in normal mode, in abort mode, rotate turret right / left)
             if (gamepad1.dpad_right)                                        {
-                if (!abort) {robot.conveyor.setPower(-1 * (robot.conveyor.getPower() - 0.5) + 0.5); sleep(100);} //power should only ever be 0 or 1; -(0 - 0.5) + 0.5 = 1; -(1 - 0.5) + 0.5 = 0
+                if (!abort) {robot.conveyor.setPower(-1 * (robot.conveyor.getPower() - 0.5) + 0.5); sleep(200);} //power should only ever be 0 or 1; -(0 - 0.5) + 0.5 = 1; -(1 - 0.5) + 0.5 = 0
                 else rotateTurretTo(Math.toRadians(currentTurretHeading + 5)); //in abort mode, rotate turret to the right
             }
             //d left, toggle grabber
             if (gamepad1.dpad_left)                                         {
-                if (!abort) {robot.wobbleGrabber.setPosition(-1 * (robot.wobbleGrabber.getPosition() - 0.4) + 0.4); sleep(100);}//position should only ever be 0 or 0.8, same deal as before
+                if (!abort) {robot.wobbleGrabber.setPosition(-1 * (robot.wobbleGrabber.getPosition() - 0.4) + 0.4); sleep(200);}//position should only ever be 0 or 0.8, same deal as before
                 else rotateTurretTo(Math.toRadians(currentTurretHeading - 5)); //in abort mode, rotate turret to the left
             }
 
@@ -391,7 +391,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                     //launch ring.
                     // rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
                     robot.turretLauncher.setPower(-1);
-                    sleep(500); ///this number will change with testing
+                    sleep(250); ///this number will change with testing
 
                     //reset/prep other components for next shot
                     robot.flyWheel1.setPower(0);
@@ -428,13 +428,13 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             //wiggle the launching thing around a bit
             robot.turretLauncher.setPower(-0.3);
             robot.conveyor.setPower(0);
-            sleep(300);
+            sleep(200);
             robot.turretLauncher.setPower(0);
             sleep(100);
             elevateTurretTo(0);
             robot.turretLauncher.setPower(-.75);
-            sleep(300); //adjust timing
-            robot.turretLauncher.setPower(0.15);
+            sleep(200); //adjust timing
+            robot.turretLauncher.setPower(0.1);
             loaded = true;
         }
     }
