@@ -22,8 +22,7 @@ import static java.lang.Double.isNaN;
  * how the teleop will handle this
  *
  */
-//todo: aimbot doesn't work, there are issues with the pitch to target calculations, and issues with heading to target calculations, goes infinite after slight movements
-// no changes have been made in response to this as the issue is assumed to be because of the PositionAndTargetManager
+//todo: any innaccuracy is likely due to the position manager being inaccurate, that inaccuracy is due to not being able to account for the wheels slipping,
 public class AimAssist {
     double turretHeight;
 

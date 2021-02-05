@@ -21,12 +21,12 @@ import java.math.MathContext;
 
 //TODO: issue: fires, then aims, should do aim then fire
 
-@Autonomous(name="Basic Autonomous Ultimate Goal", group="UltimateGoal")
+@Autonomous(name="Basic Autonomous Ultimate Goal A", group="UltimateGoal")
 public class BasicAutonomousUltimateGoal extends LinearOpMode
 {
     /* Declare OpMode members. */
     HardwareUltimateGoal robot          = new HardwareUltimateGoal("testing");
-    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, true); //TODO: 10/21/2020 change true to false if on team blue
+    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, new double[]{1.79705 - 0.57785, -1.79705 + 0.4572 / 2}, -Math.PI/2 , true); //TODO: 10/21/2020 change true to false if on team blue
     ElapsedTime runtime                 = new ElapsedTime();
     AimAssist aimMan                    = new AimAssist(robot, posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.bestTargetPosition(0));
 
@@ -54,49 +54,56 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         //---------------------------------------------------------------------------------------\\
 
         // PARAMETER VALUES ARE TENTATIVE AS EXPERIMENTATION IS NEEDED TO FINE TUNE AND ADJUST THESE VALUES \\
-        posTarMan.setTarget(3); //set the target to be the the high goal
+        posTarMan.setTarget(4); //set the target to be the the mid goal
 
-        //move forward, and lower the intake arm
-        encoderDrive(robot.leftDrive, robot.rightDrive, 0.2, 1);
-        robot.intakePulley.setPower(-1);
-        sleep(timeToLowerIntake);
+        //initialization / startup stuff
+        robot.wobbleGrabber.setPosition(0); // grab the wobble goal securely
+        rotateTurretTo(Math.PI/6); // the turret starts 30 degrees off center, move back to the middle
+        robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.intakePulley.setPower(-1); //lower the intake 1/2 of the way
+        sleep(timeToLowerIntake * (1/2));
         robot.intakePulley.setPower(0);
 
-        //move forward to right before the launch line (middle of the field
-        encoderDrive(robot.leftDrive,robot.rightDrive, Math.abs(posTarMan.getRobotPosition()[1]) - 0.2, 1);
-
-        //turn left
-        //encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(90), 1);
-
-        //move forward, where the starting stack is now to the left of the robot
-        //encoderDrive(robot.leftDrive,robot.rightDrive,0.28575, 1);
 
 
-        //turn right, where the starting stack is now behind the robot
-        //encoderTurn(robot.leftDrive,robot.rightDrive,-Math.toRadians(90),1);
+        //move forward to just before the launch line //TODO: replace this part to move forward to the target zone goal
+        encoderDrive(robot.leftDrive,robot.rightDrive, Math.abs(posTarMan.getRobotPosition()[1]) + posTarMan.launchZone - .2286/*robot length/2*/-.1, 1);
+
+        //release the wobble goal, and fully lower the intake
+        robot.wobbleGrabber.setPosition(0.8);
+        robot.intakePulley.setPower(-1);
+        sleep(timeToLowerIntake / 2);
+
+        //move back to right before the launch line, so that the robot is in the launch zone. (unneeded in this case, bc the target zone is on the line for this routine) //TODO: replace the posTarMan.getRobotPosition stuff with what the robots expected position is, keep it that way until we get odometry
+        //encoderDrive(robot.leftDrive,robot.rightDrive, Math.abs(posTarMan.getRobotPosition()[1]) - posTarMan.launchZone + .2286/*robot length*/ +.1, 1); // the .1 is there so that is isn't just ontop of the line
+
+        //turn left, so that the front of the robot (turret side) is facing away from where the robot needs to
+        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(90), 1); //if it turns the wrong way, multiply the angle by -1
+
+        //move backwards until the robot is at the firing area (where gabe goes to shoot)
+        encoderDrive(robot.leftDrive, robot.rightDrive, posTarMan.getRobotPosition()[0] * (2/3),-1);
+
+        //angle the robot a bit toward the goals,
+        encoderTurn(robot.leftDrive, robot.rightDrive, -Math.PI/4, 1); //if it turns the wrong way, multiply the angle by -1
+
+        //move back a bit to ensure it's in the launch zone
+        encoderDrive(robot.leftDrive, robot.rightDrive, 0.25, -1);
 
         //fire twice:
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
-        //  fire loaded ring
+            //  fire loaded ring
         fireTurret();
-        //  reload
-        reloadTurret();
-        //  fire again
-        fireTurret();
-
-        //TODO: if we end up having enough time, put the next bit into a for loop that repeats at most 3 times
-        /*/pick up another ring, then fire it
-        encoderDrive(robot.leftDrive,robot.rightDrive,0.5382 - 0.0034,-1);
+            //  reload and run conveyor a bit more if needed (flipped order)
         robot.conveyor.setPower(1);
-        encoderDrive(robot.leftDrive,robot.rightDrive,0.3,-0.2);
-        sleep(4000);
+        sleep(1000);
+        robot.conveyor.setPower(0);
         reloadTurret();
-        encoderDrive(robot.leftDrive,robot.rightDrive,0.8382,1);
+            //  fire again
         fireTurret();
-         */
 
-        //drive over the launch line
-        encoderDrive(robot.leftDrive, robot.rightDrive, posTarMan.launchZone /*- posTarMan.getRobotPosition()[1]*/, 1);
+        //park over the launch line
+        encoderDrive(robot.leftDrive, robot.rightDrive, .25, 1);
 
         //Saves the robot's position and heading
         HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());

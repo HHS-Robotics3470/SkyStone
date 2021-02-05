@@ -96,7 +96,7 @@ public class PositionAndTargetManager {
         //take some variables from the robot
         metersPerCount = robot.NADO_METERS_PER_COUNT;
         robotWidth = robot.robotWidth;
-        robotPosition = new double[]{1.79705 - 0.57785, -1.79705 + 0.4572 / 2}; //0.57785 is the distance from the right wall, 0.4572 is the length of the robot
+        robotPosition = new double[]{1.79705 - 0.57785, -1.79705 + 0.4572 / 2}; //0.57785 is the distance from the right wall, 0.4572 is the length of the robot, //TODO: re-measure these coordinates, measure to the center of thrust
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
             for (int r = 0; r < targets.length; r++) {
