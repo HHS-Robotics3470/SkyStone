@@ -387,19 +387,20 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                     robot.flyWheel1.setPower(0.9);
                     robot.flyWheel2.setPower(1.0);
 
-                    sleep(500);
+                    sleep(1000);
 
 
                     //launch ring.
                     // rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
                     robot.turretLauncher.setPower(-1);
-                    sleep(250); ///this number will change with testing
+
+                    sleep(500); ///this number will change with testing
 
                     //reset/prep other components for next shot
                     robot.flyWheel1.setPower(0);
                     robot.flyWheel2.setPower(0);
-                    elevateTurretTo(0);
-                    rotateTurretTo(0);
+                    //elevateTurretTo(0);
+                    //rotateTurretTo(0);
                     robot.turretLauncher.setPower(0.5);
                     loaded = false;
                 }
@@ -411,6 +412,11 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
      * this will reload a ring if needed, or clear the turret otherwise (if there was a jam for instance)
      */
     public void reloadTurret() {
+        //make sure turret is aligned
+        robot.turretLauncher.setPower(.5);
+        double prevHeading = currentTurretHeading;
+        double prevPitch = currentTurretPitch;
+
         rotateTurretTo(0);
         elevateTurretTo(0);
         if (loaded) { //if loaded, unload
@@ -429,15 +435,18 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             //wiggle the launching thing around a bit
             robot.turretLauncher.setPower(-0.3);
             robot.conveyor.setPower(0);
-            sleep(200);
+            sleep(300);
             robot.turretLauncher.setPower(0);
             sleep(100);
             elevateTurretTo(0);
             robot.turretLauncher.setPower(-.75);
-            sleep(200); //adjust timing
+            sleep(300); //adjust timing
             robot.turretLauncher.setPower(0.1);
             loaded = true;
         }
+
+        rotateTurretTo(Math.toRadians(prevHeading));
+        elevateTurretTo(Math.toRadians(prevPitch));
     }
 }
 

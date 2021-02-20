@@ -122,7 +122,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.turretLauncher.setPower(.5);
 
         robot.conveyor.setPower(1);
-        sleep(600);
+        sleep(500);
         robot.conveyor.setPower(0);
         reloadTurret();
 
@@ -136,6 +136,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 
 
 
+        robot.turretLauncher.setPower(0.5);
         rotateTurretTo(0);
         //Saves the robot's position and heading
         HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
