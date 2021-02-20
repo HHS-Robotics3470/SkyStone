@@ -136,8 +136,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 
 
 <<<<<<< HEAD
-        //Drives up to the white line
-        encoderDrive(robot.leftDrive,robot.rightDrive,0.75, 1);
+
 
 =======
         rotateTurretTo(0);
