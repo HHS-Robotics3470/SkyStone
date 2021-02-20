@@ -100,32 +100,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 
         //fire twice:
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
-            //  fire loaded ring
-<<<<<<< HEAD
-<<<<<<< HEAD
-        fireTurret();
-<<<<<<< HEAD
-
-        //TODO: if we end up having enough time, put the next bit into a for loop that repeats at most 3 times
-        //pick up another ring, then fire it
-        encoderDrive(robot.leftDrive,robot.rightDrive,0.5382 - 0.0034,-1);
-        robot.conveyor.setPower(1);
-        encoderDrive(robot.leftDrive,robot.rightDrive,0.3,-0.2);
-        sleep(4000);
-        reloadTurret();
-        encoderDrive(robot.leftDrive,robot.rightDrive,0.8382,1);
-        fireTurret();
-        /*//shoot ring 1 into the high goal
-        robot.flyWheel1.setPower(1);
-        robot.flyWheel2.setPower(1);
-        sleep(500);
-        robot.flyWheel1.setPower(0);
-        robot.flyWheel2.setPower(0);
-=======
-=======
-        fireTurret(- Math.toRadians(30), Math.toRadians(20));
->>>>>>> 8f0bc5c... some fixings, and auto optimization
-=======
+        //  fire loaded ring
         fireTurret(- Math.toRadians(10), Math.toRadians(25));
 
         robot.intakePulley.setPower(-1);
@@ -134,43 +109,22 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.intakePulley.setPower(0);
 
 
->>>>>>> 3e162e8... some fixings, and auto optimization
-            //  reload and run conveyor a bit more if needed (flipped order)
+        //  reload and run conveyor a bit more if needed (flipped order)
         robot.conveyor.setPower(1);
         sleep(1000);
         robot.conveyor.setPower(0);
         reloadTurret();
 
-            //  fire again
-<<<<<<< HEAD
-<<<<<<< HEAD
-        fireTurret();
->>>>>>> 89f91797a978f17d4cc6622cd762459bd27c9e83
-=======
-        fireTurret(- Math.toRadians(30), Math.toRadians(15));
-=======
+        //  fire again
         fireTurret(- Math.toRadians(10), Math.toRadians(25));
->>>>>>> 3e162e8... some fixings, and auto optimization
 
->>>>>>> 8f0bc5c... some fixings, and auto optimization
 
         //turn a bit and park over the launch line
         //encoderTurn(robot.leftDrive, robot.rightDrive, - Math.toRadians(10 * .8125), 1); //TODO: test this angle
         encoderDrive(robot.leftDrive, robot.rightDrive, .1, 1); //TODO: test this distance
 
 
-<<<<<<< HEAD
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-=======
         rotateTurretTo(0);
->>>>>>> 89f91797a978f17d4cc6622cd762459bd27c9e83
-=======
->>>>>>> parent of fac1a7a... Added for loop to reload and shoot the rings on the floor. Also added code to drive the robot over the line for an extra 5 points.
-=======
->>>>>>> parent of fac1a7a... Added for loop to reload and shoot the rings on the floor. Also added code to drive the robot over the line for an extra 5 points.
         //Saves the robot's position and heading
         HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
     }
