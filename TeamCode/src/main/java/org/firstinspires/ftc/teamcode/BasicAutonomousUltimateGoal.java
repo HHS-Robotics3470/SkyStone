@@ -132,10 +132,13 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 <<<<<<< HEAD
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
         rotateTurretTo(0);
 >>>>>>> 89f91797a978f17d4cc6622cd762459bd27c9e83
+=======
+>>>>>>> parent of fac1a7a... Added for loop to reload and shoot the rings on the floor. Also added code to drive the robot over the line for an extra 5 points.
 =======
 >>>>>>> parent of fac1a7a... Added for loop to reload and shoot the rings on the floor. Also added code to drive the robot over the line for an extra 5 points.
         //Saves the robot's position and heading
