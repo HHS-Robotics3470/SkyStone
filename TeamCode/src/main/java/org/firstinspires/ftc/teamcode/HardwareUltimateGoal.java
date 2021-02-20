@@ -170,10 +170,12 @@ public class HardwareUltimateGoal {
 
         // Define and initialize ALL installed servos.
         turretLauncher = hwMap.get(CRServo.class, "turretLaunchServo"); ///main hub servo port 1
-        turretLauncher.setPower(0.5);
+        turretLauncher.setPower(0.1);
         //power 0 = full reverse; power 0.5 = stop; power 1 = full forward
         //position 0.5 = open for reload, position
-        //-1 is forward
+        //-1 is forward (shoot)
+        // .5 is ready to reload
+        // .1 is ready to shoot
         //1 is back
 
         wobbleGrabber   = hwMap.get(Servo.class, "wobbleGrabber"); //main hub servo port 0
@@ -204,6 +206,7 @@ public class HardwareUltimateGoal {
     public static File positionXFile = AppUtil.getInstance().getSettingsFile("positionX.txt");
     public static File positionYFile = AppUtil.getInstance().getSettingsFile("positionY.txt");
     public static File headingFile = AppUtil.getInstance().getSettingsFile("heading.txt");
+    public static File rightDriveEncoderOffsetMultiplierFile = AppUtil.getInstance().getSettingsFile("rightDriveEncoderOffsetMultiplier.txt");
 
     /**
      * method to write the position and heading of the robot to a file (overwriting any data already there)
@@ -233,6 +236,19 @@ public class HardwareUltimateGoal {
     public static double readHeading() {
         return Double.parseDouble(ReadWriteFile.readFile(headingFile).trim());
     }
+
+
+    /**
+     * writes the drive offset calculated in driveEncoderCalibration.java
+     * @param offset
+     */
+    public static void writeRightDriveEncoderOffsetMultiplier(double offset) {
+        ReadWriteFile.writeFile(rightDriveEncoderOffsetMultiplierFile, String.valueOf(offset));
+    }
+    public static double readRightDriveEncoderOffsetMultiplier() {
+        return Double.parseDouble(ReadWriteFile.readFile(rightDriveEncoderOffsetMultiplierFile).trim());
+    }
+
 
     ////////////////////////////// Movement and utility methods //////////////////////////////
     /**

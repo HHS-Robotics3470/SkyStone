@@ -58,31 +58,36 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 
         //initialization / startup stuff
         robot.wobbleGrabber.setPosition(0); // grab the wobble goal securely
-        rotateTurretTo(Math.PI/6); // the turret starts 30 degrees off center, move back to the middle
-        robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.intakePulley.setPower(-1); //lower the intake 1/2 of the way
-        sleep(timeToLowerIntake / 4);    //POTENTIAL ISSUE, not waiting, the pulley never raises
+        robot.intakePulley.setPower(-1);
+        sleep(timeToLowerIntake / 6);
 
         robot.intakePulley.setPower(0);
 
-        //tested above this line
+        rotateTurretTo(Math.toRadians(40));
+        rotateTurretTo(Math.PI/6); // the turret starts 30 degrees off center, move back to the middle
+        robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        robot.intakePulley.setPower(-1); //lower the intake 1/2 of the way
+        sleep(timeToLowerIntake / 6);    //POTENTIAL ISSUE, not waiting, the pulley never raises
+
+        robot.intakePulley.setPower(0);
 
         //move forward to the target zone goal (closest to start position) distance is ~160 centimeters
-        encoderDrive(robot.leftDrive,robot.rightDrive, 1.6 * .8125, -.75); //TODO: test this distance
+        encoderDrive(robot.leftDrive,robot.rightDrive, 1.6 * .8125, -.75);
         //encoderDrive(robot.leftDrive,robot.rightDrive, .3 * .8125, -.5);
 
         // drop the wobble used to be here
 
-        encoderDrive(robot.leftDrive, robot.rightDrive, .2 * .8125,1); //TODO: test this distance
+        encoderDrive(robot.leftDrive, robot.rightDrive, .2 * .8125,1);
 
         //turn left, so that the front of the robot (turret side) is facing to closest wall
-        //used to be 65, changed to 55
-        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(55 * .8125), 1); //if it turns the wrong way, multiply the angle by -1 //TODO: test this angle
+        //used to be 65, changed to 55, changed to 80
+        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(80 * .8125), .75); //if it turns the wrong way, multiply the angle by -1
         //supposed to be 180
 
         //move backwards until the robot is at the firing area (where gabe goes to shoot) (4 feet) 48 * 2.54 / 100 = 1.2192
-        encoderDrive(robot.leftDrive, robot.rightDrive, .3 * .8125,-1); //TODO: test this distance
+        encoderDrive(robot.leftDrive, robot.rightDrive, .4 * .8125,-1);
 
         //release the wobble goal, and fully lower the intake
         robot.wobbleGrabber.setPosition(0.8);
@@ -99,29 +104,36 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
          */
 
         //fire twice:
-        aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
+        //aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
         //  fire loaded ring
-        fireTurret(- Math.toRadians(10), Math.toRadians(25));
+        //33 hit a powershot
+        //27 hits the goals
+        fireTurret(Math.toRadians(27), Math.toRadians(25));
 
         robot.intakePulley.setPower(-1);
-        sleep(timeToLowerIntake * 3/4);
+        sleep(timeToLowerIntake * 2/3);
 
         robot.intakePulley.setPower(0);
 
 
         //  reload and run conveyor a bit more if needed (flipped order)
+        rotateTurretTo(0);
+        elevateTurretTo(Math.toRadians(15));
+        robot.turretLauncher.setPower(.5);
+
         robot.conveyor.setPower(1);
-        sleep(1000);
+        sleep(500);
         robot.conveyor.setPower(0);
         reloadTurret();
 
         //  fire again
-        fireTurret(- Math.toRadians(10), Math.toRadians(25));
+        fireTurret(Math.toRadians(27), Math.toRadians(25));
 
 
         //turn a bit and park over the launch line
         //encoderTurn(robot.leftDrive, robot.rightDrive, - Math.toRadians(10 * .8125), 1); //TODO: test this angle
         encoderDrive(robot.leftDrive, robot.rightDrive, .1, 1); //TODO: test this distance
+
 
 
         rotateTurretTo(0);
@@ -358,17 +370,18 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         //posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition());
         //aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
+
         //move turret to aim at target
         rotateTurretTo(heading);
         elevateTurretTo(elevation);
 
-        sleep(1000);
+        sleep(100);
 
         //spin up flywheels and wait a bit to let everything move up to speed, the flywheels are not the same speed in order to create a spin
         robot.flyWheel1.setPower(0.9);
         robot.flyWheel2.setPower(1.0);
 
-        sleep(500);
+        sleep(1000);
 
         //launch ring.
         // rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
@@ -426,7 +439,8 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
     public void reloadTurret() {
         //make sure turret is aligned
         rotateTurretTo(0);
-        elevateTurretTo(0);
+        elevateTurretTo(Math.toRadians(15));//elevate the turret slightly to assist with the reload
+
         if (loaded) { //if loaded, unload
             //set the conveyors to reverse
             robot.conveyor.setPower(-1);
@@ -439,15 +453,19 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         } else { //if unloaded, load
             //set the conveyors to forward
             robot.conveyor.setPower(1);
-            elevateTurretTo(Math.toRadians(15)); //elevate the turret slightly to assist with the reload
+            sleep(300);
+
             //wiggle the launching thing around a bit
             robot.turretLauncher.setPower(-0.3);
             robot.conveyor.setPower(0);
             sleep(300);
+
             robot.turretLauncher.setPower(0);
             sleep(100);
+
             robot.turretLauncher.setPower(-.75);
             sleep(300); //adjust timing
+
             robot.turretLauncher.setPower(0.1);
             elevateTurretTo(0);
             loaded = true;
