@@ -102,19 +102,13 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 
         //TODO: if we end up having enough time, put the next bit into a for loop that repeats at most 3 times
         //pick up another ring, then fire it
-
-        for (int step = 0, step < 3, step++) {
-
-            encoderDrive(robot.leftDrive, robot.rightDrive, 0.5382 - 0.0034, -1);
-            robot.conveyor.setPower(1);
-            encoderDrive(robot.leftDrive, robot.rightDrive, 0.3, -0.2);
-            sleep(4000);
-            reloadTurret();
-            encoderDrive(robot.leftDrive, robot.rightDrive, 0.8382, 1);
-            fireTurret();
-
-        }
-
+        encoderDrive(robot.leftDrive,robot.rightDrive,0.5382 - 0.0034,-1);
+        robot.conveyor.setPower(1);
+        encoderDrive(robot.leftDrive,robot.rightDrive,0.3,-0.2);
+        sleep(4000);
+        reloadTurret();
+        encoderDrive(robot.leftDrive,robot.rightDrive,0.8382,1);
+        fireTurret();
         /*//shoot ring 1 into the high goal
         robot.flyWheel1.setPower(1);
         robot.flyWheel2.setPower(1);
@@ -137,10 +131,13 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 
 =======
         rotateTurretTo(0);
 >>>>>>> 89f91797a978f17d4cc6622cd762459bd27c9e83
+=======
+>>>>>>> parent of fac1a7a... Added for loop to reload and shoot the rings on the floor. Also added code to drive the robot over the line for an extra 5 points.
         //Saves the robot's position and heading
         HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
         */
