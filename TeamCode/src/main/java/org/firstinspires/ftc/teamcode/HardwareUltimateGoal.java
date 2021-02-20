@@ -179,7 +179,7 @@ public class HardwareUltimateGoal {
         //1 is back
 
         wobbleGrabber   = hwMap.get(Servo.class, "wobbleGrabber"); //main hub servo port 0
-        wobbleGrabber.setPosition(0); //should be the open position, closed position is half a full rotation from open
+        wobbleGrabber.setPosition(0.8); //should be the open position, closed position is half a full rotation from open
         //position 0 = closed, position .8 = open?
 
         // Define and initialize ALL installed sensors.

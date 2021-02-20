@@ -15,11 +15,7 @@ debugging things will be on the d-pad, controls on the a,b,x,y buttons
 heading tracking is not working (should be fixed, needs testing
 firing sequence may be having issues too (hold, may just be heading issue)
 fixed: drives backwards (reverse motor direction, if that causes issues with the encoders, flip directions again, and )
-conveyor elevators are being weird, maybe add a longer delay (same with other input buttons)
-reloading isn't moving forward enough (last push) (when fixed, apply to autonomous
-    fixed: conveyor moves the wrong way too (wrong way throughout code, change in hw class
-manual turret heading adjustment is inverted (for now, just inverting the control, if the same issue exists with the auto aim, flip the heading motors direction
-fixed: manual controls are slow, increase power
+
 
 auto: robot moved way to far forward, maybe the value for the encoder ticks per rotation is too high?
  */
@@ -94,8 +90,9 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
             bumpers and triggers will be debug things
                 left bumper - turn on abort mode
-                right bumper - turn off abort mode (broken, hotfixed by binding to 'y'
+                right bumper - turn off abort mode
                 left trigger - display encoder readings
+                right trigger - sets the turrets zero position to wherever it's currently at
 
             thumbsticks will control movement
 
@@ -130,17 +127,22 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             }
             //abort button
             if (gamepad1.left_bumper) {abort = true;} // changes the d-pad to control the turrets movement, also turns off aimbot
-            if (gamepad1.y/*right_bumper*/){abort = false;}// changes the d-pad to control things with the intake, also turns on aimbot
+            if (gamepad1.right_bumper){abort = false;}// changes the d-pad to control things with the intake, also turns on aimbot
+
+            if(gamepad1.right_trigger > 0.5) {
+                robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
 
 
             //d up and down, move intake up/down (if not in abort mode, if in abort, elevate turret up/down
             if (gamepad1.dpad_up)     {
-                if (!abort) {robot.intakePulley.setPower(.75);} //in normal mode, move intake up
+                if (!abort) {robot.intakePulley.setPower(1);} //in normal mode, move intake up
                 else elevateTurretTo(Math.toRadians(currentTurretPitch - 5)); //in abort mode, mode turret up
             } else robot.intakePulley.setPower(0);
             if (gamepad1.dpad_down)   {
                 if (!abort) {robot.intakePulley.setPower(-.75);} //in normal mode, move intake down
-                else elevateTurretTo(Math.toRadians(currentTurretPitch + 5)); //in abort mode, mode turret down
+                else elevateTurretTo(Math.toRadians(currentTurretPitch + 10)); //in abort mode, mode turret down
             } else robot.intakePulley.setPower(0);
             //d right and left, toggle conveyor and grabber respectively (in normal mode, in abort mode, rotate turret right / left)
             if (gamepad1.dpad_right)                                        {
@@ -409,7 +411,6 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
      * this will reload a ring if needed, or clear the turret otherwise (if there was a jam for instance)
      */
     public void reloadTurret() {
-        //make sure turret is aligned
         rotateTurretTo(0);
         elevateTurretTo(0);
         if (loaded) { //if loaded, unload

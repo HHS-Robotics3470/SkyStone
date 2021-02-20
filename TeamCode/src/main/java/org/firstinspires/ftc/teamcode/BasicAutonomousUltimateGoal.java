@@ -122,12 +122,12 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.turretLauncher.setPower(.5);
 
         robot.conveyor.setPower(1);
-        sleep(500);
+        sleep(600);
         robot.conveyor.setPower(0);
         reloadTurret();
 
         //  fire again
-        fireTurret(Math.toRadians(27), Math.toRadians(25));
+        fireTurret(Math.toRadians(25), Math.toRadians(25));
 
 
         //turn a bit and park over the launch line
