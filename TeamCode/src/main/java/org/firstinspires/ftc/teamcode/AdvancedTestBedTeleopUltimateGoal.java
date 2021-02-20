@@ -94,7 +94,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
             bumpers and triggers will be debug things
                 left bumper - turn on abort mode
-                right bumper - turn off abort mode
+                right bumper - turn off abort mode (broken, hotfixed by binding to 'y'
                 left trigger - display encoder readings
 
             thumbsticks will control movement
@@ -130,7 +130,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             }
             //abort button
             if (gamepad1.left_bumper) {abort = true;} // changes the d-pad to control the turrets movement, also turns off aimbot
-            if (gamepad1.right_bumper){abort = false;}// changes the d-pad to control things with the intake, also turns on aimbot
+            if (gamepad1.y/*right_bumper*/){abort = false;}// changes the d-pad to control things with the intake, also turns on aimbot
 
 
             //d up and down, move intake up/down (if not in abort mode, if in abort, elevate turret up/down

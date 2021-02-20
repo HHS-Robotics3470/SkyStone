@@ -22,8 +22,15 @@ public class testingAndHardwareCalibration extends LinearOpMode {
         waitForStart();
         robot.init(hardwareMap);
 
-        encoderDrive(robot.leftDrive, robot.rightDrive, 0.2, 1);
-        sleep(5000);
+        robot.intakePulley.setPower(1);
+
+        sleep(1000);
+
+        robot.intakePulley.setPower(-1);
+
+        sleep(500);
+
+        robot.intakePulley.setPower(0);
     }
 
 

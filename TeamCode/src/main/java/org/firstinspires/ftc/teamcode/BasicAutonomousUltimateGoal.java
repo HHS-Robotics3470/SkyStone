@@ -31,7 +31,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
     AimAssist aimMan                    = new AimAssist(robot, posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.bestTargetPosition(0));
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() {
         /*
          * Initialize the drive system variables.
          * The init() method of the hardware class does all the work here
@@ -68,35 +68,37 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 
         //tested above this line
 
-        //move forward to just before the launch line //TODO: replace this part to move forward to the target zone goal
-        encoderDrive(robot.leftDrive,robot.rightDrive, Math.abs(posTarMan.getRobotPosition()[1])+ /*posTarMan.launchZone*/ - .2286/*robot length/2*/-.1, -1);
+        //move forward to the target zone goal (closest to start position) distance is ~160 centimeters
+        encoderDrive(robot.leftDrive,robot.rightDrive, 1.3, -1); //TODO: test this distance
+
+        // drop the wobble used to be here
+
+        //turn left, so that the front of the robot (turret side) is facing to closest wall
+        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(65), 1); //if it turns the wrong way, multiply the angle by -1 //TODO: test this angle
 
         //release the wobble goal, and fully lower the intake
         robot.wobbleGrabber.setPosition(0.8);
         robot.intakePulley.setPower(-1);
+
         sleep(timeToLowerIntake / 2);
 
         robot.intakePulley.setPower(0);
+
+        //move backwards until the robot is at the firing area (where gabe goes to shoot) (4 feet) 48 * 2.54 / 100 = 1.2192
+        encoderDrive(robot.leftDrive, robot.rightDrive, 0.4,-1); //TODO: test this distance
+
         /*
-
-        //move back to right before the launch line, so that the robot is in the launch zone. (unneeded in this case, bc the target zone is on the line for this routine) //TODO: replace the posTarMan.getRobotPosition stuff with what the robots expected position is, keep it that way until we get odometry
-        //encoderDrive(robot.leftDrive,robot.rightDrive, Math.abs(posTarMan.getRobotPosition()[1]) - posTarMan.launchZone + .2286/*robot length*//* +.1, -1); // the .1 is there so that is isn't just ontop of the line
-
-        //turn left, so that the front of the robot (turret side) is facing away from where the robot needs to
-        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(90), 1); //if it turns the wrong way, multiply the angle by -1
-
-        //move backwards until the robot is at the firing area (where gabe goes to shoot)
-        encoderDrive(robot.leftDrive, robot.rightDrive, posTarMan.getRobotPosition()[0] * (2/3),1);
-
         //angle the robot a bit toward the goals,
         encoderTurn(robot.leftDrive, robot.rightDrive, -Math.PI/4, 1); //if it turns the wrong way, multiply the angle by -1
 
         //move back a bit to ensure it's in the launch zone
         encoderDrive(robot.leftDrive, robot.rightDrive, 0.25, 1);
+         */
 
         //fire twice:
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
             //  fire loaded ring
+<<<<<<< HEAD
         fireTurret();
 <<<<<<< HEAD
 
@@ -116,17 +118,26 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.flyWheel1.setPower(0);
         robot.flyWheel2.setPower(0);
 =======
+=======
+        fireTurret(- Math.toRadians(30), Math.toRadians(20));
+>>>>>>> 8f0bc5c... some fixings, and auto optimization
             //  reload and run conveyor a bit more if needed (flipped order)
         robot.conveyor.setPower(1);
         sleep(1000);
         robot.conveyor.setPower(0);
         reloadTurret();
             //  fire again
+<<<<<<< HEAD
         fireTurret();
 >>>>>>> 89f91797a978f17d4cc6622cd762459bd27c9e83
+=======
+        fireTurret(- Math.toRadians(30), Math.toRadians(15));
 
-        //park over the launch line
-        encoderDrive(robot.leftDrive, robot.rightDrive, .25, -1);
+>>>>>>> 8f0bc5c... some fixings, and auto optimization
+
+        //turn a bit and park over the launch line
+        encoderTurn(robot.leftDrive, robot.rightDrive, - Math.toRadians(10), 1); //TODO: test this angle
+        encoderDrive(robot.leftDrive, robot.rightDrive, .25, 1); //TODO: test this distance
 
 
 <<<<<<< HEAD
@@ -143,7 +154,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 >>>>>>> parent of fac1a7a... Added for loop to reload and shoot the rings on the floor. Also added code to drive the robot over the line for an extra 5 points.
         //Saves the robot's position and heading
         HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
-        */
+
         //---------------------------------------------------------------------------------------\\
         /* new idea
         (while doing these steps, make sure to update the robots position frequently)
@@ -397,6 +408,45 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         elevationGuessOffset = (y1 / x1) + ((x1-x3) / (y1-y3));
         return elevationGuessOffset;
     }
+
+    /**
+     * fires with given inputs
+     */
+    public void fireTurret(double heading, double elevation) {
+        //stop robot movement
+        robot.leftDrive.setPower(0);
+        robot.rightDrive.setPower(0);
+        //get heading and pitch (skip for now, probably not needed bc alot of what I would put here is redundant (already happens in the teleop))
+        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition());
+        aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
+
+        //move turret to aim at target
+        rotateTurretTo(Math.toRadians(heading));
+        elevateTurretTo(Math.toRadians(elevation));
+
+        //spin up flywheels and wait a bit to let everything move up to speed, the flywheels are not the same speed in order to create a spin
+        robot.flyWheel1.setPower(0.9);
+        robot.flyWheel2.setPower(1.0);
+
+        sleep(500);
+
+        //launch ring.
+        // rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
+        robot.turretLauncher.setPower(-1);
+        sleep(500); ///this number will change with testing
+
+        //reset/prep other components for next shot
+        robot.flyWheel1.setPower(0);
+        robot.flyWheel2.setPower(0);
+        elevateTurretTo(0);
+        rotateTurretTo(0);
+        robot.turretLauncher.setPower(0.5);
+        loaded = false;
+    }
+
+    /**
+     * fires with the aim and position managers
+     */
     public void fireTurret() {
         //stop robot movement
         robot.leftDrive.setPower(0);

@@ -147,7 +147,6 @@ public class HardwareUltimateGoal {
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        intakePulley.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         //set to run with encoder
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);  //torqueNADO motor
@@ -186,8 +185,6 @@ public class HardwareUltimateGoal {
         //color1 = hwMap.colorSensor.get("color1");
 
 
-
-
         //Initialize IMU hardware map value. PLEASE UPDATE THIS VALUE TO MATCH YOUR CONFIGURATION
         imu = hwMap.get(BNO055IMU.class, "imu");
         //Initialize IMU parameters
@@ -199,6 +196,7 @@ public class HardwareUltimateGoal {
         parameters.loggingTag          = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         imu.initialize(parameters);
+
 
     }
 
