@@ -387,13 +387,14 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         //launch ring.
         // rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
         robot.turretLauncher.setPower(-1);
+
         sleep(500); ///this number will change with testing
 
         //reset/prep other components for next shot
+        rotateTurretTo(0);
         robot.flyWheel1.setPower(0);
         robot.flyWheel2.setPower(0);
         elevateTurretTo(0);
-        rotateTurretTo(0);
         robot.turretLauncher.setPower(0.5);
         loaded = false;
     }
