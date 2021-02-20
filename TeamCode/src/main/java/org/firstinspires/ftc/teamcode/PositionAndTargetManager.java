@@ -156,6 +156,7 @@ public class PositionAndTargetManager {
         previousRightCounts = rightCounts;
 
         //using a professors ideas https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-186-mobile-autonomous-systems-laboratory-january-iap-2005/study-materials/odomtutorial.pdf
+        //
         robotPosition[0] += s * Math.cos(robotHeading);
         robotPosition[1] += s * Math.sin(robotHeading);
         robotHeading += headingChange;

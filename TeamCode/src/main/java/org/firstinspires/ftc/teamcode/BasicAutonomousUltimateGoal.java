@@ -19,7 +19,7 @@ import java.math.MathContext;
  * after every step of the autonomous, make a call to update the position manager
  */
 
-//TODO: issue: fires, then aims, should do aim then fire
+//TODO: something is wrong with the motors, they move twice as far as they should
 
 @Autonomous(name="Basic Autonomous Ultimate Goal A", group="UltimateGoal")
 public class BasicAutonomousUltimateGoal extends LinearOpMode
@@ -62,30 +62,33 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.intakePulley.setPower(-1); //lower the intake 1/2 of the way
-        sleep(timeToLowerIntake / 2);    //POTENTIAL ISSUE, not waiting, the pulley never raises
+        sleep(timeToLowerIntake / 4);    //POTENTIAL ISSUE, not waiting, the pulley never raises
 
         robot.intakePulley.setPower(0);
 
         //tested above this line
 
         //move forward to the target zone goal (closest to start position) distance is ~160 centimeters
-        encoderDrive(robot.leftDrive,robot.rightDrive, 1.3, -1); //TODO: test this distance
+        encoderDrive(robot.leftDrive,robot.rightDrive, 1.6 * .8125, -.75); //TODO: test this distance
+        //encoderDrive(robot.leftDrive,robot.rightDrive, .3 * .8125, -.5);
 
         // drop the wobble used to be here
 
+        encoderDrive(robot.leftDrive, robot.rightDrive, .2 * .8125,1); //TODO: test this distance
+
         //turn left, so that the front of the robot (turret side) is facing to closest wall
-        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(65), 1); //if it turns the wrong way, multiply the angle by -1 //TODO: test this angle
+        //used to be 65, changed to 55
+        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(55 * .8125), 1); //if it turns the wrong way, multiply the angle by -1 //TODO: test this angle
+        //supposed to be 180
+
+        //move backwards until the robot is at the firing area (where gabe goes to shoot) (4 feet) 48 * 2.54 / 100 = 1.2192
+        encoderDrive(robot.leftDrive, robot.rightDrive, .3 * .8125,-1); //TODO: test this distance
 
         //release the wobble goal, and fully lower the intake
         robot.wobbleGrabber.setPosition(0.8);
-        robot.intakePulley.setPower(-1);
-
-        sleep(timeToLowerIntake / 2);
-
-        robot.intakePulley.setPower(0);
-
-        //move backwards until the robot is at the firing area (where gabe goes to shoot) (4 feet) 48 * 2.54 / 100 = 1.2192
-        encoderDrive(robot.leftDrive, robot.rightDrive, 0.4,-1); //TODO: test this distance
+        //robot.intakePulley.setPower(-1);
+        //sleep(timeToLowerIntake * 3/4);
+        //robot.intakePulley.setPower(0);
 
         /*
         //angle the robot a bit toward the goals,
@@ -98,6 +101,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         //fire twice:
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
             //  fire loaded ring
+<<<<<<< HEAD
 <<<<<<< HEAD
         fireTurret();
 <<<<<<< HEAD
@@ -121,23 +125,38 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 =======
         fireTurret(- Math.toRadians(30), Math.toRadians(20));
 >>>>>>> 8f0bc5c... some fixings, and auto optimization
+=======
+        fireTurret(- Math.toRadians(10), Math.toRadians(25));
+
+        robot.intakePulley.setPower(-1);
+        sleep(timeToLowerIntake * 3/4);
+
+        robot.intakePulley.setPower(0);
+
+
+>>>>>>> 3e162e8... some fixings, and auto optimization
             //  reload and run conveyor a bit more if needed (flipped order)
         robot.conveyor.setPower(1);
         sleep(1000);
         robot.conveyor.setPower(0);
         reloadTurret();
+
             //  fire again
+<<<<<<< HEAD
 <<<<<<< HEAD
         fireTurret();
 >>>>>>> 89f91797a978f17d4cc6622cd762459bd27c9e83
 =======
         fireTurret(- Math.toRadians(30), Math.toRadians(15));
+=======
+        fireTurret(- Math.toRadians(10), Math.toRadians(25));
+>>>>>>> 3e162e8... some fixings, and auto optimization
 
 >>>>>>> 8f0bc5c... some fixings, and auto optimization
 
         //turn a bit and park over the launch line
-        encoderTurn(robot.leftDrive, robot.rightDrive, - Math.toRadians(10), 1); //TODO: test this angle
-        encoderDrive(robot.leftDrive, robot.rightDrive, .25, 1); //TODO: test this distance
+        //encoderTurn(robot.leftDrive, robot.rightDrive, - Math.toRadians(10 * .8125), 1); //TODO: test this angle
+        encoderDrive(robot.leftDrive, robot.rightDrive, .1, 1); //TODO: test this distance
 
 
 <<<<<<< HEAD
@@ -417,12 +436,14 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
         //get heading and pitch (skip for now, probably not needed bc alot of what I would put here is redundant (already happens in the teleop))
-        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition());
-        aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
+        //posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition());
+        //aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
         //move turret to aim at target
-        rotateTurretTo(Math.toRadians(heading));
-        elevateTurretTo(Math.toRadians(elevation));
+        rotateTurretTo(heading);
+        elevateTurretTo(elevation);
+
+        sleep(1000);
 
         //spin up flywheels and wait a bit to let everything move up to speed, the flywheels are not the same speed in order to create a spin
         robot.flyWheel1.setPower(0.9);
