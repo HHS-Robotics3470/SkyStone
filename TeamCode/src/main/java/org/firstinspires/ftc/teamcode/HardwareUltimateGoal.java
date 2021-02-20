@@ -24,6 +24,8 @@ import java.io.File;
     angle 0:
         for the robot, heading of 0 means that it's facing to the right (POV: looking toward the targets)
         for the turret, heading of 0 means facing toward the front of the robot
+
+        positive angles for the turret (relative to the robot) are turning away from the side with the control hubs
  */
 
 
@@ -103,7 +105,7 @@ public class HardwareUltimateGoal {
 
     /*another constructor for testing, when there isn't an autonomous to write the heading and position files*/
     public HardwareUltimateGoal(String writesFilesAsRedTeam){
-        writePositionHeading(new double[]{1.79705, -1.79705}, Math.PI/2); //TODO: update this as needed, use the default values in PositionAndTargetManager.java
+        writePositionHeading(new double[]{1.79705 - 0.57785, -1.79705 + 0.4572 / 2}, Math.PI/2); //TODO: update this as needed, use the default values in PositionAndTargetManager.java
     }
 
     /* Initialize standard Hardware interfaces */
@@ -123,7 +125,7 @@ public class HardwareUltimateGoal {
         flyWheel2.setDirection(DcMotor.Direction.REVERSE);
 
         turretRotator = hwMap.get(DcMotor.class, "turretRotate"); //main hub, motor port 3
-        turretElevator = hwMap.get(DcMotor.class, "turretElevator"); //main hub, motor port 2, needs an encoder wire
+        turretElevator = hwMap.get(DcMotor.class, "turretElevator"); //main hub, motor port 2,
         conveyor       = hwMap.get(DcMotor.class, "conveyor"); //second hub, motor port 3
         intakePulley    = hwMap.get(DcMotor.class, "intakePulley"); //second hub, motor port 2, needs an encoder wire
         conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -172,10 +174,12 @@ public class HardwareUltimateGoal {
         turretLauncher.setPower(0.5);
         //power 0 = full reverse; power 0.5 = stop; power 1 = full forward
         //position 0.5 = open for reload, position
+        //-1 is forward
+        //1 is back
 
         wobbleGrabber   = hwMap.get(Servo.class, "wobbleGrabber"); //main hub servo port 0
-        wobbleGrabber.setPosition(0.5); //should be the open position, closed position is half a full rotation from open
-        //position 0 = closed, position 1 = open?
+        wobbleGrabber.setPosition(0); //should be the open position, closed position is half a full rotation from open
+        //position 0 = closed, position .8 = open?
 
         // Define and initialize ALL installed sensors.
         //touch1 = hwMap.touchSensor.get("touch_sensor");

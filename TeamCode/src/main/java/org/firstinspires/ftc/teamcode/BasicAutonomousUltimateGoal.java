@@ -18,24 +18,27 @@ import java.math.MathContext;
  *
  * after every step of the autonomous, make a call to update the position manager
  */
-@Autonomous(name="Basic Autonomous Ultimate Goal", group="UltimateGoal")
+
+//TODO: issue: fires, then aims, should do aim then fire
+
+@Autonomous(name="Basic Autonomous Ultimate Goal A", group="UltimateGoal")
 public class BasicAutonomousUltimateGoal extends LinearOpMode
 {
     /* Declare OpMode members. */
     HardwareUltimateGoal robot          = new HardwareUltimateGoal("testing");
-    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, HardwareUltimateGoal.readPosition(), HardwareUltimateGoal.readHeading(), true); //TODO: 10/21/2020 change true to false if on team blue
+    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, new double[]{1.79705 - 0.57785, -1.79705 + 0.4572 / 2}, -Math.PI/2 , true); //TODO: 10/21/2020 change true to false if on team blue
     ElapsedTime runtime                 = new ElapsedTime();
     AimAssist aimMan                    = new AimAssist(robot, posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.bestTargetPosition(0));
 
     @Override
-    public void runOpMode() {
+    public void runOpMode() throws InterruptedException {
         /*
          * Initialize the drive system variables.
          * The init() method of the hardware class does all the work here
          */
         robot.init(hardwareMap);
 
-        long timeToLowerIntake = 1000; //needs testing
+        int timeToLowerIntake = 1000; //needs testing
 
         //set up other things
         robot.leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -51,51 +54,51 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         //---------------------------------------------------------------------------------------\\
 
         // PARAMETER VALUES ARE TENTATIVE AS EXPERIMENTATION IS NEEDED TO FINE TUNE AND ADJUST THESE VALUES \\
-        posTarMan.setTarget(3); //set the target to be the the high goal
-        //move forward to right before the launch line
-        encoderDrive(robot.leftDrive,robot.rightDrive,1.8, 1);
-        /*robot.leftDrive.setPower(0.5);
-        robot.rightDrive.setPower(0.5);
-        sleep(2000);
-        robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);*/
+        posTarMan.setTarget(4); //set the target to be the the mid goal
 
-        robot.intakePulley.setPower(-1);
-        sleep(timeToLowerIntake);
+        //initialization / startup stuff
+        robot.wobbleGrabber.setPosition(0); // grab the wobble goal securely
+        rotateTurretTo(Math.PI/6); // the turret starts 30 degrees off center, move back to the middle
+        robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.intakePulley.setPower(-1); //lower the intake 1/2 of the way
+        sleep(timeToLowerIntake / 2);    //POTENTIAL ISSUE, not waiting, the pulley never raises
+
         robot.intakePulley.setPower(0);
 
-        //turn left
-        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(90), 1);
-        /*robot.leftDrive.setPower(-0.5);
-        robot.rightDrive.setPower(0.5);
-        sleep(1000);
-        robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);*/
+        //tested above this line
 
-        //move forward, where the starting stack is now to the left of the robot
-        encoderDrive(robot.leftDrive,robot.rightDrive,0.28575, 1);
-        /*robot.leftDrive.setPower(0.5);
-        robot.rightDrive.setPower(0.5);
-        sleep(500);
-        robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);*/
+        //move forward to just before the launch line //TODO: replace this part to move forward to the target zone goal
+        encoderDrive(robot.leftDrive,robot.rightDrive, Math.abs(posTarMan.getRobotPosition()[1])+ /*posTarMan.launchZone*/ - .2286/*robot length/2*/-.1, -1);
 
-        //turn right, where the starting stack is now behind the robot
-        encoderTurn(robot.leftDrive,robot.rightDrive,-Math.toRadians(90),1);
-        /*robot.leftDrive.setPower(0.5);
-        robot.rightDrive.setPower(-0.5);
-        sleep(1000);
-        robot.leftDrive.setPower(0);
-        robot.rightDrive.setPower(0);*/
+        //release the wobble goal, and fully lower the intake
+        robot.wobbleGrabber.setPosition(0.8);
+        robot.intakePulley.setPower(-1);
+        sleep(timeToLowerIntake / 2);
+
+        robot.intakePulley.setPower(0);
+        /*
+
+        //move back to right before the launch line, so that the robot is in the launch zone. (unneeded in this case, bc the target zone is on the line for this routine) //TODO: replace the posTarMan.getRobotPosition stuff with what the robots expected position is, keep it that way until we get odometry
+        //encoderDrive(robot.leftDrive,robot.rightDrive, Math.abs(posTarMan.getRobotPosition()[1]) - posTarMan.launchZone + .2286/*robot length*//* +.1, -1); // the .1 is there so that is isn't just ontop of the line
+
+        //turn left, so that the front of the robot (turret side) is facing away from where the robot needs to
+        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(90), 1); //if it turns the wrong way, multiply the angle by -1
+
+        //move backwards until the robot is at the firing area (where gabe goes to shoot)
+        encoderDrive(robot.leftDrive, robot.rightDrive, posTarMan.getRobotPosition()[0] * (2/3),1);
+
+        //angle the robot a bit toward the goals,
+        encoderTurn(robot.leftDrive, robot.rightDrive, -Math.PI/4, 1); //if it turns the wrong way, multiply the angle by -1
+
+        //move back a bit to ensure it's in the launch zone
+        encoderDrive(robot.leftDrive, robot.rightDrive, 0.25, 1);
 
         //fire twice:
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
-        //  fire loaded ring
+            //  fire loaded ring
         fireTurret();
-        //  reload
-        reloadTurret();
-        //  fire again
-        fireTurret();
+<<<<<<< HEAD
 
         //TODO: if we end up having enough time, put the next bit into a for loop that repeats at most 3 times
         //pick up another ring, then fire it
@@ -118,68 +121,30 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         sleep(500);
         robot.flyWheel1.setPower(0);
         robot.flyWheel2.setPower(0);
-
-        //reloads ring 2 into the chamber
+=======
+            //  reload and run conveyor a bit more if needed (flipped order)
         robot.conveyor.setPower(1);
-        sleep(2000);
+        sleep(1000);
         robot.conveyor.setPower(0);
+        reloadTurret();
+            //  fire again
+        fireTurret();
+>>>>>>> 89f91797a978f17d4cc6622cd762459bd27c9e83
 
-        //shoot ring 2 into the high goal
-        robot.flyWheel1.setPower(1);
-        robot.flyWheel2.setPower(1);
-        sleep(500);
-        robot.flyWheel1.setPower(0);
-        robot.flyWheel2.setPower(0);
+        //park over the launch line
+        encoderDrive(robot.leftDrive, robot.rightDrive, .25, -1);
 
-        //put down the intake pulley to enable the robot to take in rings from the starter stack
-        robot.intakePulley.setPower(-1);
-        sleep(3000);
-        robot.intakePulley.setPower(0);
 
-        for(int step = 0; step < 3; step++) {
-
-            //back up and take in a ring from the starting stack
-            robot.intakePulley.setPower(1);
-            robot.leftDrive.setPower(-0.25);
-            robot.rightDrive.setPower(-0.25);
-            sleep(1000);
-            robot.intakePulley.setPower(1);
-            robot.leftDrive.setPower(0);
-            robot.rightDrive.setPower(0);
-
-            //move forward, to right behind the launch line
-            robot.leftDrive.setPower(0.5);
-            robot.rightDrive.setPower(0.5);
-            sleep(500);
-            robot.leftDrive.setPower(0);
-            robot.rightDrive.setPower(0);
-
-            //reloads a ring from the starting stack into the chamber
-            robot.conveyor.setPower(1);
-            sleep(2000);
-            robot.conveyor.setPower(0);
-
-            //shoot ring into the high goal
-            robot.flyWheel1.setPower(1);
-            robot.flyWheel2.setPower(1);
-            sleep(500);
-            robot.flyWheel1.setPower(0);
-            robot.flyWheel2.setPower(0);
-        }
-
-        //drive over the launch line
-        robot.leftDrive.setPower(0.5);
-        robot.rightDrive.setPower(0.5);
-        sleep(500);
-        robot.leftDrive.setPower(0.5);
-        robot.rightDrive.setPower(0.5);*/
-
+<<<<<<< HEAD
         //Drives up to the white line
         encoderDrive(robot.leftDrive,robot.rightDrive,0.75, 1);
 
+=======
+        rotateTurretTo(0);
+>>>>>>> 89f91797a978f17d4cc6622cd762459bd27c9e83
         //Saves the robot's position and heading
         HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
-
+        */
         //---------------------------------------------------------------------------------------\\
         /* new idea
         (while doing these steps, make sure to update the robots position frequently)
@@ -257,7 +222,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
             int rightPos = right.getCurrentPosition();
             posTarMan.update(left.getCurrentPosition(), right.getCurrentPosition());
 
-            // pid type stuff i think
+            /*// pid type stuff i think
             if (leftBigger) leftPos -= countOffset;
             else            rightPos -=countOffset;
 
@@ -270,7 +235,10 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
             } else {
                 left.setPower(power);
                 right.setPower(power);
-            }
+            }*/
+            telemetry.addData("left encoder count", robot.leftDrive.getCurrentPosition());
+            telemetry.addData("right encoder count", robot.rightDrive.getCurrentPosition());
+            telemetry.update();
         }
 
         //stop running to position
@@ -317,6 +285,9 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         // while the motors are busy, update the positionTargetManager
         while (right.isBusy() || left.isBusy()) {
             posTarMan.update(left.getCurrentPosition(), right.getCurrentPosition());
+            telemetry.addData("left encoder count", robot.leftDrive.getCurrentPosition());
+            telemetry.addData("right encoder count", robot.rightDrive.getCurrentPosition());
+            telemetry.update();
         }
 
         //stop running to position
@@ -339,14 +310,34 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
      * @param angle angle relative to field
      * @return if the target angle in in a dead zone, it returns -1, otherwise it returns 0 and rotates the turret to the needed position
      */
-    public int rotateTurretTo(double angle) {
+    public int rotateTurretTo(double angle, double robotHeading) {
         double targetPosition;
-        double robotHeading = posTarMan.getRobotHeading();
 
         //heading relative to field -> heading relative to the robot
         targetPosition = angle - robotHeading;
         //check if heading rel. to robot is in the deadzone, if so, return -1
-        if (targetPosition > Math.toRadians(45) || targetPosition < -Math.toRadians(45)) return -1;
+        if (targetPosition > Math.toRadians(45) || targetPosition < -Math.toRadians(45)) {rotateTurretTo(0); return -1;}
+        //convert the heading rel. to robot into the needed encoder counts
+        targetPosition /= robot.CORE_HEX_RADIANS_PER_COUNTS;
+        //make sure that the robot rotates the best direction to reach goal
+
+        //rotate to that position and return 0
+        robot.runMotorToPosition(robot.turretRotator, (int) targetPosition, 0.5);
+        return 0;
+    }
+    /**
+     * modification of the other rotateTurret method, this one disregards the robots heading
+     * given the angle relative to the robot, move the turret to that angle
+     * @param angle angle relative to robot
+     * @return if the target angle in in a dead zone, it returns -1, otherwise it returns 0 and rotates the turret to the needed position
+     */
+    public int rotateTurretTo(double angle) {
+        double targetPosition;
+
+        //heading relative to field -> heading relative to the robot
+        targetPosition = angle;
+        //check if heading rel. to robot is in the deadzone, if so, return -1
+        if (targetPosition > Math.toRadians(45) || targetPosition < -Math.toRadians(45)) {rotateTurretTo(0); return -1;}
         //convert the heading rel. to robot into the needed encoder counts
         targetPosition /= robot.CORE_HEX_RADIANS_PER_COUNTS;
         //make sure that the robot rotates the best direction to reach goal
@@ -419,6 +410,8 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) rotateTurretTo(Math.toRadians(0)); //try to aim to whatever the aim manager thinks it needs to, if that doesn't work, point forward
         if (elevateTurretTo(aimMan.getPitchToTarget()) == -1)  rotateTurretTo(Math.toRadians(40));//same as above, just pitch instead of heading
 
+
+
         //spin up flywheels and wait a bit to let everything move up to speed, the flywheels are not the same speed in order to create a spin
         robot.flyWheel1.setPower(0.9);
         robot.flyWheel2.setPower(1.0);
@@ -464,9 +457,9 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
             sleep(300);
             robot.turretLauncher.setPower(0);
             sleep(100);
-            robot.turretLauncher.setPower(-.5);
+            robot.turretLauncher.setPower(-.75);
             sleep(300); //adjust timing
-            robot.turretLauncher.setPower(0.15);
+            robot.turretLauncher.setPower(0.1);
             elevateTurretTo(0);
             loaded = true;
         }
