@@ -5,11 +5,13 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.io.File;
@@ -60,8 +62,11 @@ public class HardwareUltimateGoal {
     public CRServo turretLauncher;
 
     public Servo wobbleGrabber;
+    public Servo distanceServo;
 
-    //public TouchSensor touch1 = null; //commented out bc it's not installed yet
+    public DistanceSensor distanceSensor;
+
+    //public TouchSensor touch1; //commented out bc it's not installed yet
     //public ColorSensor color1 = null; //commented out bc it's not installed yet
 
 
@@ -77,7 +82,7 @@ public class HardwareUltimateGoal {
     /* some variables for different measurements of the robot */ //TODO: keep up to date
     public double turretHeight = 0.2023; //5 + (13/16) inches, from the floor to the launch platform at rest, up to date but not 100% accurate
     public double robotWidth = 0.345;  // 34.5cm, up to date, but not 100% accurate
-    public long launcherTimeToRotate = 100; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
+    public static long LAUNCHER_TIME_TO_ROTATE = 1300; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
 
     // stats for the TorqueNADO motors
     public final double NADO_COUNTS_PER_MOTOR_REV = 1440;
@@ -169,8 +174,13 @@ public class HardwareUltimateGoal {
         intakePulley.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Define and initialize ALL installed servos.
-        turretLauncher = hwMap.get(CRServo.class, "turretLaunchServo"); ///main hub servo port 1
-        turretLauncher.setPower(0.1);
+        turretLauncher = hwMap.get(CRServo.class, "turretLaunchServo"); ///main hub servo port 1 // continuous rotation servo
+        turretLauncher.setPower(0);
+        // forward, here, means that the launch paddle moves in the direction that would launch the ring
+        // stopped: 0
+        // forward: [-1,0)
+        // backward: (0,1]
+        /*old, this is from when the servo was a normal servo*/
         //power 0 = full reverse; power 0.5 = stop; power 1 = full forward
         //position 0.5 = open for reload, position
         //-1 is forward (shoot)
@@ -178,11 +188,36 @@ public class HardwareUltimateGoal {
         // .1 is ready to shoot
         //1 is back
 
-        wobbleGrabber   = hwMap.get(Servo.class, "wobbleGrabber"); //main hub servo port 0
+
+
+        wobbleGrabber   = hwMap.get(Servo.class, "wobbleGrabber"); //main hub servo port 2 //360 servo
         wobbleGrabber.setPosition(0.8); //should be the open position, closed position is half a full rotation from open
         //position 0 = closed, position .8 = open?
 
+
+        distanceServo = hwMap.get(Servo.class, "distanceServo"); //main hub servo port 3 //180 servo
+        distanceServo.setPosition(0.5);
+        //position 0.5: parallel to the front of the robot (folded in), position 1: pointed outwards, ready to scan
+        //DO NOT SET BELOW 0.5 btw, or it will be pushing against the tower, which may cause some damage
+
         // Define and initialize ALL installed sensors.
+        distanceSensor = hwMap.get(DistanceSensor.class, "distanceSensor"); //main hub I2C port 3
+        //usage example: distanceSensor.getDistance(DistanceUnit.METER);
+        /*
+            the distances that should be detected for various ring numbers
+            0 - ~10.8-11.5 CM
+            1 - ~8-9cm
+            4 - ~3.2-4 CM
+
+            in code:
+
+            if > 5 { if > 10 {0 rings} else {1 ring} } else {4 rings}
+            or
+            set as 0 rings
+            if < 10 set as 1 ring
+            if < 5 set as 4 rings
+         */
+
         //touch1 = hwMap.touchSensor.get("touch_sensor");
         //color1 = hwMap.colorSensor.get("color1");
 

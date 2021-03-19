@@ -19,7 +19,7 @@ import java.math.MathContext;
  * after every step of the autonomous, make a call to update the position manager
  */
 
-//TODO: something is wrong with the motors, they move twice as far as they should
+//TODO: Rewrite for 2 things: 1) distance sensor, 2) odometry
 
 @Autonomous(name="Basic Autonomous Ultimate Goal A", group="UltimateGoal")
 public class BasicAutonomousUltimateGoal extends LinearOpMode
@@ -277,7 +277,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         //heading relative to field -> heading relative to the robot
         targetPosition = angle - robotHeading;
         //check if heading rel. to robot is in the deadzone, if so, return -1
-        if (targetPosition > Math.toRadians(45) || targetPosition < -Math.toRadians(45)) {rotateTurretTo(0); return -1;}
+        if (targetPosition >= Math.toRadians(90) || targetPosition < -Math.toRadians(45)) {rotateTurretTo(0); return -1;}
         //convert the heading rel. to robot into the needed encoder counts
         targetPosition /= robot.CORE_HEX_RADIANS_PER_COUNTS;
         //make sure that the robot rotates the best direction to reach goal
@@ -298,7 +298,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         //heading relative to field -> heading relative to the robot
         targetPosition = angle;
         //check if heading rel. to robot is in the deadzone, if so, return -1
-        if (targetPosition > Math.toRadians(45) || targetPosition < -Math.toRadians(45)) {rotateTurretTo(0); return -1;}
+        if (targetPosition >= Math.toRadians(90) || targetPosition < -Math.toRadians(45)) {rotateTurretTo(0); return -1;}
         //convert the heading rel. to robot into the needed encoder counts
         targetPosition /= robot.CORE_HEX_RADIANS_PER_COUNTS;
         //make sure that the robot rotates the best direction to reach goal

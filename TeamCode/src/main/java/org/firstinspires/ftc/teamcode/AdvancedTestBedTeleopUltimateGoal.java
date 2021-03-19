@@ -245,7 +245,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         //heading relative to field -> heading relative to the robot
         targetPosition = angle;
         //check if heading rel. to robot is in the deadzone, if so, return -1
-        if (targetPosition > Math.toRadians(45) || targetPosition < -Math.toRadians(45)) {rotateTurretTo(0); return -1;}
+        if (targetPosition > Math.toRadians(60) || targetPosition < -Math.toRadians(45)) {rotateTurretTo(0); return -1;}
         currentTurretHeading = Math.toDegrees(targetPosition);
         //convert the heading rel. to robot into the needed encoder counts
         targetPosition /= robot.CORE_HEX_RADIANS_PER_COUNTS;
@@ -392,12 +392,14 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
                     //launch ring.
                     // rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
-                    robot.turretLauncher.setPower(-1);
-
-                    sleep(500); ///this number will change with testing
+                    robot.turretLauncher.setPower(-1); // if this moves the wrong way, set to 1
+                    sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/4);
 
                     //reset/prep other components for next shot
-                    robot.turretLauncher.setPower(0.5);
+                    robot.turretLauncher.setPower(1);
+                    sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/4);
+
+                    robot.turretLauncher.setPower(0);
                     robot.flyWheel1.setPower(0);
                     robot.flyWheel2.setPower(0);
                     //elevateTurretTo(0);
@@ -419,18 +421,37 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
         rotateTurretTo(0);
         elevateTurretTo(0);
-        if (loaded) { //if loaded, unload
+        if (loaded) { //if loaded, unload //TODO: recode the unload sequence, when done, apply changes to the autonomous
+
+            /*old, from when the turret launcher was a normal servo
             //set the conveyors to reverse
             robot.conveyor.setPower(-1);
             //clear turret
             robot.turretLauncher.setPower(.5);
             sleep(500);
             //stop conveyors
-            robot.conveyor.setPower(0);
+            robot.conveyor.setPower(0); */
             loaded = false;
-        } else { //if unloaded, load
+        } else { //if unloaded, load //TODO: recode the reload sequence, when done, apply changes to the autonomous
             //set the conveyors to forward
             robot.conveyor.setPower(1);
+
+            //turn the launcher in one full rotation
+            robot.turretLauncher.setPower(-1);
+            sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/4);
+
+            //stop the launcher, this interruption should help with missaligned loads
+            robot.turretLauncher.setPower(0);
+            sleep(100);
+
+            //finish the rotation
+            robot.turretLauncher.setPower(-1);
+            sleep((3*HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE)/4);
+
+            //stop the launcher
+            robot.turretLauncher.setPower(0);
+
+            /*old, from when the turret launcher was a normal servo
             elevateTurretTo(Math.toRadians(15)); //elevate the turret slightly to assist with the reload
             //wiggle the launching thing around a bit
             robot.turretLauncher.setPower(-0.3);
@@ -441,7 +462,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             elevateTurretTo(0);
             robot.turretLauncher.setPower(-.75);
             sleep(300); //adjust timing
-            robot.turretLauncher.setPower(0.1);
+            robot.turretLauncher.setPower(0.1);*/
             loaded = true;
         }
 

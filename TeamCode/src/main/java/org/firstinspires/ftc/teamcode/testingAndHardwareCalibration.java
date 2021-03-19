@@ -5,6 +5,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -22,6 +24,33 @@ public class testingAndHardwareCalibration extends LinearOpMode {
         waitForStart();
         robot.init(hardwareMap);
 
+        //turn the launcher in one full rotation
+        robot.turretLauncher.setPower(-1);
+        sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/4);
+/*
+        //stop the launcher, this interruption should help with missaligned loads
+        robot.turretLauncher.setPower(.5);
+        sleep(200);
+
+        robot.turretLauncher.setPower(-.5);
+        sleep(200);
+*/
+
+
+
+
+        //finish the rotation
+        robot.turretLauncher.setPower(-1);
+        sleep((3*HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE)/4);
+
+        //stop the launcher
+        robot.turretLauncher.setPower(0);
+
+        while (opModeIsActive()) {
+            telemetry.addData("distance detected", robot.distanceSensor.getDistance(DistanceUnit.CM));
+            telemetry.update();
+        }
+        /*
         robot.intakePulley.setPower(1);
 
         sleep(1000);
@@ -31,6 +60,7 @@ public class testingAndHardwareCalibration extends LinearOpMode {
         sleep(500);
 
         robot.intakePulley.setPower(0);
+         */
     }
 
 
