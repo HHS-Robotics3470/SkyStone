@@ -76,12 +76,15 @@ public class PositionAndTargetManager {
     double launchZone = 2.06375 - 1.79705/*+- 0.0254m*/;       //any position with a y coordinate less (maybe more than?) than launchZone is in the launch zone
 
     double metersPerCount;
-    double robotWidth;
+    double robotOdoWidth;
+    double horizRadiansPerCount;
+    double robotOdoLength;
 
     byte powerShotsHit = 0;
 
     int previousLeftCounts = 0;
     int previousRightCounts = 0;
+    int previousHorizCounts = 0;
     ////////////////////////////// constructors //////////////////////////////
 
     /**
@@ -95,7 +98,10 @@ public class PositionAndTargetManager {
     public PositionAndTargetManager(HardwareUltimateGoal robot, boolean isTeamRed) {
         //take some variables from the robot
         metersPerCount = robot.NADO_METERS_PER_COUNT;
-        robotWidth = robot.robotWidth;
+        robotOdoWidth = robot.robotOdometryWidth;
+        robotOdoLength = robot.robotOdometryLength;
+        horizRadiansPerCount = metersPerCount / robotOdoLength;
+
         robotPosition = new double[]{1.79705 - 0.57785, -1.79705 + 0.4572/2}; //0.57785 is the distance from the right wall, 0.4572 is the length of the robot, //TODO: re-measure these coordinates, measure to the center of thrust
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
@@ -118,8 +124,10 @@ public class PositionAndTargetManager {
      */
     public PositionAndTargetManager(HardwareUltimateGoal robot, double[] initPosition, double initHeading, boolean isTeamRed) {
         //take some variables from the robot
-        metersPerCount = robot.NADO_METERS_PER_COUNT;
-        robotWidth = robot.robotWidth;
+        metersPerCount = robot.ODOMETRY_METERS_PER_COUNT;
+        robotOdoWidth = robot.robotOdometryWidth;
+        robotOdoLength = robot.robotOdometryLength;
+        horizRadiansPerCount = metersPerCount / robotOdoLength;
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
             for (int r = 0; r < targets.length; r++) {
@@ -130,36 +138,40 @@ public class PositionAndTargetManager {
         robotPosition[0] = initPosition[0];
         robotPosition[1] = initPosition[1];
         robotHeading = initHeading;
+
     }
 
     ////////////////////////////// update and calculate method //////////////////////////////
     //TODO: currently, this only uses the encoders of the drive motors, once separate odometry systems are installed, rewrite this code, basing it on the ideas of team wizard https://www.youtube.com/watch?v=cpdPtN4BDug
-    public void update(int leftCounts, int rightCounts) {
+    public void update(int leftCounts, int rightCounts, int horizCounts) {
         double headingChange = 0.0;
 
         int leftChange = leftCounts - previousLeftCounts;
         int rightChange = rightCounts - previousRightCounts;
+        int horizChange = horizCounts - previousHorizCounts;
+
+        previousLeftCounts = leftCounts;
+        previousRightCounts = rightCounts;
+        previousHorizCounts = horizCounts;
 
         //positions
-        double s1 = leftChange * metersPerCount;  // distance the left wheel traveled (m) (delta s1)
-        double s2 = rightChange * metersPerCount; // distance the right wheel traveled (m) (delta s2)
+        double s1 = leftChange;  // distance the left wheel traveled (m) (delta s1)
+        double s2 = rightChange; // distance the right wheel traveled (m) (delta s2)
         double s = (s1 + s2) / 2.0; // average distance travelled between the two wheels; also the length of the arc the robot moved
 
         //Calculate Angle change, robot width may need to be adjusted, and must be accurate to a high degree
-        //this part is broken most likely
-        //headingChange = Math.toRadians(-(leftChange - rightChange) / (robotWidth)); //attempted fix 1
-        headingChange = (s2 - s1) / robotWidth; //attempted fix 2
-        // attempted fix 3
-
-        //some house keeping
-        previousLeftCounts = leftCounts;
-        previousRightCounts = rightCounts;
-
-        //using a professors ideas https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-186-mobile-autonomous-systems-laboratory-january-iap-2005/study-materials/odomtutorial.pdf
-        //
-        robotPosition[0] += s * Math.cos(robotHeading);
-        robotPosition[1] += s * Math.sin(robotHeading);
+        headingChange = (s2 - s1) / robotOdoWidth;
         robotHeading += headingChange;
+
+        horizChange -= headingChange/horizRadiansPerCount;
+        //some house keeping
+
+
+        //calculate the changes in position
+
+        robotPosition[0] += (s*Math.sin(robotHeading) + horizChange*Math.cos(robotHeading)) * metersPerCount;
+        robotPosition[1] += (s*Math.cos(robotHeading) - horizChange*Math.sin(robotHeading)) * metersPerCount;
+
 
         //make sure robotHeading is in the range [pi,-pi] not [2pi, 0]
         double twoPI = 2 * Math.PI;

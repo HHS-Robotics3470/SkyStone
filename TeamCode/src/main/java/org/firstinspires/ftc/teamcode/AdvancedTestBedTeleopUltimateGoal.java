@@ -53,6 +53,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         // declare some variables if needed
         int leftCounts  = 0;
         int rightCounts = 0;
+        int horizCounts = 0;
 
         /* Initialize the hardware variables.
          * The init() method of the hardware class does all the work here
@@ -76,7 +77,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
           // update position and aim managers
             leftCounts     = robot.leftDrive.getCurrentPosition(); //total left encoder counts
             rightCounts    = robot.rightDrive.getCurrentPosition();//total right encoder counts
-            posTarMan.update(leftCounts, rightCounts);
+            horizCounts    = robot.horizOdometry.getCurrentPosition();
+            posTarMan.update(leftCounts, rightCounts, horizCounts);
             aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
 
@@ -334,7 +336,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
         //get heading and pitch (skip for now, probably not needed bc alot of what I would put here is redundant (already happens in the teleop))
-        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition());
+        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition(), robot.horizOdometry.getCurrentPosition());
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
         switch ((int) aimMan.getPitchToTarget()) {

@@ -2,13 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Hardware;
-
-import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -74,20 +70,20 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.intakePulley.setPower(0);
 
         //move forward to the target zone goal (closest to start position) distance is ~160 centimeters
-        encoderDrive(robot.leftDrive,robot.rightDrive, 1.6 * .8125, -.75);
+        encoderDrive(robot.leftDrive,robot.rightDrive, robot.horizOdometry, 1.6 * .8125, -.75);
         //encoderDrive(robot.leftDrive,robot.rightDrive, .3 * .8125, -.5);
 
         // drop the wobble used to be here
 
-        encoderDrive(robot.leftDrive, robot.rightDrive, .2 * .8125,1);
+        encoderDrive(robot.leftDrive, robot.rightDrive, robot.horizOdometry, .2 * .8125,1);
 
         //turn left, so that the front of the robot (turret side) is facing to closest wall
         //used to be 65, changed to 55, changed to 80
-        encoderTurn(robot.leftDrive, robot.rightDrive, Math.toRadians(80 * .8125), .75); //if it turns the wrong way, multiply the angle by -1
+        encoderTurn(robot.leftDrive, robot.rightDrive, robot.horizOdometry, Math.toRadians(80 * .8125), .75); //if it turns the wrong way, multiply the angle by -1
         //supposed to be 180
 
         //move backwards until the robot is at the firing area (where gabe goes to shoot) (4 feet) 48 * 2.54 / 100 = 1.2192
-        encoderDrive(robot.leftDrive, robot.rightDrive, .4 * .8125,-1);
+        encoderDrive(robot.leftDrive, robot.rightDrive, robot.horizOdometry, .4 * .8125,-1);
 
         //release the wobble goal, and fully lower the intake
         robot.wobbleGrabber.setPosition(0.8);
@@ -132,7 +128,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 
         //turn a bit and park over the launch line
         //encoderTurn(robot.leftDrive, robot.rightDrive, - Math.toRadians(10 * .8125), 1); //TODO: test this angle
-        encoderDrive(robot.leftDrive, robot.rightDrive, .1, 1); //TODO: test this distance
+        encoderDrive(robot.leftDrive, robot.rightDrive, robot.horizOdometry, .1, 1); //TODO: test this distance
 
 
 
@@ -146,10 +142,11 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
      * drives the robot forward a given distance, to go in reverse, give a negative value for power
      * @param left the motor on the left
      * @param right the motor on the right
+     * @param horiz the horizontal odometry encoder
      * @param distance the distance the robot should move, meters, always positive, IMPORTANT, You're passing the desired change, not a desired place (this makes more sense with the turn method)
      * @param power the power the robot should move at
      */
-    public void encoderDrive(DcMotor left, DcMotor right, double distance, double power) {
+    public void encoderDrive(DcMotor left, DcMotor right, DcMotor horiz, double distance, double power) {
         distance *= robot.NADO_COUNTS_PER_METER; //converts the desired distance into encoder ticks
         //if they want to move backwards, invert distance
         if (power < 0) {
@@ -181,7 +178,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         while (right.isBusy() || left.isBusy()) {
             int leftPos = left.getCurrentPosition();
             int rightPos = right.getCurrentPosition();
-            posTarMan.update(left.getCurrentPosition(), right.getCurrentPosition());
+            posTarMan.update(left.getCurrentPosition(), right.getCurrentPosition(), horiz.getCurrentPosition());
 
             /*// pid type stuff i think
             if (leftBigger) leftPos -= countOffset;
@@ -213,14 +210,15 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
      *
      * @param left the motor on the left
      * @param right the motor on the right
+     * @param horiz the horizontal odometry encoder
      * @param angle the desired change in angle, in radians, positive angles turn ccw, negative angles turn cw
      * @param power the power the motors should move at, should always be positive
      */
-    public void encoderTurn(DcMotor left, DcMotor right, double angle, double power) {
+    public void encoderTurn(DcMotor left, DcMotor right, DcMotor horiz, double angle, double power) {
         double wheelCircumference = robot.NADO_WHEEL_DIAMETER_METERS * Math.PI;
-        double turnCircumference = robot.robotWidth * Math.PI;
+        double turnCircumference = robot.robotOdometryWidth * Math.PI;
 
-        double angleCircumference = angle * robot.robotWidth;//in meters
+        double angleCircumference = angle * robot.robotOdometryWidth;//in meters
         angleCircumference *= robot.NADO_COUNTS_PER_METER; // in encoder ticks
 
         //set up right and left to run to position
@@ -245,7 +243,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         }
         // while the motors are busy, update the positionTargetManager
         while (right.isBusy() || left.isBusy()) {
-            posTarMan.update(left.getCurrentPosition(), right.getCurrentPosition());
+            posTarMan.update(left.getCurrentPosition(), right.getCurrentPosition(), horiz.getCurrentPosition());
             telemetry.addData("left encoder count", robot.leftDrive.getCurrentPosition());
             telemetry.addData("right encoder count", robot.rightDrive.getCurrentPosition());
             telemetry.update();
@@ -407,7 +405,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
         //get heading and pitch (skip for now, probably not needed bc alot of what I would put here is redundant (already happens in the teleop))
-        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition());
+        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition(), robot.horizOdometry.getCurrentPosition());
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
         //move turret to aim at target

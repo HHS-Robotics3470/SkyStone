@@ -59,6 +59,8 @@ public class HardwareUltimateGoal {
     public DcMotor turretRotator;
     public DcMotor turretElevator; //go bilda 53:1
 
+    public DcMotor horizOdometry;
+
     public CRServo turretLauncher;
 
     public Servo wobbleGrabber;
@@ -81,8 +83,16 @@ public class HardwareUltimateGoal {
 
     /* some variables for different measurements of the robot */ //TODO: keep up to date
     public double turretHeight = 0.2023; //5 + (13/16) inches, from the floor to the launch platform at rest, up to date but not 100% accurate
-    public double robotWidth = 0.345;  // 34.5cm, up to date, but not 100% accurate
+    public double robotOdometryWidth = 0.345;  // 34.5cm, up to date, but not 100% accurate // refers to the distance between the 2 side encoders
+    public double robotOdometryLength = 0.2; // refers to the distance between the front odometry encoder and the imaginary line between the 2 side encoders
     public static long LAUNCHER_TIME_TO_ROTATE = 1300; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
+
+    //stats for the odometry encoders
+    public final double ODOMETRY_COUNTS_PER_MOTOR_REV = 1440;
+    public final double ODOMETRY_WHEEL_DIAMETER_METERS= 0.1016; //(4") For figuring circumference
+    public final double ODOMETRY_COUNTS_PER_METER      = (ODOMETRY_COUNTS_PER_MOTOR_REV) / (ODOMETRY_WHEEL_DIAMETER_METERS * Math.PI);
+    public final double ODOMETRY_METERS_PER_COUNT = 1.0 /ODOMETRY_COUNTS_PER_METER;
+
 
     // stats for the TorqueNADO motors
     public final double NADO_COUNTS_PER_MOTOR_REV = 1440;
@@ -132,9 +142,15 @@ public class HardwareUltimateGoal {
         turretRotator = hwMap.get(DcMotor.class, "turretRotate"); //main hub, motor port 3
         turretElevator = hwMap.get(DcMotor.class, "turretElevator"); //main hub, motor port 2,
         conveyor       = hwMap.get(DcMotor.class, "conveyor"); //second hub, motor port 3
-        intakePulley    = hwMap.get(DcMotor.class, "intakePulley"); //second hub, motor port 2, needs an encoder wire
+        intakePulley    = hwMap.get(DcMotor.class, "intakePulley"); //second hub, motor port 2,
         conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         turretRotator.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        //odometry: left and right odometry are plugged into the encoder slots for the drive motors on their corresponding sides
+        // horizontal odometry is plugged into the encoder slot of ____
+        horizOdometry = hwMap.get(DcMotor.class, "intakePulley");
+
+
 
         // Set all motors to zero power
         leftDrive.setPower(0);
@@ -152,6 +168,7 @@ public class HardwareUltimateGoal {
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        horizOdometry.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         //set to run with encoder
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);  //torqueNADO motor
@@ -163,7 +180,7 @@ public class HardwareUltimateGoal {
         conveyor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         flyWheel1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         flyWheel2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intakePulley.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intakePulley.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //for odometry
 
 
         //set zero behavior
