@@ -88,19 +88,19 @@ public class HardwareUltimateGoal {
     public static long LAUNCHER_TIME_TO_ROTATE = 1300; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
 
     //stats for the odometry encoders
-    public final double ODOMETRY_COUNTS_PER_MOTOR_REV = 1440;
-    public final double ODOMETRY_WHEEL_DIAMETER_METERS= 0.1016; //(4") For figuring circumference
-    public final double ODOMETRY_COUNTS_PER_METER      = (ODOMETRY_COUNTS_PER_MOTOR_REV) / (ODOMETRY_WHEEL_DIAMETER_METERS * Math.PI);
-    public final double ODOMETRY_METERS_PER_COUNT = 1.0 /ODOMETRY_COUNTS_PER_METER;
+    public final double ODOMETRY_COUNTS_PER_MOTOR_REV = 8192; //or 2048
+    public final double ODOMETRY_WHEEL_DIAMETER_METERS= 0.0508; //(2") For figuring circumference
+    public final double ODOMETRY_COUNTS_PER_METER     = (ODOMETRY_COUNTS_PER_MOTOR_REV) / (ODOMETRY_WHEEL_DIAMETER_METERS * Math.PI);
+    public final double ODOMETRY_METERS_PER_COUNT     = 1.0 /ODOMETRY_COUNTS_PER_METER;
 
 
     // stats for the TorqueNADO motors
     public final double NADO_COUNTS_PER_MOTOR_REV = 1440;
     public final double NADO_DRIVE_GEAR_REDUCTION = 32.0/24.0;  // This is < 1.0 if geared UP (to increase speed)
     public final double NADO_WHEEL_DIAMETER_METERS= 0.1016; //(4") For figuring circumference
-    public final double NADO_COUNTS_PER_METER      = (NADO_COUNTS_PER_MOTOR_REV * NADO_DRIVE_GEAR_REDUCTION) /
+    public final double NADO_COUNTS_PER_METER     = (NADO_COUNTS_PER_MOTOR_REV * NADO_DRIVE_GEAR_REDUCTION) /
             (NADO_WHEEL_DIAMETER_METERS * Math.PI);
-    public final double NADO_METERS_PER_COUNT = 1.0 / NADO_COUNTS_PER_METER;
+    public final double NADO_METERS_PER_COUNT     = 1.0 / NADO_COUNTS_PER_METER;
 
     // stats for the Rev Core Hex motor
     public final double CORE_HEX_COUNTS_PER_MOTOR_REV = 288;  // 4 * 72(gear ratio)
@@ -250,8 +250,6 @@ public class HardwareUltimateGoal {
         parameters.loggingTag          = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         imu.initialize(parameters);
-
-
     }
 
     ////////////////////////////// file for storing position and heading info after autonomous //////////////////////////////
