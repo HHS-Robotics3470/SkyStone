@@ -83,15 +83,15 @@ public class HardwareUltimateGoal {
 
     /* some variables for different measurements of the robot */ //TODO: keep up to date
     public double turretHeight = 0.2023; //5 + (13/16) inches, from the floor to the launch platform at rest, up to date but not 100% accurate
-    public double robotOdometryWidth = 0.345;  // 34.5cm, up to date, but not 100% accurate // refers to the distance between the 2 side encoders
-    public double robotOdometryLength = 0.2; // refers to the distance between the front odometry encoder and the imaginary line between the 2 side encoders
+    public double robotOdometryWidth = 0.12375;  // 12.375cm, up to date, may not be accurate // refers to the distance between the 2 side encoders
+    public double robotOdometryLength = 0.084; // 8.4cm, up to date, may not be accurate // refers to the distance between the front odometry encoder and the imaginary line between the 2 side encoders
     public static long LAUNCHER_TIME_TO_ROTATE = 1300; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
 
     //stats for the odometry encoders
     public final double ODOMETRY_COUNTS_PER_MOTOR_REV = 8192; //or 2048
-    public final double ODOMETRY_WHEEL_DIAMETER_METERS= 0.0508; //(2") For figuring circumference
+    public final double ODOMETRY_WHEEL_DIAMETER_METERS= 0.05; //(5cm) For figuring circumference, up to date may not be accurate
     public final double ODOMETRY_COUNTS_PER_METER     = (ODOMETRY_COUNTS_PER_MOTOR_REV) / (ODOMETRY_WHEEL_DIAMETER_METERS * Math.PI);
-    public final double ODOMETRY_METERS_PER_COUNT     = 1.0 /ODOMETRY_COUNTS_PER_METER;
+    public final double ODOMETRY_METERS_PER_COUNT     = 1.0 / ODOMETRY_COUNTS_PER_METER;
 
 
     // stats for the TorqueNADO motors
