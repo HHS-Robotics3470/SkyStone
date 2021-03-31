@@ -93,8 +93,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             bumpers and triggers will be debug things
                 left bumper - turn on abort mode
                 right bumper - turn off abort mode
-                left trigger - display encoder readings
-                right trigger - sets the turrets zero position to wherever it's currently at
+                left trigger - display encoder readings                                         (in abort mode, makes the turret launcher turn CCW)
+                right trigger - sets the turrets zero position to wherever it's currently at    (in abort mode, makes the turret launcher turn CW)
 
             thumbsticks will control movement
 
@@ -129,21 +129,27 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             if (gamepad1.left_bumper) {abort = true;} // changes the d-pad to control the turrets movement, also turns off aimbot
             if (gamepad1.right_bumper){abort = false;}// changes the d-pad to control things with the intake, also turns on aimbot
             if (gamepad1.right_trigger > 0.5) {
-                robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                if (abort) { robot.turretLauncher.setPower(-0.5); }
+                else {
+                    robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                }
             }
             //telemetry
             if (gamepad1.left_trigger > 0.5) { //shows info about the motor encoders
-                telemetry.addLine("odometry encoder counts");
-                telemetry.addData("left odometry", robot.leftOdometry.getCurrentPosition());
-                telemetry.addData("right odometry", robot.rightOdometry.getCurrentPosition());
-                telemetry.addData("horizontal ododmetry", robot.horizOdometry.getCurrentPosition());
+                if (abort) { robot.turretLauncher.setPower(0.5); }
+                else {
+                    telemetry.addLine("odometry encoder counts");
+                    telemetry.addData("left odometry", robot.leftOdometry.getCurrentPosition());
+                    telemetry.addData("right odometry", robot.rightOdometry.getCurrentPosition());
+                    telemetry.addData("horizontal ododmetry", robot.horizOdometry.getCurrentPosition());
 
-                telemetry.addLine("motor encoder counts");
-                telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
-                telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
-                telemetry.update();
-            } else basicTelemetryManager();
+                    telemetry.addLine("motor encoder counts");
+                    telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
+                    telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
+                    telemetry.update();
+                }
+            } else {basicTelemetryManager(); robot.turretLauncher.setPower(0);}
 
 
 
