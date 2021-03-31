@@ -174,10 +174,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 if (!abort) {robot.wobbleGrabber.setPosition(-1 * (robot.wobbleGrabber.getPosition() - 0.4) + 0.4); sleep(200);}//position should only ever be 0 or 0.8, same deal as before
                 else rotateTurretTo(Math.toRadians(currentTurretHeading - 5)); //in abort mode, rotate turret to the left
             }
-
-
         }
-
         //after opMode, save current position and heading for reasons
         //HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
     }

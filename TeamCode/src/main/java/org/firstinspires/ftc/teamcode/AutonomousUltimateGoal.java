@@ -17,8 +17,8 @@ import java.math.MathContext;
 
 //TODO: Rewrite for 2 things: 1) distance sensor, 2) odometry
 
-@Autonomous(name="Basic Autonomous Ultimate Goal A", group="UltimateGoal")
-public class BasicAutonomousUltimateGoal extends LinearOpMode
+@Autonomous(name="Autonomous Ultimate Goal A", group="UltimateGoal")
+public class AutonomousUltimateGoal extends LinearOpMode
 {
     /* Declare OpMode members. */
     HardwareUltimateGoal robot          = new HardwareUltimateGoal("testing");
@@ -46,7 +46,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         runtime.reset();
 
         // Step through each leg of the path,
-
+        //TODO: need to recode the auto-routine
         //---------------------------------------------------------------------------------------\\
 
         // PARAMETER VALUES ARE TENTATIVE AS EXPERIMENTATION IS NEEDED TO FINE TUNE AND ADJUST THESE VALUES \\
@@ -179,12 +179,9 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
                 if (deltaLeft>deltaRight) {left.setPower(power-0.5);right.setPower(power);}         //if left has gone further, make it go slower
                 else if (deltaLeft<deltaRight) {left.setPower(power-0.5);right.setPower(power);}    //if right has gone further, make it go slower
             } else {left.setPower(power);right.setPower(power);}
-
-
         }
 
-
-
+        /*
         //vvv old vvv
         //set up right and left to run to position
         left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -193,14 +190,11 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         right.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         right.setTargetPosition((int) (right.getCurrentPosition() + distance));
         right.setPower(0);
-
         //set to RunToPosition
         left.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         right.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
         left.setPower(power);
         right.setPower(power);
-
         // while the motors are busy, update the positionTargetManager
         int countOffset = left.getCurrentPosition() - right.getCurrentPosition();
         boolean leftBigger = true;
@@ -209,14 +203,11 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
             countOffset *= -1;
         }
         while (right.isBusy() || left.isBusy()) {
-            int leftPos = left.getCurrentPosition();
-            int rightPos = right.getCurrentPosition();
             posTarMan.update(leftOdo.getCurrentPosition(), rightOdo.getCurrentPosition(), horizOdo.getCurrentPosition());
 
-            /*// pid type stuff i think
+            /*//* pid type stuff i think
             if (leftBigger) leftPos -= countOffset;
             else            rightPos -=countOffset;
-
             if (leftPos > rightPos) {
                 left.setPower(power - 0.05);
                 right.setPower(power + 0.05);
@@ -226,17 +217,16 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
             } else {
                 left.setPower(power);
                 right.setPower(power);
-            }*/
+            }*//*
             telemetry.addData("left encoder count", robot.leftDrive.getCurrentPosition());
             telemetry.addData("right encoder count", robot.rightDrive.getCurrentPosition());
             telemetry.update();
         }
-
         //stop running to position
         left.setPower(0);
         right.setPower(0);
         left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        right.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        right.setMode(DcMotor.RunMode.RUN_USING_ENCODER); */
     }
 
     /**
@@ -245,17 +235,40 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
      * @param right the motor on the right
      * @param leftOdo the left odometry encoder
      * @param rightOdo the right odometry ecododer
-     * @param horiz the horizontal odometry encoder
-     * @param angle the desired change in angle, in radians, positive angles turn ccw, negative angles turn cw
-     * @param power the power the motors should move at, should always be positive
-     */ //TODO: recode this to use odometry
-    public void encoderTurn(DcMotor left, DcMotor right, DcMotor leftOdo, DcMotor rightOdo, DcMotor horiz, double angle, double power) {
+     * @param horizOdo the horizontal odometry encoder
+     * @param angle the desired change in angle, in radians, should always be positive
+     * @param power the power the motors should move at, positive turn ccw, angles turn cw
+     */ //TODO: test this
+    public void encoderTurn(DcMotor left, DcMotor right, DcMotor leftOdo, DcMotor rightOdo, DcMotor horizOdo, double angle, double power) {
+        /* old from pre-odo times
         double wheelCircumference = robot.ODOMETRY_WHEEL_DIAMETER_METERS * Math.PI;
         double turnCircumference = robot.getRobotOdometryWidth() * Math.PI;
-
-        double angleCircumference = angle * robot.getRobotOdometryWidth();//in meters
+        double angleCircumference = angle * robot.getRobotOdometryLength();//in meters //arc length formula
         angleCircumference *= robot.ODOMETRY_COUNTS_PER_METER; // in encoder ticks
+        */
+        // target heading
+        double targetHeading = posTarMan.getRobotHeading();
+        if (power > 0) targetHeading += angle;
+        else targetHeading -= angle;
+        //orientate the target heading
+        double twoPI = 2 * Math.PI;
+        if (targetHeading > Math.PI) {
+            targetHeading = -twoPI + targetHeading;
+        } else if (targetHeading < -Math.PI) {
+            targetHeading = twoPI + targetHeading;
+        }
 
+        left.setPower(-power);
+        right.setPower(power);
+        //while the current heading is too far from the target heading, move
+        while ( Math.abs(targetHeading - posTarMan.getRobotHeading()) > robot.getHorizOdoAllowedCountOffset()) {
+            posTarMan.update(leftOdo.getCurrentPosition(), rightOdo.getCurrentPosition(), horizOdo.getCurrentPosition());
+        }
+        //once we're at the target position, exit loop and stop
+        left.setPower(0);
+        right.setPower(0);
+
+        /*old, from pre odo
         //set up right and left to run to position
         left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         left.setTargetPosition((int) (left.getCurrentPosition() - angleCircumference));
@@ -263,11 +276,9 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         right.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         right.setTargetPosition((int) (right.getCurrentPosition() + angleCircumference));
         right.setPower(0);
-
         //set to RunToPosition
         left.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         right.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
         //make sure the set powers will make the robot turn properly
         if (angle > 0) {
             left.setPower(-power);
@@ -283,12 +294,11 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
             telemetry.addData("right encoder count", robot.rightDrive.getCurrentPosition());
             telemetry.update();
         }
-
         //stop running to position
         left.setPower(0);
         right.setPower(0);
         left.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        right.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        right.setMode(DcMotor.RunMode.RUN_USING_ENCODER); */
     }
 
     //////////////////////////////turret stuff//////////////////////////////
