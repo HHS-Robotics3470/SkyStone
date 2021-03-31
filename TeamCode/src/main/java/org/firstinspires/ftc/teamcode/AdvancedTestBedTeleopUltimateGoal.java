@@ -75,8 +75,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             tankControls(gamepad1.right_stick_y, gamepad1.left_stick_y);
 
           // update position and aim managers
-            leftCounts     = robot.leftDrive.getCurrentPosition(); //total left encoder counts
-            rightCounts    = robot.rightDrive.getCurrentPosition();//total right encoder counts
+            leftCounts     = robot.leftOdometry.getCurrentPosition(); //total left encoder counts
+            rightCounts    = robot.rightOdometry.getCurrentPosition();//total right encoder counts
             horizCounts    = robot.horizOdometry.getCurrentPosition();
             posTarMan.update(leftCounts, rightCounts, horizCounts);
             aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
@@ -122,6 +122,11 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
             //shows info about the motor encoders
             if (gamepad1.left_trigger > 0.5) {
+                telemetry.addLine("odometry encoder counts");
+                telemetry.addData("left odometry", robot.leftOdometry.getCurrentPosition());
+                telemetry.addData("right odometry", robot.rightOdometry.getCurrentPosition());
+                telemetry.addData("horizontal ododmetry", robot.horizOdometry.getCurrentPosition());
+
                 telemetry.addLine("motor encoder counts");
                 telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
                 telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
@@ -336,7 +341,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
         //get heading and pitch (skip for now, probably not needed bc alot of what I would put here is redundant (already happens in the teleop))
-        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition(), robot.horizOdometry.getCurrentPosition());
+        posTarMan.update(robot.leftOdometry.getCurrentPosition(), robot.rightOdometry.getCurrentPosition(), robot.horizOdometry.getCurrentPosition());
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
         switch ((int) aimMan.getPitchToTarget()) {

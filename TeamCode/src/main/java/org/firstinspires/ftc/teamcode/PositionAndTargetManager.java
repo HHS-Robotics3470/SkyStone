@@ -85,6 +85,10 @@ public class PositionAndTargetManager {
     int previousLeftCounts = 0;
     int previousRightCounts = 0;
     int previousHorizCounts = 0;
+
+    short leftDirection;
+    short rightDirection;
+    short horizDirection;
     ////////////////////////////// constructors //////////////////////////////
 
     /**
@@ -97,10 +101,13 @@ public class PositionAndTargetManager {
      */
     public PositionAndTargetManager(HardwareUltimateGoal robot, boolean isTeamRed) {
         //take some variables from the robot
-        metersPerCount = robot.NADO_METERS_PER_COUNT;
-        robotOdoWidth = robot.robotOdometryWidth;
-        robotOdoLength = robot.robotOdometryLength;
+        metersPerCount = robot.ODOMETRY_METERS_PER_COUNT;
+        robotOdoWidth = robot.getRobotOdometryWidth();
+        robotOdoLength = robot.getRobotOdometryLength();
         horizRadiansPerCount = metersPerCount / robotOdoLength;
+        leftDirection = robot.getLeftDirection();
+        rightDirection = robot.getRightDirection();
+        horizDirection = robot.getHorizDirection();
 
         robotPosition = new double[]{1.79705 - 0.57785, -1.79705 + 0.4572/2}; //0.57785 is the distance from the right wall, 0.4572 is the length of the robot, //TODO: re-measure these coordinates, measure to the center of thrust
         //flip some things for if the robot is on blue team
@@ -125,9 +132,13 @@ public class PositionAndTargetManager {
     public PositionAndTargetManager(HardwareUltimateGoal robot, double[] initPosition, double initHeading, boolean isTeamRed) {
         //take some variables from the robot
         metersPerCount = robot.ODOMETRY_METERS_PER_COUNT;
-        robotOdoWidth = robot.robotOdometryWidth;
-        robotOdoLength = robot.robotOdometryLength;
+        robotOdoWidth = robot.getRobotOdometryWidth();
+        robotOdoLength = robot.getRobotOdometryLength();
         horizRadiansPerCount = metersPerCount / robotOdoLength;
+        leftDirection = robot.getLeftDirection();
+        rightDirection = robot.getRightDirection();
+        horizDirection = robot.getHorizDirection();
+
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
             for (int r = 0; r < targets.length; r++) {
@@ -142,7 +153,6 @@ public class PositionAndTargetManager {
     }
 
     ////////////////////////////// update and calculate method //////////////////////////////
-    //TODO: currently, this only uses the encoders of the drive motors, once separate odometry systems are installed, rewrite this code, basing it on the ideas of team wizard https://www.youtube.com/watch?v=cpdPtN4BDug
     public void update(int leftCounts, int rightCounts, int horizCounts) {
         double headingChange = 0.0;
 
@@ -153,6 +163,10 @@ public class PositionAndTargetManager {
         previousLeftCounts = leftCounts;
         previousRightCounts = rightCounts;
         previousHorizCounts = horizCounts;
+
+        leftChange *= leftDirection;
+        rightChange *= rightDirection;
+        horizChange *= horizDirection;
 
         //positions
         double s1 = leftChange;  // distance the left wheel traveled (m) (delta s1)
