@@ -99,7 +99,10 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             thumbsticks will control movement
 
             d-pad will control the intake and wobble grabber (up and down, move intake up/down; right, toggle conveyor; left, toggle grabber
-             */
+            */
+
+
+            //////ABXY bindings/////
 
             //change targets, and name the new target
             if (gamepad1.x /*&& !abort*/) { // if driver presses X, change targets
@@ -120,8 +123,17 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 sleep(100);
             }
 
-            //shows info about the motor encoders
-            if (gamepad1.left_trigger > 0.5) {
+            /////bumper and trigger bindings/////
+
+            //abort button
+            if (gamepad1.left_bumper) {abort = true;} // changes the d-pad to control the turrets movement, also turns off aimbot
+            if (gamepad1.right_bumper){abort = false;}// changes the d-pad to control things with the intake, also turns on aimbot
+            if (gamepad1.right_trigger > 0.5) {
+                robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+            //telemetry
+            if (gamepad1.left_trigger > 0.5) { //shows info about the motor encoders
                 telemetry.addLine("odometry encoder counts");
                 telemetry.addData("left odometry", robot.leftOdometry.getCurrentPosition());
                 telemetry.addData("right odometry", robot.rightOdometry.getCurrentPosition());
@@ -131,16 +143,11 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
                 telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
                 telemetry.update();
-            }
-            //abort button
-            if (gamepad1.left_bumper) {abort = true;} // changes the d-pad to control the turrets movement, also turns off aimbot
-            if (gamepad1.right_bumper){abort = false;}// changes the d-pad to control things with the intake, also turns on aimbot
+            } else basicTelemetryManager();
 
-            if(gamepad1.right_trigger > 0.5) {
-                robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            }
 
+
+            ///////dpad bindings//////
 
             //d up and down, move intake up/down (if not in abort mode, if in abort, elevate turret up/down
             if (gamepad1.dpad_up)     {
@@ -162,8 +169,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 else rotateTurretTo(Math.toRadians(currentTurretHeading - 5)); //in abort mode, rotate turret to the left
             }
 
-            //telemetry
-            if (!(gamepad1.left_trigger > 0.5)) basicTelemetryManager();
+
         }
 
         //after opMode, save current position and heading for reasons
@@ -388,14 +394,11 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 //while(robot.turretElevator.isBusy() || robot.turretRotator.isBusy()) sleep(10);
 
                 if (!firingError && loaded) {
-                    //TODO 12/25/2020 this should work, but i need to figure out what launcherTimeToRotate should be, and i'll need a actual continuous servo, recode to work for a standard servo
-
                     //spin up flywheels and wait a bit to let everything move up to speed, the flywheels are not the same speed in order to create a spin
                     robot.flyWheel1.setPower(0.9);
                     robot.flyWheel2.setPower(1.0);
 
                     sleep(1000);
-
 
                     //launch ring.
                     // rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
@@ -429,6 +432,15 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         rotateTurretTo(0);
         elevateTurretTo(0);
         if (loaded) { //if loaded, unload //TODO: recode the unload sequence, when done, apply changes to the autonomous
+            //set the conveyors to reverse
+            robot.conveyor.setPower(-1);
+            //rotate the launch servo one full backwards rotation
+            robot.turretLauncher.setPower(1);
+            sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE);
+            //stop launcher, wait a bit, then stop conveyor
+            robot.conveyor.setPower(0);
+            sleep(500);
+            robot.turretLauncher.setPower(0);
 
             /*old, from when the turret launcher was a normal servo
             //set the conveyors to reverse
@@ -437,7 +449,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             robot.turretLauncher.setPower(.5);
             sleep(500);
             //stop conveyors
-            robot.conveyor.setPower(0); */
+            robot.conveyor.setPower(0);*/
             loaded = false;
         } else { //if unloaded, load //TODO: recode the reload sequence, when done, apply changes to the autonomous
             //set the conveyors to forward

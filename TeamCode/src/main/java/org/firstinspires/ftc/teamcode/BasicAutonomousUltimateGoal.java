@@ -145,7 +145,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
      * @param horiz the horizontal odometry encoder
      * @param distance the distance the robot should move, meters, always positive, IMPORTANT, You're passing the desired change, not a desired place (this makes more sense with the turn method)
      * @param power the power the robot should move at
-     */ //TODO: recode this to use odometry
+     */ //TODO: test this
     public void encoderDrive(DcMotor left, DcMotor right, DcMotor leftOdo, DcMotor rightOdo, DcMotor horizOdo, double distance, double power) {
         distance *= robot.ODOMETRY_COUNTS_PER_METER; //converts the desired distance into encoder ticks
         //if they want to move backwards, invert distance
@@ -173,12 +173,12 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
             deltaHoriz = (horizOdo.getCurrentPosition() * robot.getHorizDirection()) - initHoriz;
 
             //move
-            left.setPower(power);
-            right.setPower(power);
-
             //make sure it's not drifting
-
-
+            //if there is a noticable difference in the distance travelled by each side OR the horiz encoder detects too much of a change in angle
+            if ( Math.abs(deltaLeft-deltaRight) > robot.getSideOdoAllowedCountOffset() || deltaHoriz > robot.getHorizOdoAllowedCountOffset()) {
+                if (deltaLeft>deltaRight) {left.setPower(power-0.5);right.setPower(power);}         //if left has gone further, make it go slower
+                else if (deltaLeft<deltaRight) {left.setPower(power-0.5);right.setPower(power);}    //if right has gone further, make it go slower
+            } else {left.setPower(power);right.setPower(power);}
 
 
         }
@@ -457,15 +457,22 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
 
         //launch ring.
         // rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
+        robot.turretLauncher.setPower(-1); // if this moves the wrong way, set to 1
+        sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/4);
+
+        //reset/prep other components for next shot
+        robot.turretLauncher.setPower(1);
+        sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/4);
+        /*old from when launcher was a standard servo// rotate the launch servo enough that the ring gets pushed into the flywheels, and the launcher is ready to accept the next ring
         robot.turretLauncher.setPower(-1);
-        sleep(500); ///this number will change with testing
+        sleep(500); ///this number will change with testing*/
 
         //reset/prep other components for next shot
         robot.flyWheel1.setPower(0);
         robot.flyWheel2.setPower(0);
         elevateTurretTo(0);
         rotateTurretTo(0);
-        robot.turretLauncher.setPower(0.5);
+        robot.turretLauncher.setPower(0/*.5*/);
         loaded = false;
     }
     /**
@@ -479,13 +486,43 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
         if (loaded) { //if loaded, unload
             //set the conveyors to reverse
             robot.conveyor.setPower(-1);
+            //rotate the launch servo one full backwards rotation
+            robot.turretLauncher.setPower(1);
+            sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE);
+            //stop launcher, wait a bit, then stop conveyor
+            robot.conveyor.setPower(0);
+            sleep(500);
+            robot.turretLauncher.setPower(0);
+
+            /*old, from when the turret launcher was a normal servo
+            //set the conveyors to reverse
+            robot.conveyor.setPower(-1);
             //clear turret
             robot.turretLauncher.setPower(.5);
             sleep(500);
             //stop conveyors
-            robot.conveyor.setPower(0);
+            robot.conveyor.setPower(0);*/
             loaded = false;
         } else { //if unloaded, load
+            //set the conveyors to forward
+            robot.conveyor.setPower(1);
+
+            //turn the launcher in one full rotation
+            robot.turretLauncher.setPower(-1);
+            sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/4);
+
+            //stop the launcher, this interruption should help with missaligned loads
+            robot.turretLauncher.setPower(0);
+            sleep(100);
+
+            //finish the rotation
+            robot.turretLauncher.setPower(-1);
+            sleep((3*HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE)/4);
+
+            //stop the launcher
+            robot.turretLauncher.setPower(0);
+
+            /* old from when turret was a standard servo
             //set the conveyors to forward
             robot.conveyor.setPower(1);
             sleep(300);
@@ -501,7 +538,7 @@ public class BasicAutonomousUltimateGoal extends LinearOpMode
             robot.turretLauncher.setPower(-.75);
             sleep(300); //adjust timing
 
-            robot.turretLauncher.setPower(0.1);
+            robot.turretLauncher.setPower(0.1);*/
             elevateTurretTo(0);
             loaded = true;
         }
