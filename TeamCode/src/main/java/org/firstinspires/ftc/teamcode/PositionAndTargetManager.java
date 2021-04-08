@@ -169,11 +169,12 @@ public class PositionAndTargetManager {
         horizChange *= horizDirection;
 
         //positions
-        double s1 = leftChange;  // distance the left wheel traveled (m) (delta s1)
-        double s2 = rightChange; // distance the right wheel traveled (m) (delta s2)
+        double s1 = leftChange * metersPerCount;  // distance the left wheel traveled (m) (delta s1)
+        double s2 = rightChange * metersPerCount; // distance the right wheel traveled (m) (delta s2)
         double s = (s1 + s2) / 2.0; // average distance travelled between the two wheels; also the length of the arc the robot moved
 
         //Calculate Angle change, robot width may need to be adjusted, and must be accurate to a high degree
+        double n = s2 - s1;
         headingChange = (s2 - s1) / robotOdoWidth;
         robotHeading += headingChange;
 
@@ -183,16 +184,16 @@ public class PositionAndTargetManager {
 
         //calculate the changes in position
 
-        robotPosition[0] += (s*Math.sin(robotHeading) + horizChange*Math.cos(robotHeading)) * metersPerCount;
-        robotPosition[1] += (s*Math.cos(robotHeading) - horizChange*Math.sin(robotHeading)) * metersPerCount;
+        robotPosition[0] += (s*Math.sin(robotHeading) + n*Math.cos(robotHeading));// * metersPerCount;
+        robotPosition[1] += (s*Math.cos(robotHeading) - n*Math.sin(robotHeading));// * metersPerCount;
 
 
         //make sure robotHeading is in the range [pi,-pi] not [2pi, 0]
         double twoPI = 2 * Math.PI;
         if (robotHeading > Math.PI) {
-            robotHeading = -twoPI + robotHeading;
+            robotHeading -= twoPI;
         } else if (robotHeading < -Math.PI) {
-            robotHeading = twoPI + robotHeading;
+            robotHeading += twoPI;
         }
 
         /*using Wizards ideas would involve,

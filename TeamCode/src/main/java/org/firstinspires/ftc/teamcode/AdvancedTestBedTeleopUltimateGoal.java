@@ -59,7 +59,6 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
          * The init() method of the hardware class does all the work here
          */
         robot.init(hardwareMap);
-        robot.turretLauncher.setPower(0.5);
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
