@@ -37,7 +37,7 @@ public class AimAssist {
     double[] targetPosition = new double[3]; // x, y, z, coords of the robot, measured in meters
 
     //variables that are calculated
-    public double headingToTarget; // the direction that the turret needs to face relative to the wall with the goals (pi/2), measured in radians
+    public double headingToTarget; // the direction that the turret needs to face relative the robot
     public double pitchToTarget; // the pitch that the turret needs to be at to hit the target, measured in radians
 
     ////////////////////////////// constructors //////////////////////////////
@@ -69,7 +69,7 @@ public class AimAssist {
         targetPosition[1] = tPosition[1];
         targetPosition[2] = tPosition[2];
 
-        headingToTarget = headingCalculation();
+        headingToTarget = headingCalculation() - rHeading; //get heading relative to the field, return heading relative to the turret
         pitchToTarget = pitchCalculation();
     }
 
