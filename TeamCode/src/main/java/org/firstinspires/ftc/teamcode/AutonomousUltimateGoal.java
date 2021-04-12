@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 
@@ -73,7 +75,32 @@ public class AutonomousUltimateGoal extends LinearOpMode
         //TODO: i'm literally guessing these distances, change them with testing
         //reverse to the stack
         encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.5,-1);
-        //move distance sensor, and measure distance to determine the needed
+        //move distance sensor, and measure distance to determine the target zone
+        robot.distanceServo.setPosition(1);
+
+        sleep(500);
+
+        short targetZone = 0; //0 == 0 rings, 1 == 1 ring, 2 == 4 rings
+        if (robot.distanceSensor.getDistance(DistanceUnit.CM) < 10) targetZone = 2;
+        if (robot.distanceSensor.getDistance(DistanceUnit.CM) < 5) targetZone = 1;
+
+
+        //------------------------------STEP 2: use the results of step one to go to the proper target zone and deposit the wobble goal------------------------------//
+
+
+
+
+        //------------------------------STEP 3: go over the launch line (so we can fire without penalty), rotate the robot so that it is pointed toward the driver, reverse to the other side of the field, rotate slightly more so the turret can hit the goals------------------------------//
+
+
+
+
+
+
+        //------------------------------STEP 4: aim and fire twice, then park on the launch line------------------------------//
+
+
+
 
         /*
         //move forward to the target zone goal (closest to start position) distance is ~160 centimeters
