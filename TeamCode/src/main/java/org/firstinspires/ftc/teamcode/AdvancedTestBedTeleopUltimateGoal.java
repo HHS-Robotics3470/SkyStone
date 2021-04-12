@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.app.Activity;
+import android.graphics.Color;
+import android.view.View;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -47,41 +51,63 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
     boolean abort = false; //variable to control whether or not it allows movement commands to go through
 
+    //button locks
+    boolean aButtonCurPressed;
+    boolean aButtonPrevPressed=false;
+
+    boolean bButtonCurPressed;
+    boolean bButtonPrevPressed=false;
+
+    boolean xButtonCurPressed;
+    boolean xButtonPrevPressed=false;
+
+    boolean leftBumperCurPressed;
+    boolean leftBumperPrevPressed=false;
+
+    boolean rightBumperCurPressed;
+    boolean rightBumperPrevPressed=false;
+
+    //for background changing
+    View relativeLayout;
+
     @Override
     public void runOpMode()
     {
-        // declare some variables if needed
-        int leftCounts  = 0;
-        int rightCounts = 0;
-        int horizCounts = 0;
+        //stuff for background changing
+        //int relativeLayoutId=hardwareMap.appContext.getResources().getIdentifier("RelativeLayout", "id", hardwareMap.appContext.getPackageName());
+        //relativeLayout = ((Activity) hardwareMap.appContext).findViewById(relativeLayoutId);
+        //try {
+            // declare some variables if needed
+            int leftCounts = 0;
+            int rightCounts = 0;
+            int horizCounts = 0;
 
-        /* Initialize the hardware variables.
-         * The init() method of the hardware class does all the work here
-         */
-        robot.init(hardwareMap);
-        // Wait for the game to start (driver presses PLAY)
-        waitForStart();
-        runtime.reset();
+            /* Initialize the hardware variables.
+             * The init() method of the hardware class does all the work here
+             */
+            robot.init(hardwareMap);
+            // Wait for the game to start (driver presses PLAY)
+            waitForStart();
+            runtime.reset();
 
-        robot.leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        // run until the end of the match (driver presses STOP)
-        //maybe some other set up stuff depending on how we want to do this
-        while (opModeIsActive())
-        {
+            robot.leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            // run until the end of the match (driver presses STOP)
+            //maybe some other set up stuff depending on how we want to do this
+            while (opModeIsActive()) {
 
-          // controls and movement
-            tankControls(gamepad1.right_stick_y, gamepad1.left_stick_y);
+                // controls and movement
+                tankControls(gamepad1.right_stick_y, gamepad1.left_stick_y);
 
-          // update position and aim managers
-            leftCounts     = robot.leftOdometry.getCurrentPosition(); //total left encoder counts
-            rightCounts    = robot.rightOdometry.getCurrentPosition();//total right encoder counts
-            horizCounts    = robot.horizOdometry.getCurrentPosition();
-            posTarMan.update(leftCounts, rightCounts, horizCounts);
-            aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
+                // update position and aim managers
+                leftCounts = robot.leftOdometry.getCurrentPosition(); //total left encoder counts
+                rightCounts = robot.rightOdometry.getCurrentPosition();//total right encoder counts
+                horizCounts = robot.horizOdometry.getCurrentPosition();
+                posTarMan.update(leftCounts, rightCounts, horizCounts);
+                aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
 
-          //controls
+                //controls
             /* for controls: (as of 12/26/2020)
             a,b,x,y pad will have turret controls
                 a-fire (will reload if needed)
@@ -101,83 +127,132 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             */
 
 
-            //////ABXY bindings/////
+                //////ABXY bindings/////
+                //fire turret
+                aButtonCurPressed = gamepad1.a;
+                if (aButtonCurPressed && !aButtonPrevPressed) {
+                    int oldTarget = posTarMan.getCurrentTarget();
+                    fireTurret();
+                    posTarMan.setTarget(oldTarget);
+                }
+                aButtonPrevPressed = aButtonCurPressed;
+                //reload/clear
+                bButtonCurPressed = gamepad1.b;
+                if (bButtonCurPressed && !bButtonPrevPressed) {
+                    reloadTurret();
+                }
+                bButtonPrevPressed = bButtonCurPressed;
+                //change targets, and name the new target
+                xButtonCurPressed = gamepad1.x;
+                if (xButtonCurPressed && !xButtonPrevPressed) { // if driver presses X, change targets
+                    posTarMan.bestTargetPosition(runtime.seconds());
+                    telemetry.addLine("TARGET CHANGED");
+                    telemetry.addData("new target", posTarMan.getCurrentTargetDesc());
+                    telemetry.update();
+                }
+                xButtonPrevPressed = xButtonCurPressed;
+                //rotate turret launcher
+                if (gamepad1.y) {
+                    if (!abort) robot.turretLauncher.setPower(-0.5);
+                    else robot.turretLauncher.setPower(0.5);
+                } else robot.turretLauncher.setPower(0);
 
-            //change targets, and name the new target
-            if (gamepad1.x /*&& !abort*/) { // if driver presses X, change targets
-                posTarMan.bestTargetPosition(runtime.seconds());
-                telemetry.addLine("TARGET CHANGED");
-                telemetry.addData("new target", posTarMan.getCurrentTargetDesc());
-                telemetry.update();
-                sleep(100);
+
+                /////bumper and trigger bindings/////
+
+                //abort buttons
+                leftBumperCurPressed=gamepad1.left_bumper;
+                if (leftBumperCurPressed && !leftBumperPrevPressed) {
+                    abort = true;
+                } // changes the d-pad to control the turrets movement, also turns off aimbot
+                leftBumperPrevPressed=leftBumperCurPressed;
+                rightBumperCurPressed=gamepad1.right_bumper;
+                if (rightBumperCurPressed && !rightBumperPrevPressed) {
+                    abort = false;
+                }// changes the d-pad to control things with the intake, also turns on aimbot
+                rightBumperPrevPressed=rightBumperCurPressed;
+                //reset the turret rotators zero position
+                if (gamepad1.right_trigger > 0.5) {
+                    robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                }
+                //telemetry
+                if (gamepad1.left_trigger > 0.5) { //shows info about the motor encoders
+                    telemetry.addLine("odometry encoder counts");
+                    telemetry.addData("left odometry", robot.leftOdometry.getCurrentPosition());
+                    telemetry.addData("right odometry", robot.rightOdometry.getCurrentPosition());
+                    telemetry.addData("horizontal ododmetry", robot.horizOdometry.getCurrentPosition());
+
+                    telemetry.addLine("motor encoder counts");
+                    telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
+                    telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
+                    telemetry.update();
+                } else {
+                    basicTelemetryManager();
+                }
+
+
+                ///////dpad bindings//////
+
+                //d up and down, move intake up/down (if not in abort mode, if in abort, elevate turret up/down
+                if (gamepad1.dpad_up) {
+                    if (!abort) {
+                        robot.intakePulley.setPower(1);
+                    } //in normal mode, move intake up
+                    else
+                        elevateTurretTo(Math.toRadians(currentTurretPitch - 5)); //in abort mode, mode turret up
+                } else robot.intakePulley.setPower(0);
+                if (gamepad1.dpad_down) {
+                    if (!abort) {
+                        robot.intakePulley.setPower(-.75);
+                    } //in normal mode, move intake down
+                    else
+                        elevateTurretTo(Math.toRadians(currentTurretPitch + 10)); //in abort mode, mode turret down
+                } else robot.intakePulley.setPower(0);
+                //d right and left, toggle conveyor and grabber respectively (in normal mode, in abort mode, rotate turret right / left)
+                if (gamepad1.dpad_right) {
+                    if (!abort) {
+                        robot.conveyor.setPower(-1 * (robot.conveyor.getPower() - 0.5) + 0.5);
+                        sleep(200);
+                    } //power should only ever be 0 or 1; -(0 - 0.5) + 0.5 = 1; -(1 - 0.5) + 0.5 = 0
+                    else
+                        rotateTurretTo(Math.toRadians(currentTurretHeading + 5)); //in abort mode, rotate turret to the right
+                }
+                //d left, toggle grabber
+                if (gamepad1.dpad_left) {
+                    if (!abort) {
+                        robot.wobbleGrabber.setPosition(-1 * (robot.wobbleGrabber.getPosition() - 0.4) + 0.4);
+                        sleep(200);
+                    }//position should only ever be 0 or 0.8, same deal as before
+                    else
+                        rotateTurretTo(Math.toRadians(currentTurretHeading - 5)); //in abort mode, rotate turret to the left
+                }
+
+                /*
+                //set the background color depending on whether or not the robot is in abort mode
+                if (abort) relativeLayout.post(new Runnable() {
+                    public void run() {
+                        relativeLayout.setBackgroundColor(Color.RED);
+                    }
+                });
+                else relativeLayout.post(new Runnable() {
+                    public void run() {
+                        relativeLayout.setBackgroundColor(Color.BLUE);
+                    }
+                });*/
+
+
             }
-            //fire turret
-            if(gamepad1.a) {
-                int oldTarget = posTarMan.getCurrentTarget();
-                fireTurret();
-                posTarMan.setTarget(oldTarget);
-                sleep(100);
-            }
-            //reload/clear
-            if(gamepad1.b) {
-                reloadTurret();
-                sleep(100);
-            }
-            //rotate turret launcher
-            if(gamepad1.y) {
-                if (!abort) robot.turretLauncher.setPower(-0.5);
-                else robot.turretLauncher.setPower(0.5);
-            } else robot.turretLauncher.setPower(0);
-
-
-            /////bumper and trigger bindings/////
-
-            //abort button
-            if (gamepad1.left_bumper) {abort = true;} // changes the d-pad to control the turrets movement, also turns off aimbot
-            if (gamepad1.right_bumper){abort = false;}// changes the d-pad to control things with the intake, also turns on aimbot
-            if (gamepad1.right_trigger > 0.5) {
-                robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            }
-            //telemetry
-            if (gamepad1.left_trigger > 0.5) { //shows info about the motor encoders
-                telemetry.addLine("odometry encoder counts");
-                telemetry.addData("left odometry", robot.leftOdometry.getCurrentPosition());
-                telemetry.addData("right odometry", robot.rightOdometry.getCurrentPosition());
-                telemetry.addData("horizontal ododmetry", robot.horizOdometry.getCurrentPosition());
-
-                telemetry.addLine("motor encoder counts");
-                telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
-                telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
-                telemetry.update();
-            } else {basicTelemetryManager();}
-
-
-
-            ///////dpad bindings//////
-
-            //d up and down, move intake up/down (if not in abort mode, if in abort, elevate turret up/down
-            if (gamepad1.dpad_up)     {
-                if (!abort) {robot.intakePulley.setPower(1);} //in normal mode, move intake up
-                else elevateTurretTo(Math.toRadians(currentTurretPitch - 5)); //in abort mode, mode turret up
-            } else robot.intakePulley.setPower(0);
-            if (gamepad1.dpad_down)   {
-                if (!abort) {robot.intakePulley.setPower(-.75);} //in normal mode, move intake down
-                else elevateTurretTo(Math.toRadians(currentTurretPitch + 10)); //in abort mode, mode turret down
-            } else robot.intakePulley.setPower(0);
-            //d right and left, toggle conveyor and grabber respectively (in normal mode, in abort mode, rotate turret right / left)
-            if (gamepad1.dpad_right)                                        {
-                if (!abort) {robot.conveyor.setPower(-1 * (robot.conveyor.getPower() - 0.5) + 0.5); sleep(200);} //power should only ever be 0 or 1; -(0 - 0.5) + 0.5 = 1; -(1 - 0.5) + 0.5 = 0
-                else rotateTurretTo(Math.toRadians(currentTurretHeading + 5)); //in abort mode, rotate turret to the right
-            }
-            //d left, toggle grabber
-            if (gamepad1.dpad_left)                                         {
-                if (!abort) {robot.wobbleGrabber.setPosition(-1 * (robot.wobbleGrabber.getPosition() - 0.4) + 0.4); sleep(200);}//position should only ever be 0 or 0.8, same deal as before
-                else rotateTurretTo(Math.toRadians(currentTurretHeading - 5)); //in abort mode, rotate turret to the left
-            }
-        }
-        //after opMode, save current position and heading for reasons
-        //HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
+        /*} finally {
+            //restore the background color
+            relativeLayout.post(new Runnable() {
+                public void run() {
+                    relativeLayout.setBackgroundColor(Color.WHITE);
+                }
+            });*/
+            //after opMode, save current position and heading for reasons
+            //HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
+        //}
     }
 
     public void basicTelemetryManager() {
