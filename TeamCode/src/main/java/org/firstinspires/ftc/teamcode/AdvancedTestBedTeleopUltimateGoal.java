@@ -343,7 +343,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
 
 
-
+    int curFireCycle = 0;
     public void fireTurret() {
         //stop robot movement
         robot.leftDrive.setPower(0);
@@ -356,9 +356,19 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             case -1://target out of range
                 telemetry.addLine("target out of range, move closer or change targets");
                 telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
+                if (!abort) telemetry.addLine("cycling targets");
                 telemetry.update();
                 sleep(100);
-                if (!abort) break;
+                //if not abort mode, cycle targets until one works
+                if (!abort) {
+                    if (curFireCycle<5) {
+                        posTarMan.cycleTarget();
+                        curFireCycle++;
+                    } else {
+                        curFireCycle=0;
+                    }
+                    break;
+                }
             case -2://target would require going over range/height cap
                 telemetry.addLine("hitting the current target would require going over the range / height cap");
                 telemetry.addData("currently targeting", posTarMan.getCurrentTarget());

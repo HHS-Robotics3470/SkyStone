@@ -69,6 +69,13 @@ public class AutonomousUltimateGoal extends LinearOpMode
 
         robot.intakePulley.setPower(0);
 
+        //------------------------------STEP 1: move to the ring stack, and use the distance sensor to determine which target zone the wobble goal needs to be dropped in------------------------------//
+        //TODO: i'm literally guessing these distances, change them with testing
+        //reverse to the stack
+        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.5,-1);
+        //move distance sensor, and measure distance to determine the needed
+
+        /*
         //move forward to the target zone goal (closest to start position) distance is ~160 centimeters
         encoderDrive(robot.leftDrive,robot.rightDrive, robot.leftOdometry, robot.rightOdometry, robot.horizOdometry, 1.6 * .8125, -.75);
         //encoderDrive(robot.leftDrive,robot.rightDrive, .3 * .8125, -.5);
@@ -98,7 +105,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
         //move back a bit to ensure it's in the launch zone
         encoderDrive(robot.leftDrive, robot.rightDrive, 0.25, 1);
          */
-
+        /*
         //fire twice:
         //aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
         //  fire loaded ring
@@ -132,7 +139,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
 
 
 
-        robot.turretLauncher.setPower(0.5);
+        robot.turretLauncher.setPower(0.5); */
         rotateTurretTo(0);
         //Saves the robot's position and heading
         HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());

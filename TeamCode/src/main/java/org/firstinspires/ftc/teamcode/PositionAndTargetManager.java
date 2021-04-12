@@ -306,4 +306,9 @@ public class PositionAndTargetManager {
         currentTarget = 3;
         targetPosition = getTargetPosition(i);
     }
+    public void cycleTarget() {
+        currentTarget++;
+        if (currentTarget > 5) currentTarget=0;
+        targetPosition = getTargetPosition(currentTarget);
+    }
 }
