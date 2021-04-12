@@ -265,7 +265,7 @@ public class PositionAndTargetManager {
     /**
      * @return a description of the current target
      */
-    public String getCurrentTarget() {
+    public String getCurrentTargetDesc() {
         /*
         r = 0, power shot 1
         r = 1, power shot 2
@@ -300,6 +300,14 @@ public class PositionAndTargetManager {
         }
         return description;
     }
+
+    /**
+     * @return the integer representing the current target
+     */
+    public int getCurrentTarget() {
+        return currentTarget;
+    }
+
     ////////////////////////////// set methods //////////////////////////////
     public void setTarget(int i) {
         if (i > 5 || i < 0) i=3;

@@ -87,13 +87,13 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 a-fire (will reload if needed)
                 b-reload
                 x-change target
-                y-unassigned
+                y-make launcher rotate CW (direct to fire)      (in abort mode, makes the launcher rotate CCW)
 
             bumpers and triggers will be debug things
                 left bumper - turn on abort mode
                 right bumper - turn off abort mode
-                left trigger - display encoder readings                                         (in abort mode, makes the turret launcher turn CCW)
-                right trigger - sets the turrets zero position to wherever it's currently at    (in abort mode, makes the turret launcher turn CW)
+                left trigger - display encoder readings
+                right trigger - sets the turrets zero position to wherever it's currently at
 
             thumbsticks will control movement
 
@@ -107,13 +107,15 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             if (gamepad1.x /*&& !abort*/) { // if driver presses X, change targets
                 posTarMan.bestTargetPosition(runtime.seconds());
                 telemetry.addLine("TARGET CHANGED");
-                telemetry.addData("new target", posTarMan.getCurrentTarget());
+                telemetry.addData("new target", posTarMan.getCurrentTargetDesc());
                 telemetry.update();
                 sleep(100);
             }
             //fire turret
             if(gamepad1.a) {
+                int oldTarget = posTarMan.getCurrentTarget();
                 fireTurret();
+                posTarMan.setTarget(oldTarget);
                 sleep(100);
             }
             //reload/clear
@@ -121,6 +123,12 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 reloadTurret();
                 sleep(100);
             }
+            //rotate turret launcher
+            if(gamepad1.y) {
+                if (!abort) robot.turretLauncher.setPower(-0.5);
+                else robot.turretLauncher.setPower(0.5);
+            } else robot.turretLauncher.setPower(0);
+
 
             /////bumper and trigger bindings/////
 
@@ -128,27 +136,21 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             if (gamepad1.left_bumper) {abort = true;} // changes the d-pad to control the turrets movement, also turns off aimbot
             if (gamepad1.right_bumper){abort = false;}// changes the d-pad to control things with the intake, also turns on aimbot
             if (gamepad1.right_trigger > 0.5) {
-                if (abort) { robot.turretLauncher.setPower(-0.5); }
-                else {
-                    robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                }
+                robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
             //telemetry
             if (gamepad1.left_trigger > 0.5) { //shows info about the motor encoders
-                if (abort) { robot.turretLauncher.setPower(0.5); }
-                else {
-                    telemetry.addLine("odometry encoder counts");
-                    telemetry.addData("left odometry", robot.leftOdometry.getCurrentPosition());
-                    telemetry.addData("right odometry", robot.rightOdometry.getCurrentPosition());
-                    telemetry.addData("horizontal ododmetry", robot.horizOdometry.getCurrentPosition());
+                telemetry.addLine("odometry encoder counts");
+                telemetry.addData("left odometry", robot.leftOdometry.getCurrentPosition());
+                telemetry.addData("right odometry", robot.rightOdometry.getCurrentPosition());
+                telemetry.addData("horizontal ododmetry", robot.horizOdometry.getCurrentPosition());
 
-                    telemetry.addLine("motor encoder counts");
-                    telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
-                    telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
-                    telemetry.update();
-                }
-            } else {basicTelemetryManager(); robot.turretLauncher.setPower(0);}
+                telemetry.addLine("motor encoder counts");
+                telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
+                telemetry.addData("right motor", robot.rightDrive.getCurrentPosition());
+                telemetry.update();
+            } else {basicTelemetryManager();}
 
 
 
@@ -189,12 +191,12 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         telemetry.addLine("turret information");
         telemetry.addData("heading"             , currentTurretHeading);
         telemetry.addData("pitch"               , currentTurretPitch);
-        telemetry.addData("target"              , posTarMan.getCurrentTarget());
+        telemetry.addData("target"              , posTarMan.getCurrentTargetDesc());
         telemetry.addData("heading to target"   , Math.toDegrees(aimMan.getHeadingToTarget()));
         telemetry.addData("pitch to target"     , Math.toDegrees(aimMan.getPitchToTarget()));
 
         telemetry.addLine("target info");
-        telemetry.addData("target"  , posTarMan.getCurrentTarget());
+        telemetry.addData("target"  , posTarMan.getCurrentTargetDesc());
         telemetry.addData("x"       , posTarMan.getTargetPosition()[0]);
         telemetry.addData("y"       , posTarMan.getTargetPosition()[1]);
         telemetry.addData("z"       , posTarMan.getTargetPosition()[2]);
@@ -355,23 +357,24 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         switch ((int) aimMan.getPitchToTarget()) {
             case -1://target out of range
                 telemetry.addLine("target out of range, move closer or change targets");
-                telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
+                telemetry.addData("currently targeting", posTarMan.getCurrentTargetDesc());
                 if (!abort) telemetry.addLine("cycling targets");
                 telemetry.update();
                 sleep(100);
                 //if not abort mode, cycle targets until one works
                 if (!abort) {
-                    if (curFireCycle<5) {
+                    if (curFireCycle<=5) {
                         posTarMan.cycleTarget();
                         curFireCycle++;
                     } else {
                         curFireCycle=0;
                     }
+                    fireTurret();
                     break;
                 }
             case -2://target would require going over range/height cap
                 telemetry.addLine("hitting the current target would require going over the range / height cap");
-                telemetry.addData("currently targeting", posTarMan.getCurrentTarget());
+                telemetry.addData("currently targeting", posTarMan.getCurrentTargetDesc());
                 telemetry.update();
                 sleep(100);
                 if (!abort) break;
@@ -382,7 +385,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                     } // if there was a firing error, it'll simply skip, and try to aim again
 
                     //move turret to aim at target
-                    if (rotateTurretTo(aimMan.getHeadingToTarget(), posTarMan.getRobotHeading()) == -1) { //executes the rotation method, and if there is an error, runs the body of the IF statement, delcaring an error, and aborting launch
+                    if (rotateTurretTo(aimMan.getHeadingToTarget()/*, posTarMan.getRobotHeading()*/) == -1) { //executes the rotation method, and if there is an error, runs the body of the IF statement, delcaring an error, and aborting launch
                         //the target is in deadzone
                         telemetry.addLine("target is in turret dead zone, try rotating the robot");
                         telemetry.update();
