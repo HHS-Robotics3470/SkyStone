@@ -217,7 +217,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
             //move
             //make sure it's not drifting
             //if there is a noticable difference in the distance travelled by each side OR the horiz encoder detects too much of a change in angle
-            if (false){//(Math.abs(deltaLeft - deltaRight) > robot.getSideOdoAllowedCountOffset()) && (deltaHoriz > robot.getHorizOdoAllowedCountOffset())) {
+            if ((Math.abs(deltaLeft - deltaRight) > robot.getSideOdoAllowedCountOffset()) && (deltaHoriz > robot.getHorizOdoAllowedCountOffset())) {
                 if (deltaLeft>deltaRight) {left.setPower(power*0.95);right.setPower(power);}         //if left has gone further, make it go slower
                 else if (deltaLeft<deltaRight) {left.setPower(power*0.95);right.setPower(power);}    //if right has gone further, make it go slower
             } else {left.setPower(power);right.setPower(power);}
