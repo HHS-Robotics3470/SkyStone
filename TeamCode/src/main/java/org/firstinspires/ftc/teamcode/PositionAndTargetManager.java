@@ -109,7 +109,7 @@ public class PositionAndTargetManager {
         rightDirection = robot.getRightDirection();
         horizDirection = robot.getHorizDirection();
 
-        robotPosition = new double[]{1.79705 - 0.57785, -1.79705 + 0.4572/2}; //0.57785 is the distance from the right wall, 0.4572 is the length of the robot, //TODO: re-measure these coordinates, measure to the center of thrust
+        robotPosition = new double[]{1.79705 - 0.8, -1.79705 + 0.225}; //0.57785 is the distance from the right wall, 0.4572 is the length of the robot, //remeasured, but old measurements are what's recorded in comments
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
             for (int r = 0; r < targets.length; r++) {

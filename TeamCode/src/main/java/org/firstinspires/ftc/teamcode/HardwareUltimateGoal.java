@@ -93,11 +93,11 @@ public class HardwareUltimateGoal {
     public static final long LAUNCHER_TIME_TO_ROTATE = 1300; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
 
     //directions of the odometry encoders, 1 == FORWARD; -1 == REVERSE
-    public final short leftDirection = -1;
-    public final short rightDirection = 1;
+    public final short leftDirection = 1;
+    public final short rightDirection = -1;
     public final short horizDirection = 1;
     //odometry allowed count offset (how close to the perfect position is allowed?)
-    public final int sideOdoAllowedCountOffset = 50; //for the left and right odometry
+    public final int sideOdoAllowedCountOffset = 200; //for the left and right odometry
     public final int horizOdoAllowedCountOffset = 50;
 
     //stats for the odometry encoders
@@ -161,8 +161,8 @@ public class HardwareUltimateGoal {
 
         // odometry: left and right odometry are plugged into the encoder slots for the drive motors on their corresponding sides
         // they parasite off of other motors encoder slots
-        leftOdometry = hwMap.get(DcMotor.class, "flywheelLeft");   //second hub, encoder port 0
-        rightOdometry = hwMap.get(DcMotor.class, "flywheelRight"); //second hub, encoder port 1
+        leftOdometry = hwMap.get(DcMotor.class, "flywheelRight");   //second hub, encoder port 1
+        rightOdometry = hwMap.get(DcMotor.class, "flywheelLeft"); //second hub, encoder port 0
         horizOdometry = hwMap.get(DcMotor.class, "intakePulley");  //second hub, encoder port 2
 
         // Set all motors to zero power

@@ -24,7 +24,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
 {
     /* Declare OpMode members. */
     HardwareUltimateGoal robot          = new HardwareUltimateGoal("testing");
-    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, new double[]{1.79705 - 0.57785, -1.79705 + 0.4572 / 2}, -Math.PI/2 , true); //TODO: 10/21/2020 change true to false if on team blue
+    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, new double[]{1.79705 - 0.8, -1.79705 + 0.225}, -Math.PI/2 , true); //TODO: 10/21/2020 change true to false if on team blue
     ElapsedTime runtime                 = new ElapsedTime();
     AimAssist aimMan                    = new AimAssist(robot, posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.bestTargetPosition(0));
 
@@ -55,8 +55,11 @@ public class AutonomousUltimateGoal extends LinearOpMode
         posTarMan.setTarget(4); //set the target to be the the mid goal
 
         //initialization / startup stuff
+        robot.distanceServo.setPosition(1);
         robot.wobbleGrabber.setPosition(0); // grab the wobble goal securely
+
         robot.intakePulley.setPower(-1);
+
         sleep(timeToLowerIntake / 6);
 
         robot.intakePulley.setPower(0);
@@ -71,28 +74,33 @@ public class AutonomousUltimateGoal extends LinearOpMode
 
         robot.intakePulley.setPower(0);
 
-        //------------------------------STEP 1: move to the ring stack, and use the distance sensor to determine which target zone the wobble goal needs to be dropped in------------------------------//
-        //TODO: i'm literally guessing these distances, change them with testing
+        //------------------------------STEP 1: scan ring stack, and get to position (to start depositing the wobble goal)------------------------------//
         //reverse to the stack
-        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.5,-1);
-        //move distance sensor, and measure distance to determine the target zone
-        robot.distanceServo.setPosition(1);
-
-        sleep(500);
-
+        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.69,-1);
+        //scan with sensor
+        //scan the stack size
         short targetZone = 0; //0 == 0 rings, 1 == 1 ring, 2 == 4 rings
         if (robot.distanceSensor.getDistance(DistanceUnit.CM) < 10) targetZone = 2;
         if (robot.distanceSensor.getDistance(DistanceUnit.CM) < 5) targetZone = 1;
 
+        //turn ccw 45 degrees
+        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), -1);
 
-        //------------------------------STEP 2: use the results of step one to go to the proper target zone and deposit the wobble goal------------------------------//
+        //move past rings
+        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.35, -1);
+
+        //rotate cw 45 degrees
+        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), 1);
+
+        //move to launch line
+        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.6, -1);
+
+        //------------------------------STEP 2: branches for different target zones------------------------------//
 
 
 
 
-        //------------------------------STEP 3: go over the launch line (so we can fire without penalty), rotate the robot so that it is pointed toward the driver, reverse to the other side of the field, rotate slightly more so the turret can hit the goals------------------------------//
-
-
+        //------------------------------STEP 3: ------------------------------//
 
 
 
@@ -176,7 +184,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
      * drives the robot forward a given distance, to go in reverse, give a negative value for power
      * @param left the motor on the left
      * @param right the motor on the right
-     * @param horiz the horizontal odometry encoder
+     * @param horizOdo the horizontal odometry encoder
      * @param distance the distance the robot should move, meters, always positive, IMPORTANT, You're passing the desired change, not a desired place (this makes more sense with the turn method)
      * @param power the power the robot should move at
      */ //TODO: test this
@@ -197,7 +205,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
 
         int deltaLeft  = (leftOdo.getCurrentPosition()  * robot.getLeftDirection())  - initLeft;
         int deltaRight = (rightOdo.getCurrentPosition() * robot.getRightDirection()) - initRight;
-        int deltaHoriz = (horizOdo.getCurrentPosition() * robot.getHorizDirection()) - initHoriz;
+        int deltaHoriz = horizOdo.getCurrentPosition()*robot.getHorizDirection() - initHoriz;
         //while the absolute value of (average side change) - (desired change) is not less than or equal to (is greater than) allowed side count offset:
         while ( Math.abs( Math.abs((deltaLeft - deltaRight)/2) - (int)distance ) > robot.getSideOdoAllowedCountOffset() ) {
             posTarMan.update(leftOdo.getCurrentPosition(), rightOdo.getCurrentPosition(), horizOdo.getCurrentPosition());
@@ -209,9 +217,9 @@ public class AutonomousUltimateGoal extends LinearOpMode
             //move
             //make sure it's not drifting
             //if there is a noticable difference in the distance travelled by each side OR the horiz encoder detects too much of a change in angle
-            if ( Math.abs(deltaLeft-deltaRight) > robot.getSideOdoAllowedCountOffset() || deltaHoriz > robot.getHorizOdoAllowedCountOffset()) {
-                if (deltaLeft>deltaRight) {left.setPower(power*0.9);right.setPower(power);}         //if left has gone further, make it go slower
-                else if (deltaLeft<deltaRight) {left.setPower(power*0.9);right.setPower(power);}    //if right has gone further, make it go slower
+            if (false){//(Math.abs(deltaLeft - deltaRight) > robot.getSideOdoAllowedCountOffset()) && (deltaHoriz > robot.getHorizOdoAllowedCountOffset())) {
+                if (deltaLeft>deltaRight) {left.setPower(power*0.95);right.setPower(power);}         //if left has gone further, make it go slower
+                else if (deltaLeft<deltaRight) {left.setPower(power*0.95);right.setPower(power);}    //if right has gone further, make it go slower
             } else {left.setPower(power);right.setPower(power);}
         }
 
@@ -251,7 +259,8 @@ public class AutonomousUltimateGoal extends LinearOpMode
             } else {
                 left.setPower(power);
                 right.setPower(power);
-            }*//*
+            }*/
+        /*
             telemetry.addData("left encoder count", robot.leftDrive.getCurrentPosition());
             telemetry.addData("right encoder count", robot.rightDrive.getCurrentPosition());
             telemetry.update();
