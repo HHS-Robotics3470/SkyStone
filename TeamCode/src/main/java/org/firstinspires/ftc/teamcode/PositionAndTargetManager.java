@@ -85,6 +85,10 @@ public class PositionAndTargetManager {
     int previousLeftCounts = 0;
     int previousRightCounts = 0;
     int previousHorizCounts = 0;
+
+    short leftDirection;
+    short rightDirection;
+    short horizDirection;
     ////////////////////////////// constructors //////////////////////////////
 
     /**
@@ -97,10 +101,13 @@ public class PositionAndTargetManager {
      */
     public PositionAndTargetManager(HardwareUltimateGoal robot, boolean isTeamRed) {
         //take some variables from the robot
-        metersPerCount = robot.NADO_METERS_PER_COUNT;
-        robotOdoWidth = robot.robotOdometryWidth;
-        robotOdoLength = robot.robotOdometryLength;
+        metersPerCount = robot.ODOMETRY_METERS_PER_COUNT;
+        robotOdoWidth = robot.getRobotOdometryWidth();
+        robotOdoLength = robot.getRobotOdometryLength();
         horizRadiansPerCount = metersPerCount / robotOdoLength;
+        leftDirection = robot.getLeftDirection();
+        rightDirection = robot.getRightDirection();
+        horizDirection = robot.getHorizDirection();
 
         robotPosition = new double[]{1.79705 - 0.57785, -1.79705 + 0.4572/2}; //0.57785 is the distance from the right wall, 0.4572 is the length of the robot, //TODO: re-measure these coordinates, measure to the center of thrust
         //flip some things for if the robot is on blue team
@@ -125,9 +132,13 @@ public class PositionAndTargetManager {
     public PositionAndTargetManager(HardwareUltimateGoal robot, double[] initPosition, double initHeading, boolean isTeamRed) {
         //take some variables from the robot
         metersPerCount = robot.ODOMETRY_METERS_PER_COUNT;
-        robotOdoWidth = robot.robotOdometryWidth;
-        robotOdoLength = robot.robotOdometryLength;
+        robotOdoWidth = robot.getRobotOdometryWidth();
+        robotOdoLength = robot.getRobotOdometryLength();
         horizRadiansPerCount = metersPerCount / robotOdoLength;
+        leftDirection = robot.getLeftDirection();
+        rightDirection = robot.getRightDirection();
+        horizDirection = robot.getHorizDirection();
+
         //flip some things for if the robot is on blue team
         if (!isTeamRed) {
             for (int r = 0; r < targets.length; r++) {
@@ -142,7 +153,6 @@ public class PositionAndTargetManager {
     }
 
     ////////////////////////////// update and calculate method //////////////////////////////
-    //TODO: currently, this only uses the encoders of the drive motors, once separate odometry systems are installed, rewrite this code, basing it on the ideas of team wizard https://www.youtube.com/watch?v=cpdPtN4BDug
     public void update(int leftCounts, int rightCounts, int horizCounts) {
         double headingChange = 0.0;
 
@@ -154,12 +164,17 @@ public class PositionAndTargetManager {
         previousRightCounts = rightCounts;
         previousHorizCounts = horizCounts;
 
+        leftChange *= leftDirection;
+        rightChange *= rightDirection;
+        horizChange *= horizDirection;
+
         //positions
-        double s1 = leftChange;  // distance the left wheel traveled (m) (delta s1)
-        double s2 = rightChange; // distance the right wheel traveled (m) (delta s2)
+        double s1 = leftChange * metersPerCount;  // distance the left wheel traveled (m) (delta s1)
+        double s2 = rightChange * metersPerCount; // distance the right wheel traveled (m) (delta s2)
         double s = (s1 + s2) / 2.0; // average distance travelled between the two wheels; also the length of the arc the robot moved
 
         //Calculate Angle change, robot width may need to be adjusted, and must be accurate to a high degree
+        double n = s2 - s1;
         headingChange = (s2 - s1) / robotOdoWidth;
         robotHeading += headingChange;
 
@@ -169,16 +184,16 @@ public class PositionAndTargetManager {
 
         //calculate the changes in position
 
-        robotPosition[0] += (s*Math.sin(robotHeading) + horizChange*Math.cos(robotHeading)) * metersPerCount;
-        robotPosition[1] += (s*Math.cos(robotHeading) - horizChange*Math.sin(robotHeading)) * metersPerCount;
+        robotPosition[0] += (s*Math.sin(robotHeading) + n*Math.cos(robotHeading));// * metersPerCount;
+        robotPosition[1] += (s*Math.cos(robotHeading) - n*Math.sin(robotHeading));// * metersPerCount;
 
 
         //make sure robotHeading is in the range [pi,-pi] not [2pi, 0]
         double twoPI = 2 * Math.PI;
         if (robotHeading > Math.PI) {
-            robotHeading = -twoPI + robotHeading;
+            robotHeading -= twoPI;
         } else if (robotHeading < -Math.PI) {
-            robotHeading = twoPI + robotHeading;
+            robotHeading += twoPI;
         }
 
         /*using Wizards ideas would involve,
@@ -250,7 +265,7 @@ public class PositionAndTargetManager {
     /**
      * @return a description of the current target
      */
-    public String getCurrentTarget() {
+    public String getCurrentTargetDesc() {
         /*
         r = 0, power shot 1
         r = 1, power shot 2
@@ -285,10 +300,23 @@ public class PositionAndTargetManager {
         }
         return description;
     }
+
+    /**
+     * @return the integer representing the current target
+     */
+    public int getCurrentTarget() {
+        return currentTarget;
+    }
+
     ////////////////////////////// set methods //////////////////////////////
     public void setTarget(int i) {
         if (i > 5 || i < 0) i=3;
         currentTarget = 3;
         targetPosition = getTargetPosition(i);
+    }
+    public void cycleTarget() {
+        currentTarget++;
+        if (currentTarget > 5) currentTarget=0;
+        targetPosition = getTargetPosition(currentTarget);
     }
 }

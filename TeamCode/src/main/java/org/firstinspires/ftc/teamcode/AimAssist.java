@@ -37,7 +37,7 @@ public class AimAssist {
     double[] targetPosition = new double[3]; // x, y, z, coords of the robot, measured in meters
 
     //variables that are calculated
-    public double headingToTarget; // the direction that the turret needs to face relative to the wall with the goals (pi/2), measured in radians
+    public double headingToTarget; // the direction that the turret needs to face relative the robot
     public double pitchToTarget; // the pitch that the turret needs to be at to hit the target, measured in radians
 
     ////////////////////////////// constructors //////////////////////////////
@@ -69,7 +69,7 @@ public class AimAssist {
         targetPosition[1] = tPosition[1];
         targetPosition[2] = tPosition[2];
 
-        headingToTarget = headingCalculation();
+        headingToTarget = headingCalculation() - rHeading; //get heading relative to the field, return heading relative to the turret
         pitchToTarget = pitchCalculation();
     }
 
@@ -179,12 +179,12 @@ public class AimAssist {
             // TODO 12/25/2020 update this when Aaron finishes the experiment to determine launch speed
             final double v = 5.08;
 
-            a1 = Math.atan( ( (v*v) + Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );//+
-            a2 = Math.atan( ( (v*v) - Math.sqrt( (v*v*v*v) - (g * (g * (d*d) + (2*h * (v*v)) )) ) ) / (g * d) );//-
+            a1 = Math.atan( ( v*v + Math.sqrt( v*v*v*v - g*(g*d*d + 2*h*v*v) )) / (g * d) );//+
+            a2 = Math.atan( ( v*v - Math.sqrt( v*v*v*v - g*(g*d*d + 2*h*v*v) )) / (g * d) );//-
             // TODO do isNAN on these, throw exception if it is
             //decide the optimal angle
             angle = a2;
-            if (a1 < a2)
+            if (a1 < a2 && a1 > 0)
             {
                 angle = a1;
             }
@@ -194,7 +194,7 @@ public class AimAssist {
             if ( (((v*v * Math.sin(angle) * Math.sin(angle)) / (2 * g)) >= (heightCap - turretHeight)) || (((v*v * Math.sin(2 * angle)) / (g)) >= rangeCap) )  return -2.0;
 
             //check if something is wack, return negative 1 (the error value)
-            if (isNaN(a1) || isNaN(a2)) {
+            if (isNaN(a1) || isNaN(a2) || angle < 0) {
                 return -1;
             }
 

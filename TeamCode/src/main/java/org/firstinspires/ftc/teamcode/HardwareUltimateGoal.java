@@ -27,6 +27,9 @@ import java.io.File;
         for the robot, heading of 0 means that it's facing to the right (POV: looking toward the targets)
         for the turret, heading of 0 means facing toward the front of the robot
 
+        for the horiz odometry, + change should mean turning CCW
+                                - change should mean turning CW
+
         positive angles for the turret (relative to the robot) are turning away from the side with the control hubs
  */
 
@@ -59,6 +62,8 @@ public class HardwareUltimateGoal {
     public DcMotor turretRotator;
     public DcMotor turretElevator; //go bilda 53:1
 
+    public DcMotor leftOdometry;
+    public DcMotor rightOdometry;
     public DcMotor horizOdometry;
 
     public CRServo turretLauncher;
@@ -82,25 +87,33 @@ public class HardwareUltimateGoal {
 
 
     /* some variables for different measurements of the robot */ //TODO: keep up to date
-    public double turretHeight = 0.2023; //5 + (13/16) inches, from the floor to the launch platform at rest, up to date but not 100% accurate
-    public double robotOdometryWidth = 0.12375;  // 12.375cm, up to date, may not be accurate // refers to the distance between the 2 side encoders
-    public double robotOdometryLength = 0.084; // 8.4cm, up to date, may not be accurate // refers to the distance between the front odometry encoder and the imaginary line between the 2 side encoders
-    public static long LAUNCHER_TIME_TO_ROTATE = 1300; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
+    public final double turretHeight = 0.2023; //5 + (13/16) inches, from the floor to the launch platform at rest, up to date but not 100% accurate
+    public final double robotOdometryWidth = 0.12065;  // 4.75in, 12.065cm, up to date, but not 100% accurate // refers to the distance between the 2 side encoders
+    public final double robotOdometryLength = 0.08255; // 3.25in, 8.255cm    //refers to the distance between the front odometry encoder and the imaginary line between the 2 side encoders
+    public static final long LAUNCHER_TIME_TO_ROTATE = 1300; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
+
+    //directions of the odometry encoders, 1 == FORWARD; -1 == REVERSE
+    public final short leftDirection = -1;
+    public final short rightDirection = 1;
+    public final short horizDirection = 1;
+    //odometry allowed count offset (how close to the perfect position is allowed?)
+    public final int sideOdoAllowedCountOffset = 50; //for the left and right odometry
+    public final int horizOdoAllowedCountOffset = 50;
 
     //stats for the odometry encoders
-    public final double ODOMETRY_COUNTS_PER_MOTOR_REV = 8192; //or 2048
-    public final double ODOMETRY_WHEEL_DIAMETER_METERS= 0.05; //(5cm) For figuring circumference, up to date may not be accurate
-    public final double ODOMETRY_COUNTS_PER_METER     = (ODOMETRY_COUNTS_PER_MOTOR_REV) / (ODOMETRY_WHEEL_DIAMETER_METERS * Math.PI);
-    public final double ODOMETRY_METERS_PER_COUNT     = 1.0 / ODOMETRY_COUNTS_PER_METER;
+    public final double ODOMETRY_COUNTS_PER_MOTOR_REV = 8192;
+    public final double ODOMETRY_WHEEL_DIAMETER_METERS= 0.0508; //(2") For figuring circumference
+    public final double ODOMETRY_COUNTS_PER_METER      = (ODOMETRY_COUNTS_PER_MOTOR_REV) / (ODOMETRY_WHEEL_DIAMETER_METERS * Math.PI);
+    public final double ODOMETRY_METERS_PER_COUNT = 1.0 /ODOMETRY_COUNTS_PER_METER;
 
 
     // stats for the TorqueNADO motors
     public final double NADO_COUNTS_PER_MOTOR_REV = 1440;
     public final double NADO_DRIVE_GEAR_REDUCTION = 32.0/24.0;  // This is < 1.0 if geared UP (to increase speed)
     public final double NADO_WHEEL_DIAMETER_METERS= 0.1016; //(4") For figuring circumference
-    public final double NADO_COUNTS_PER_METER     = (NADO_COUNTS_PER_MOTOR_REV * NADO_DRIVE_GEAR_REDUCTION) /
+    public final double NADO_COUNTS_PER_METER      = (NADO_COUNTS_PER_MOTOR_REV * NADO_DRIVE_GEAR_REDUCTION) /
             (NADO_WHEEL_DIAMETER_METERS * Math.PI);
-    public final double NADO_METERS_PER_COUNT     = 1.0 / NADO_COUNTS_PER_METER;
+    public final double NADO_METERS_PER_COUNT = 1.0 / NADO_COUNTS_PER_METER;
 
     // stats for the Rev Core Hex motor
     public final double CORE_HEX_COUNTS_PER_MOTOR_REV = 288;  // 4 * 72(gear ratio)
@@ -146,11 +159,11 @@ public class HardwareUltimateGoal {
         conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         turretRotator.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        //odometry: left and right odometry are plugged into the encoder slots for the drive motors on their corresponding sides
-        // horizontal odometry is plugged into the encoder slot of ____
-        horizOdometry = hwMap.get(DcMotor.class, "intakePulley");
-
-
+        // odometry: left and right odometry are plugged into the encoder slots for the drive motors on their corresponding sides
+        // they parasite off of other motors encoder slots
+        leftOdometry = hwMap.get(DcMotor.class, "flywheelLeft");   //second hub, encoder port 0
+        rightOdometry = hwMap.get(DcMotor.class, "flywheelRight"); //second hub, encoder port 1
+        horizOdometry = hwMap.get(DcMotor.class, "intakePulley");  //second hub, encoder port 2
 
         // Set all motors to zero power
         leftDrive.setPower(0);
@@ -163,26 +176,29 @@ public class HardwareUltimateGoal {
         intakePulley.setPower(0);
 
         // Set run modes
+        //encoders
+        leftOdometry.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightOdometry.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        horizOdometry.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftOdometry.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightOdometry.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        horizOdometry.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         //reset encoders
         leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        horizOdometry.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
         //set to run with encoder
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);  //torqueNADO motor
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //torqueNADO motor
         turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //core hex motor //will run using a target position
         turretElevator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);// GoBilda 5201 series 53:1 //will run using a target position
-
         //set to run without encoder
         conveyor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        flyWheel1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        flyWheel2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intakePulley.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //for odometry
-
-
+        //flyWheel1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); //commented ou for odometry
+        //flyWheel2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //intakePulley.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //set zero behavior
         leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -250,6 +266,8 @@ public class HardwareUltimateGoal {
         parameters.loggingTag          = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         imu.initialize(parameters);
+
+
     }
 
     ////////////////////////////// file for storing position and heading info after autonomous //////////////////////////////
@@ -333,4 +351,26 @@ public class HardwareUltimateGoal {
 
     // 2 methods that handle moving the robot for autonomous
 
+    // get methods
+    public double getRobotOdometryWidth() {
+        return robotOdometryWidth;
+    }
+    public double getRobotOdometryLength() {
+        return robotOdometryLength;
+    }
+    public short getLeftDirection() {
+        return leftDirection;
+    }
+    public short getRightDirection() {
+        return rightDirection;
+    }
+    public short getHorizDirection() {
+        return horizDirection;
+    }
+    public int getSideOdoAllowedCountOffset() {
+        return sideOdoAllowedCountOffset;
+    }
+    public int getHorizOdoAllowedCountOffset() {
+        return horizOdoAllowedCountOffset;
+    }
 }
