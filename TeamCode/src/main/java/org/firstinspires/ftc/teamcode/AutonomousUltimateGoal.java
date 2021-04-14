@@ -96,11 +96,20 @@ public class AutonomousUltimateGoal extends LinearOpMode
         encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.6, -1);
 
         //------------------------------STEP 2: branches for different target zones------------------------------//
+        if (targetZone == 0) {
+            //deposit, move to launch position path 1
 
+        } else {
+            //move to zone c
 
+            if (targetZone == 4) {
+                //deposit, move back, move to launch position path 1
+            } else {
+                //turn and move to b, deposit, continue to launch position
+            }
+        }
 
-
-        //------------------------------STEP 3: ------------------------------//
+        //------------------------------STEP 3: aim and fire :D ------------------------------//
 
 
 
@@ -200,9 +209,6 @@ public class AutonomousUltimateGoal extends LinearOpMode
         int initHoriz = horizOdo.getCurrentPosition() * robot.getHorizDirection();
 
         // while the change in measured distance (from odometry encoders) is less than the desired change, move
-        left.setPower(0);
-        right.setPower(0);
-
         int deltaLeft  = (leftOdo.getCurrentPosition()  * robot.getLeftDirection())  - initLeft;
         int deltaRight = (rightOdo.getCurrentPosition() * robot.getRightDirection()) - initRight;
         int deltaHoriz = horizOdo.getCurrentPosition()*robot.getHorizDirection() - initHoriz;
@@ -222,6 +228,9 @@ public class AutonomousUltimateGoal extends LinearOpMode
                 else if (deltaLeft<deltaRight) {left.setPower(power*0.95);right.setPower(power);}    //if right has gone further, make it go slower
             } else {left.setPower(power);right.setPower(power);}
         }
+
+        left.setPower(0);
+        right.setPower(0);
 
         /*
         //vvv old vvv

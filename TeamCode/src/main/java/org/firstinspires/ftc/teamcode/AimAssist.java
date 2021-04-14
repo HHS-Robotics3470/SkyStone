@@ -177,7 +177,7 @@ public class AimAssist {
             double a2;
             // the launch speed
             // TODO 12/25/2020 update this when Aaron finishes the experiment to determine launch speed
-            final double v = 5.08;
+            final double v = 11.428;//5.08;
 
             a1 = Math.atan( ( v*v + Math.sqrt( v*v*v*v - g*(g*d*d + 2*h*v*v) )) / (g * d) );//+
             a2 = Math.atan( ( v*v - Math.sqrt( v*v*v*v - g*(g*d*d + 2*h*v*v) )) / (g * d) );//-
@@ -191,7 +191,7 @@ public class AimAssist {
 
             //make sure that the height and length of the trajectory stay within bounds
             // height || range
-            if ( (((v*v * Math.sin(angle) * Math.sin(angle)) / (2 * g)) >= (heightCap - turretHeight)) || (((v*v * Math.sin(2 * angle)) / (g)) >= rangeCap) )  return -2.0;
+            //if ( (((v*v * Math.sin(angle) * Math.sin(angle)) / (2 * g)) >= (heightCap - turretHeight)) || (((v*v * Math.sin(2 * angle)) / (g)) >= rangeCap) )  return -2.0;
 
             //check if something is wack, return negative 1 (the error value)
             if (isNaN(a1) || isNaN(a2) || angle < 0) {

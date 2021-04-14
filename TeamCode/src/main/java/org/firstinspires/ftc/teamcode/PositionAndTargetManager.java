@@ -189,12 +189,12 @@ public class PositionAndTargetManager {
 
 
         //make sure robotHeading is in the range [pi,-pi] not [2pi, 0]
-        double twoPI = 2 * Math.PI;
+        /*double twoPI = 2 * Math.PI;
         if (robotHeading > Math.PI) {
             robotHeading -= twoPI;
         } else if (robotHeading < -Math.PI) {
             robotHeading += twoPI;
-        }
+        }*/
 
         /*using Wizards ideas would involve,
         replacing line 149 (robotPosition[0] += s * Math.cos(robotHeading);) with robotPosition[0] += (p*Math.sin(robotHeading) + n*Math.cos(robotHeading)) * metersPerCount;
@@ -231,7 +231,7 @@ public class PositionAndTargetManager {
 
         //actually change the target
         currentTarget = curTar;
-        targetPosition = getTargetPosition(curTar);
+        targetPosition = targets[curTar];
         return targetPosition;
     }
 

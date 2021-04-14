@@ -87,7 +87,7 @@ public class HardwareUltimateGoal {
 
 
     /* some variables for different measurements of the robot */ //TODO: keep up to date
-    public final double turretHeight = 0.2023; //5 + (13/16) inches, from the floor to the launch platform at rest, up to date but not 100% accurate
+    public final double turretHeight = 0.15; //5 + (13/16) inches, from the floor to the launch platform at rest, up to date but not 100% accurate
     public final double robotOdometryWidth = 0.12065;  // 4.75in, 12.065cm, up to date, but not 100% accurate // refers to the distance between the 2 side encoders
     public final double robotOdometryLength = 0.08255; // 3.25in, 8.255cm    //refers to the distance between the front odometry encoder and the imaginary line between the 2 side encoders
     public static final long LAUNCHER_TIME_TO_ROTATE = 1300; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
@@ -133,7 +133,7 @@ public class HardwareUltimateGoal {
 
     /*another constructor for testing, when there isn't an autonomous to write the heading and position files*/
     public HardwareUltimateGoal(String writesFilesAsRedTeam){
-        writePositionHeading(new double[]{1.79705 - 0.57785, -1.79705 + 0.4572 / 2}, Math.PI/2); //TODO: update this as needed, use the default values in PositionAndTargetManager.java
+        writePositionHeading(new double[]{1.79705 - 0.8, -1.79705 + 0.225}, Math.PI/2); //TODO: update this as needed, use the default values in PositionAndTargetManager.java
     }
 
     /* Initialize standard Hardware interfaces */

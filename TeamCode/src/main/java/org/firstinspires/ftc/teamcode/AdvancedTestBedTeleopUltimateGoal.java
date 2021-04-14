@@ -267,8 +267,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         telemetry.addData("heading"             , currentTurretHeading);
         telemetry.addData("pitch"               , currentTurretPitch);
         telemetry.addData("target"              , posTarMan.getCurrentTargetDesc());
-        telemetry.addData("heading to target"   , Math.toDegrees(aimMan.getHeadingToTarget()));
-        telemetry.addData("pitch to target"     , Math.toDegrees(aimMan.getPitchToTarget()));
+        telemetry.addData("heading to target"   , aimMan.getHeadingToTarget());//Math.toDegrees(aimMan.getHeadingToTarget()));
+        telemetry.addData("pitch to target"     , aimMan.getPitchToTarget());//Math.toDegrees(aimMan.getPitchToTarget()));
 
         telemetry.addLine("target info");
         telemetry.addData("target"  , posTarMan.getCurrentTargetDesc());
@@ -559,6 +559,8 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
 
             //stop the launcher
             robot.turretLauncher.setPower(0);
+
+            robot.conveyor.setPower(0);
 
             /*old, from when the turret launcher was a normal servo
             elevateTurretTo(Math.toRadians(15)); //elevate the turret slightly to assist with the reload
