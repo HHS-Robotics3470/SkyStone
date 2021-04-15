@@ -48,6 +48,10 @@ public class AutonomousUltimateGoal extends LinearOpMode
         boolean lessGoFound = false;
         if (lessGoSoundID != 0) lessGoFound= SoundPlayer.getInstance().preload(hardwareMap.appContext, lessGoSoundID);
 
+        int notGoodSoundID = hardwareMap.appContext.getResources().getIdentifier("ohshitnotgood.wav","raw",hardwareMap.appContext.getPackageName());
+        boolean notGoodFound = false;
+        if (notGoodSoundID!=0) notGoodFound=SoundPlayer.getInstance().preload(hardwareMap.appContext,notGoodSoundID);
+
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
@@ -85,6 +89,9 @@ public class AutonomousUltimateGoal extends LinearOpMode
         //------------------------------STEP 1: scan ring stack, and get to position (to start depositing the wobble goal)------------------------------//
         //reverse to the stack
         encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.69,-1);
+        //position should now be +0.69y from start position
+
+
         //scan with sensor
         //scan the stack size
         short targetZone = 0; //0 == 0 rings, 1 == 1 ring, 2 == 4 rings
@@ -231,7 +238,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
             //move
             //make sure it's not drifting
             //if there is a noticable difference in the distance travelled by each side OR the horiz encoder detects too much of a change in angle
-            if ((Math.abs(deltaLeft - deltaRight) > robot.getSideOdoAllowedCountOffset()) && (deltaHoriz > robot.getHorizOdoAllowedCountOffset())) {
+            if ((Math.abs(deltaLeft - deltaRight) > robot.getSideOdoAllowedCountOffset()) ||/*&&*/ (deltaHoriz > robot.getHorizOdoAllowedCountOffset())) {
                 if (deltaLeft>deltaRight) {left.setPower(power*0.95);right.setPower(power);}         //if left has gone further, make it go slower
                 else if (deltaLeft<deltaRight) {left.setPower(power*0.95);right.setPower(power);}    //if right has gone further, make it go slower
             } else {left.setPower(power);right.setPower(power);}
@@ -300,28 +307,32 @@ public class AutonomousUltimateGoal extends LinearOpMode
      * @param power the power the motors should move at, positive turn ccw, angles turn cw
      */ //TODO: test this
     public void encoderTurn(DcMotor left, DcMotor right, DcMotor leftOdo, DcMotor rightOdo, DcMotor horizOdo, double angle, double power) {
-        /* old from pre-odo times
+        // old from pre-odo times
         double wheelCircumference = robot.ODOMETRY_WHEEL_DIAMETER_METERS * Math.PI;
         double turnCircumference = robot.getRobotOdometryWidth() * Math.PI;
         double angleCircumference = angle * robot.getRobotOdometryLength();//in meters //arc length formula
         angleCircumference *= robot.ODOMETRY_COUNTS_PER_METER; // in encoder ticks
-        */
+
+        int initHorizCount = horizOdo.getCurrentPosition();
         // target heading
         double targetHeading = posTarMan.getRobotHeading();
         if (power > 0) targetHeading += angle;
         else targetHeading -= angle;
-        //orientate the target heading
+
+        //TODO: maybe remove this ??
+        /*orientate the target heading
         double twoPI = 2 * Math.PI;
         if (targetHeading > Math.PI) {
             targetHeading = -twoPI + targetHeading;
         } else if (targetHeading < -Math.PI) {
             targetHeading = twoPI + targetHeading;
-        }
+        }*/
 
         left.setPower(-power);
         right.setPower(power);
+        //TODO: after testing the position manager, if it is what's not working (and i can't fix it), change this to use encoders to guide it rather than the position tracker
         //while the current heading is too far from the target heading, move
-        while ( Math.abs(targetHeading - posTarMan.getRobotHeading()) > robot.getHorizOdoAllowedCountOffset()) {
+        while ( Math.abs(targetHeading - posTarMan.getRobotHeading()) > 0.017/*robot.getHorizOdoAllowedCountOffset()*/ /*&& Math.abs(angleCircumference - (horizOdo.getCurrentPosition()-initHorizCount)) > robot.getHorizOdoAllowedOffset*/) {
             posTarMan.update(leftOdo.getCurrentPosition(), rightOdo.getCurrentPosition(), horizOdo.getCurrentPosition());
         }
         //once we're at the target position, exit loop and stop
@@ -515,7 +526,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
 
         //move turret to aim at target
         if (rotateTurretTo(aimMan.getHeadingToTarget()) == -1) rotateTurretTo(Math.toRadians(0)); //try to aim to whatever the aim manager thinks it needs to, if that doesn't work, point forward
-        if (elevateTurretTo(aimMan.getPitchToTarget()) == -1)  rotateTurretTo(Math.toRadians(40));//same as above, just pitch instead of heading
+        if (elevateTurretTo(aimMan.getPitchToTarget()) == -1)  elevateTurretTo(Math.toRadians(40));//same as above, just pitch instead of heading
 
 
 
@@ -583,6 +594,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
 
             //stop the launcher, this interruption should help with missaligned loads
             robot.turretLauncher.setPower(0);
+            robot.conveyor.setPower(0);
             sleep(100);
 
             //finish the rotation
