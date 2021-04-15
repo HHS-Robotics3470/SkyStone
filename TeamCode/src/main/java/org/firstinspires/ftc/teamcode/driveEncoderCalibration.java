@@ -19,8 +19,8 @@ public class driveEncoderCalibration extends LinearOpMode {
 
         //calculate the offset, the right drive is the motor we'll offset, the left drive is the one that slips,
             // find the difference between left and right
-        int rightCount = robot.rightDrive.getCurrentPosition();
-        int leftCount = robot.leftDrive.getCurrentPosition();
+        int rightCount = robot.rightOdometry.getCurrentPosition();
+        int leftCount = robot.leftOdometry.getCurrentPosition();
 
         // l = r * x
         double rightOffsetMultiplier = leftCount / rightCount;
@@ -42,7 +42,7 @@ public class driveEncoderCalibration extends LinearOpMode {
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
 
-        int difference = Math.abs(robot.leftDrive.getCurrentPosition() - robot.rightDrive.getCurrentPosition());
+        int difference = Math.abs(robot.leftOdometry.getCurrentPosition() - robot.rightOdometry.getCurrentPosition());
         if ( difference < 50) { //if the difference is less than
             telemetry.addLine("success");
             telemetry.addData("difference", difference);
