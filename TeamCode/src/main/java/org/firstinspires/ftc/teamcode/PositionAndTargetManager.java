@@ -185,8 +185,9 @@ public class PositionAndTargetManager {
         //calculate the changes in position
 
         robotPosition[0] += (s*Math.sin(robotHeading) + n*Math.cos(robotHeading));// * metersPerCount;
+        //robotPosition[0] += s * Math.cos(robotHeading);
         robotPosition[1] += (s*Math.cos(robotHeading) - n*Math.sin(robotHeading));// * metersPerCount;
-
+        //robotPosition[0] += s * Math.cos(robotHeading);
 
         //make sure robotHeading is in the range [pi,-pi] not [2pi, 0]
         /*double twoPI = 2 * Math.PI;
