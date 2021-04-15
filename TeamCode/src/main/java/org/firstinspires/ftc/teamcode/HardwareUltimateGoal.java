@@ -101,7 +101,7 @@ public class HardwareUltimateGoal {
     public final int horizOdoAllowedCountOffset = 50;
 
     //stats for the odometry encoders
-    public final double ODOMETRY_COUNTS_PER_MOTOR_REV = 2048;
+    public final double ODOMETRY_COUNTS_PER_MOTOR_REV = 2048*4;
     public final double ODOMETRY_WHEEL_DIAMETER_METERS= 0.0508; //(2") For figuring circumference
     public final double ODOMETRY_COUNTS_PER_METER      = (ODOMETRY_COUNTS_PER_MOTOR_REV) / (ODOMETRY_WHEEL_DIAMETER_METERS * Math.PI);
     public final double ODOMETRY_METERS_PER_COUNT = 1.0 /ODOMETRY_COUNTS_PER_METER;

@@ -174,9 +174,8 @@ public class PositionAndTargetManager {
         double s = (s1 + s2) / 2.0; // average distance travelled between the two wheels; also the length of the arc the robot moved
 
         //Calculate Angle change, robot width may need to be adjusted, and must be accurate to a high degree
-        double n = s2 - s1;
-        headingChange = (s2 - s1) / robotOdoWidth;
-        robotHeading += headingChange;
+        headingChange = (s1 - s2) / robotOdoWidth;
+        robotHeading += headingChange;//Math.toRadians(headingChange);
 
         horizChange -= headingChange/horizRadiansPerCount;
         //some house keeping
@@ -184,10 +183,10 @@ public class PositionAndTargetManager {
 
         //calculate the changes in position
 
-        robotPosition[0] += (s*Math.sin(robotHeading) + n*Math.cos(robotHeading));// * metersPerCount;
-        //robotPosition[0] += s * Math.cos(robotHeading);
-        robotPosition[1] += (s*Math.cos(robotHeading) - n*Math.sin(robotHeading));// * metersPerCount;
-        //robotPosition[0] += s * Math.cos(robotHeading);
+        //robotPosition[0] += (s*Math.sin(robotHeading) + horizChange*Math.cos(robotHeading));// * metersPerCount;
+        robotPosition[0] += s * Math.cos(robotHeading);
+        //robotPosition[1] += (s*Math.cos(robotHeading) - horizChange*Math.sin(robotHeading));// * metersPerCount;
+        robotPosition[1] += s * Math.sin(robotHeading);
 
         //make sure robotHeading is in the range [pi,-pi] not [2pi, 0]
         /*double twoPI = 2 * Math.PI;

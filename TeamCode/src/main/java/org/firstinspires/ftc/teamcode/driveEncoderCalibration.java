@@ -1,16 +1,20 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+@TeleOp(name="odometry calibration", group="UltimateGoal")
 public class driveEncoderCalibration extends LinearOpMode {
     HardwareUltimateGoal robot = new HardwareUltimateGoal("calibrating");
 
     @Override
     public void runOpMode() throws InterruptedException {
+        waitForStart();
+
         //move the robot a bit
-        robot.leftDrive.setPower(1);
-        robot.rightDrive.setPower(1);
+        robot.leftDrive.setPower(-1);
+        robot.rightDrive.setPower(-1);
 
         sleep(1000);
 
@@ -28,11 +32,11 @@ public class driveEncoderCalibration extends LinearOpMode {
         sleep(1000);
 
         //test if the new offset works
-        robot.leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.leftOdometry.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.rightOdometry.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        robot.leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.leftOdometry.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightOdometry.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         robot.leftDrive.setPower(1);
         robot.rightDrive.setPower(1 * rightOffsetMultiplier);
@@ -58,7 +62,7 @@ public class driveEncoderCalibration extends LinearOpMode {
 
             sleep(2500);
 
-            HardwareUltimateGoal.writeRightDriveEncoderOffsetMultiplier(1.0);
+            //HardwareUltimateGoal.writeRightDriveEncoderOffsetMultiplier(1.0);
         }
     }
 }

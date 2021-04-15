@@ -175,13 +175,14 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 if (gamepad1.right_trigger > 0.5) {
                     robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    currentTurretHeading=0;
                 }
                 //telemetry
                 if (gamepad1.left_trigger > 0.5) { //shows info about the motor encoders
                     telemetry.addLine("odometry encoder counts");
-                    telemetry.addData("left odometry", robot.leftOdometry.getCurrentPosition());
-                    telemetry.addData("right odometry", robot.rightOdometry.getCurrentPosition());
-                    telemetry.addData("horizontal ododmetry", robot.horizOdometry.getCurrentPosition());
+                    telemetry.addData("left odometry", robot.leftOdometry.getCurrentPosition() * robot.getLeftDirection());
+                    telemetry.addData("right odometry", robot.rightOdometry.getCurrentPosition() * robot.getRightDirection());
+                    telemetry.addData("horizontal ododmetry", robot.horizOdometry.getCurrentPosition() * robot.getHorizDirection());
 
                     telemetry.addLine("motor encoder counts");
                     telemetry.addData("left motor", robot.leftDrive.getCurrentPosition());
@@ -261,7 +262,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         telemetry.addLine("position information");
         telemetry.addData("x"       , posTarMan.getRobotPosition()[0]);
         telemetry.addData("y"       , posTarMan.getRobotPosition()[1]);
-        telemetry.addData("heading" , Math.toDegrees(posTarMan.getRobotHeading()));
+        telemetry.addData("heading" , Math.toDegrees(posTarMan.getRobotHeading()%(Math.PI*2)));//posTarMan.getRobotHeading());
 
         telemetry.addLine("turret information");
         telemetry.addData("heading"             , currentTurretHeading);
@@ -483,7 +484,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 //wait for the turret to finish aiming (unneeded, the methods used to rotate the turrets already wait
                 //while(robot.turretElevator.isBusy() || robot.turretRotator.isBusy()) sleep(10);
 
-                if (!firingError && loaded) {
+                if ((!firingError && loaded) || abort) {
                     //spin up flywheels and wait a bit to let everything move up to speed, the flywheels are not the same speed in order to create a spin
                     robot.flyWheel1.setPower(0.9);
                     robot.flyWheel2.setPower(1.0);
