@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -42,10 +43,17 @@ public class AutonomousUltimateGoal extends LinearOpMode
         robot.leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        //sounds stuff
+        int lessGoSoundID = hardwareMap.appContext.getResources().getIdentifier("lessgo","raw",hardwareMap.appContext.getPackageName());
+        boolean lessGoFound = false;
+        if (lessGoSoundID != 0) lessGoFound= SoundPlayer.getInstance().preload(hardwareMap.appContext, lessGoSoundID);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
+
+        //sounds stuff
+        if (lessGoFound) SoundPlayer.getInstance().startPlaying(hardwareMap.appContext,lessGoSoundID);
 
         // Step through each leg of the path,
         //TODO: need to recode the auto-routine
