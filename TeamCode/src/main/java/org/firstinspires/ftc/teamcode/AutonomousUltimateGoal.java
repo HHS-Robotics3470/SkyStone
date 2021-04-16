@@ -228,7 +228,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
         int deltaRight = (rightOdo.getCurrentPosition() * robot.getRightDirection()) - initRight;
         int deltaHoriz = horizOdo.getCurrentPosition()*robot.getHorizDirection() - initHoriz;
         //while the absolute value of (average side change) - (desired change) is not less than or equal to (is greater than) allowed side count offset:
-        while ( Math.abs( Math.abs((deltaLeft - deltaRight)/2) - (int)distance ) > robot.getSideOdoAllowedCountOffset() ) {
+        while ( Math.abs( Math.abs((deltaLeft + deltaRight)/2) - (int)distance ) > robot.getSideOdoAllowedCountOffset() ) {
             posTarMan.update(leftOdo.getCurrentPosition(), rightOdo.getCurrentPosition(), horizOdo.getCurrentPosition());
             //update delta__'s
             deltaLeft  = (leftOdo.getCurrentPosition()  * robot.getLeftDirection())  - initLeft;
