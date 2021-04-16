@@ -177,6 +177,8 @@ public class PositionAndTargetManager {
         headingChange = (s1 - s2) / robotOdoWidth;
         robotHeading += headingChange;//Math.toRadians(headingChange);
 
+        //robotHeading = robotHeading % (Math.PI*2);
+
         horizChange -= headingChange/horizRadiansPerCount;
         //some house keeping
 
@@ -220,7 +222,7 @@ public class PositionAndTargetManager {
         //cycle targets
         curTar++;
         //make sure it stays in bounds
-        if (curTar > 5) curTar = 0;
+        if (curTar > 5) curTar = powerShotsHit;
 
         //if the robot is out of launch area, it can only target the low goal (5)
         if (robotPosition[1] > launchZone && curTar != 5)
@@ -316,7 +318,14 @@ public class PositionAndTargetManager {
     }
     public void cycleTarget() {
         currentTarget++;
-        if (currentTarget > 5) currentTarget=0;
+        if (currentTarget > 5) currentTarget=powerShotsHit;
         targetPosition = getTargetPosition(currentTarget);
+    }
+    /**
+     * method to call when you shoot a powershot, will prevent it from being targeted
+     */
+    public void powerShotHit() {
+        while (getCurrentTarget() <= powerShotsHit) {cycleTarget();}
+        powerShotsHit++;
     }
 }

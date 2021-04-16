@@ -31,6 +31,20 @@ import java.io.File;
                                 - change should mean turning CW
 
         positive angles for the turret (relative to the robot) are turning away from the side with the control hubs
+        positive angles, for the robot (relative to the field) are facing toward the goals
+
+
+     front of the robot is the side the turret is facing in
+
+     Coords format: x,y,z
+     * Origin (0,0) : center of the 6x6(square) grid
+     *      field x bounds [-1.79705m,+1.79705m]
+     *      field y bounds [-1.79705m,+1.79705m]
+     * z = height from the foam grid
+     * x+ = toward red alliance station (right from audience area perspective)
+     * x- = toward blue alliance station
+     * y+ = toward the tower goal and power shot targets
+     * y- = toward audience
  */
 
 
@@ -97,7 +111,7 @@ public class HardwareUltimateGoal {
     public final short rightDirection = -1;
     public final short horizDirection = 1;
     //odometry allowed count offset (how close to the perfect position is allowed?)
-    public final int sideOdoAllowedCountOffset = 200; //for the left and right odometry
+    public final int sideOdoAllowedCountOffset = 50; //for the left and right odometry
     public final int horizOdoAllowedCountOffset = 50;
 
     //stats for the odometry encoders
