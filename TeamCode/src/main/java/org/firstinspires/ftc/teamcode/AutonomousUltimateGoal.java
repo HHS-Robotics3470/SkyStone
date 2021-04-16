@@ -282,8 +282,6 @@ public class AutonomousUltimateGoal extends LinearOpMode
         int deltaRight = (rightOdo.getCurrentPosition() * robot.getRightDirection()) - initRight;
         int deltaHoriz = horizOdo.getCurrentPosition()*robot.getHorizDirection() - initHoriz;
         //while the absolute value of (average side change) <= (desired change)
-        int ramp = 0;
-        int rampMax = 50;
         while ( Math.abs((deltaLeft + deltaRight)/2) <= distance ){
             posTarMan.update(leftOdo.getCurrentPosition(), rightOdo.getCurrentPosition(), horizOdo.getCurrentPosition());
             //update delta__'s
@@ -291,17 +289,14 @@ public class AutonomousUltimateGoal extends LinearOpMode
             deltaRight = (rightOdo.getCurrentPosition() * robot.getRightDirection()) - initRight;
             deltaHoriz = (horizOdo.getCurrentPosition() * robot.getHorizDirection()) - initHoriz;
 
+
             telemetry.addData("left encoder count", robot.leftOdometry.getCurrentPosition()*robot.getLeftDirection());
             telemetry.addData("right encoder count", robot.rightOdometry.getCurrentPosition()*robot.getRightDirection());
             telemetry.addData("horizontal encoder count", robot.horizOdometry.getCurrentPosition()*robot.getHorizDirection());
             telemetry.update();
 
-            //power ramping?
-            if (ramp <= rampMax) ramp++;
-            else ramp = rampMax;
-
-            left.setPower(power * ((double)ramp/(double)rampMax));
-            right.setPower(power * ((double)ramp/(double)rampMax));
+            left.setPower(power);
+            right.setPower(power);
             //move
             //make sure it's not drifting
             //if there is a noticable difference in the distance travelled by each side OR the horiz encoder detects too much of a change in angle
@@ -397,8 +392,8 @@ public class AutonomousUltimateGoal extends LinearOpMode
             targetHeading = twoPI + targetHeading;
         }*/
 
-        int ramp = 0;
-        int rampMax = 50;
+        left.setPower(-power);
+        right.setPower(power);
         //TODO: after testing the position manager, if it is what's not working (and i can't fix it), change this to use encoders to guide it rather than the position tracker
         //while the current heading is too far from the target heading, move
         while ( Math.abs(targetHeading - posTarMan.getRobotHeading()) > 0.017/*robot.getHorizOdoAllowedCountOffset()*/ /*&& Math.abs(angleCircumference - (horizOdo.getCurrentPosition()-initHorizCount)) > robot.getHorizOdoAllowedOffset*/) {
@@ -408,14 +403,6 @@ public class AutonomousUltimateGoal extends LinearOpMode
             telemetry.addData("right encoder count", robot.rightOdometry.getCurrentPosition()*robot.getRightDirection());
             telemetry.addData("horizontal encoder count", robot.horizOdometry.getCurrentPosition()*robot.getHorizDirection());
             telemetry.update();
-
-            //power ramping?
-            if (ramp <= rampMax) ramp++;
-            else ramp = rampMax;
-
-            left.setPower(-power * ((double)ramp/(double)rampMax));
-            right.setPower(power * ((double)ramp/(double)rampMax));
-
         }
         //once we're at the target position, exit loop and stop
         left.setPower(0);
