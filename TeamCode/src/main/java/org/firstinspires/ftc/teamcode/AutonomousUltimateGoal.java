@@ -269,9 +269,9 @@ public class AutonomousUltimateGoal extends LinearOpMode
     public void encoderDrive(DcMotor left, DcMotor right, DcMotor leftOdo, DcMotor rightOdo, DcMotor horizOdo, double distance, double power) {
         distance *= robot.ODOMETRY_COUNTS_PER_METER; //converts the desired distance into encoder ticks
         //if they want to move backwards, invert distance
-        if (power < 0) {
-            distance *= -1;
-        }
+        //if (power < 0) {
+        //    distance *= -1;
+        //}
 
         int initLeft = leftOdo.getCurrentPosition() * robot.getLeftDirection();
         int initRight = rightOdo.getCurrentPosition() * robot.getRightDirection();
@@ -282,7 +282,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
         int deltaRight = (rightOdo.getCurrentPosition() * robot.getRightDirection()) - initRight;
         int deltaHoriz = horizOdo.getCurrentPosition()*robot.getHorizDirection() - initHoriz;
         //while the absolute value of (average side change) - (desired change) is not less than or equal to (is greater than) allowed side count offset:
-        while ( Math.abs( Math.abs((deltaLeft + deltaRight)/2) - (int)distance ) > robot.getSideOdoAllowedCountOffset() ) {
+        while ( Math.abs((deltaLeft + deltaRight)/2) <= distance ){//Math.abs( Math.abs((deltaLeft + deltaRight)/2) - (int)distance ) > robot.getSideOdoAllowedCountOffset() ) {
             posTarMan.update(leftOdo.getCurrentPosition(), rightOdo.getCurrentPosition(), horizOdo.getCurrentPosition());
             //update delta__'s
             deltaLeft  = (leftOdo.getCurrentPosition()  * robot.getLeftDirection())  - initLeft;
