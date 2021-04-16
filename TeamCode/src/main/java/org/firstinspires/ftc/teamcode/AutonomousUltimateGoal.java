@@ -58,7 +58,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
         runtime.reset();
 
         //play sound
-        //if (lessGoFound) SoundPlayer.getInstance().startPlaying(hardwareMap.appContext,lessGoSoundID);
+        if (lessGoFound) SoundPlayer.getInstance().startPlaying(hardwareMap.appContext,lessGoSoundID);
 
         // Step through each leg of the path,
         //TODO: need to recode the auto-routine
@@ -89,7 +89,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
 
         //------------------------------STEP 1: scan ring stack, and get to position (to start depositing the wobble goal)------------------------------//
         //reverse to the stack
-        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.69,-1);
+        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.60,-0.75); //changed distance from 69 to 60 cm
         //position should now be +0.69y from start position
 
         //------this is the test line, move it as things get tested
@@ -102,16 +102,16 @@ public class AutonomousUltimateGoal extends LinearOpMode
         if (robot.distanceSensor.getDistance(DistanceUnit.CM) < 5) targetZone = 1;
 
         //turn ccw 45 degrees
-        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), -1);
+        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), -0.75);
 
         //move past rings
-        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.35, -1);
+        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.35, -0.75);
 
         //rotate cw 45 degrees
-        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), 1);
+        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), 0.75);
 
         //move to launch line
-        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.6, -1);
+        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.6, -0.75);
 
         //------------------------------STEP 2: branches for different target zones------------------------------//
         //TODO: every distance beyond here is an educated guess
@@ -141,11 +141,11 @@ public class AutonomousUltimateGoal extends LinearOpMode
                 depositWobbleGoal();
 
                 //turn
-                encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(135),1);
+                encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(135),0.75);
                 robot.intakePulley.setPower(-1);
                 sleep(timeToLowerIntake/3);
 
-                encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromC, -1);
+                encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromC, -0.75);
             } else { //zone B
                 //turn and move to b, deposit, continue to launch position
 
@@ -161,7 +161,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
                 encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromC-distToB, -0.75);
             }
 
-            encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,Math.toRadians(15),-1);
+            encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,Math.toRadians(15),-0.75);
         }
 
         //------------------------------STEP 3: aim and fire :D, then park ------------------------------//
@@ -281,8 +281,8 @@ public class AutonomousUltimateGoal extends LinearOpMode
         int deltaLeft  = (leftOdo.getCurrentPosition()  * robot.getLeftDirection())  - initLeft;
         int deltaRight = (rightOdo.getCurrentPosition() * robot.getRightDirection()) - initRight;
         int deltaHoriz = horizOdo.getCurrentPosition()*robot.getHorizDirection() - initHoriz;
-        //while the absolute value of (average side change) - (desired change) is not less than or equal to (is greater than) allowed side count offset:
-        while ( Math.abs((deltaLeft + deltaRight)/2) <= distance ){//Math.abs( Math.abs((deltaLeft + deltaRight)/2) - (int)distance ) > robot.getSideOdoAllowedCountOffset() ) {
+        //while the absolute value of (average side change) <= (desired change)
+        while ( Math.abs((deltaLeft + deltaRight)/2) <= distance ){
             posTarMan.update(leftOdo.getCurrentPosition(), rightOdo.getCurrentPosition(), horizOdo.getCurrentPosition());
             //update delta__'s
             deltaLeft  = (leftOdo.getCurrentPosition()  * robot.getLeftDirection())  - initLeft;
@@ -295,14 +295,17 @@ public class AutonomousUltimateGoal extends LinearOpMode
             telemetry.addData("horizontal encoder count", robot.horizOdometry.getCurrentPosition()*robot.getHorizDirection());
             telemetry.update();
 
-
+            left.setPower(power);
+            right.setPower(power);
             //move
             //make sure it's not drifting
             //if there is a noticable difference in the distance travelled by each side OR the horiz encoder detects too much of a change in angle
-            if ((Math.abs(deltaLeft - deltaRight) > robot.getSideOdoAllowedCountOffset())){// ||/*&&*/ (deltaHoriz > robot.getHorizOdoAllowedCountOffset())) {
-                if (deltaLeft>deltaRight) {left.setPower(power*0.95);right.setPower(power);}         //if left has gone further, make it go slower
-                else if (deltaLeft<deltaRight) {left.setPower(power*0.95);right.setPower(power);}    //if right has gone further, make it go slower
+            /*
+            if ((Math.abs(deltaLeft - deltaRight) > robot.getSideOdoAllowedCountOffset())){// || (deltaHoriz > robot.getHorizOdoAllowedCountOffset())) {
+                if (deltaLeft>deltaRight) {left.setPower(power*0.8);right.setPower(power);}         //if left has gone further, make it go slower
+                else if (deltaLeft<deltaRight) {left.setPower(power*0.8);right.setPower(power);}    //if right has gone further, make it go slower
             } else {left.setPower(power);right.setPower(power);}
+            */
         }
 
         left.setPower(0);

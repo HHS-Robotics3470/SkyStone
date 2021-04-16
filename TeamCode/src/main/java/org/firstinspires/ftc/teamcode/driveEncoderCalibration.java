@@ -10,26 +10,27 @@ public class driveEncoderCalibration extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+        robot.init(hardwareMap);
         waitForStart();
 
         //move the robot a bit
-        robot.leftDrive.setPower(-1);
-        robot.rightDrive.setPower(-1);
+        robot.leftDrive.setPower(-0.75);
+        robot.rightDrive.setPower(-0.75);
 
         sleep(1000);
 
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
 
-        //calculate the offset, the right drive is the motor we'll offset, the left drive is the one that slips,
+        //calculate the offset, the left drive is the motor we'll offset, the right drive is the one that slips,
             // find the difference between left and right
-        int rightCount = robot.rightOdometry.getCurrentPosition();
-        int leftCount = robot.leftOdometry.getCurrentPosition();
+        int rightCount = robot.rightOdometry.getCurrentPosition()*robot.getRightDirection();
+        int leftCount = robot.leftOdometry.getCurrentPosition()*robot.getLeftDirection();
 
         // l = r * x
-        double rightOffsetMultiplier = leftCount / rightCount;
+        double leftOffsetMultiplier = (double)rightCount / (double)leftCount;
 
-        sleep(1000);
+        sleep(500);
 
         //test if the new offset works
         robot.leftOdometry.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -38,16 +39,16 @@ public class driveEncoderCalibration extends LinearOpMode {
         robot.leftOdometry.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rightOdometry.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        robot.leftDrive.setPower(1);
-        robot.rightDrive.setPower(1 * rightOffsetMultiplier);
+        robot.leftDrive.setPower(0.75 * leftOffsetMultiplier);
+        robot.rightDrive.setPower(0.75);
 
         sleep(1000);
 
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
 
-        int difference = Math.abs(robot.leftOdometry.getCurrentPosition() - robot.rightOdometry.getCurrentPosition());
-        if ( difference < 50) { //if the difference is less than
+        int difference = Math.abs(robot.leftOdometry.getCurrentPosition()*robot.getLeftDirection() - robot.rightOdometry.getCurrentPosition()*robot.getRightDirection());
+        if ( difference < 200) { //if the difference is less than
             telemetry.addLine("success");
             telemetry.addData("difference", difference);
             telemetry.update();
@@ -55,9 +56,10 @@ public class driveEncoderCalibration extends LinearOpMode {
             sleep(2500);
 
             //write the offset to a file
-            HardwareUltimateGoal.writeRightDriveEncoderOffsetMultiplier(rightOffsetMultiplier);
+            HardwareUltimateGoal.writeLeftDriveEncoderOffsetMultiplier(leftOffsetMultiplier);
         } else {
             telemetry.addLine("failed");
+            telemetry.addData("difference", difference);
             telemetry.update();
 
             sleep(2500);

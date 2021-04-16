@@ -301,6 +301,13 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
         robot.rightDrive.setPower(rightPower);
     }
     public void tankControls(double left, double right){
+        //give left and right some increments
+        int intLeft = (int)(left * 10.0);
+        int intRight = (int)(right * 10.0);
+
+        left = (double)intLeft/10.0;
+        right = (double)intRight/10.0;
+
         robot.leftDrive.setPower(-left);
         robot.rightDrive.setPower(-right);
     }

@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.ReadWriteFile;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.io.File;
@@ -98,6 +97,7 @@ public class HardwareUltimateGoal {
     /* local OpMode members. */
     HardwareMap hwMap           =  null;
     private ElapsedTime period  = new ElapsedTime();
+    public double leftOffsetMultiplier;
 
 
     /* some variables for different measurements of the robot */ //TODO: keep up to date
@@ -154,6 +154,9 @@ public class HardwareUltimateGoal {
     public void init(HardwareMap ahwMap) {
         // Save reference to Hardware map
         hwMap = ahwMap;
+
+        //read the offset
+        //leftOffsetMultiplier= readLeftDriveEncoderOffsetMultiplier();
 
         // Define and Initialize Motors
         leftDrive   = hwMap.get(DcMotor.class, "leftDrive"); //main hub, motor port 0
@@ -288,7 +291,7 @@ public class HardwareUltimateGoal {
     public static File positionXFile = AppUtil.getInstance().getSettingsFile("positionX.txt");
     public static File positionYFile = AppUtil.getInstance().getSettingsFile("positionY.txt");
     public static File headingFile = AppUtil.getInstance().getSettingsFile("heading.txt");
-    public static File rightDriveEncoderOffsetMultiplierFile = AppUtil.getInstance().getSettingsFile("rightDriveEncoderOffsetMultiplier.txt");
+    public static File leftDriveEncoderOffsetMultiplierFile = AppUtil.getInstance().getSettingsFile("leftDriveEncoderOffsetMultiplier.txt");
 
     /**
      * method to write the position and heading of the robot to a file (overwriting any data already there)
@@ -324,11 +327,11 @@ public class HardwareUltimateGoal {
      * writes the drive offset calculated in driveEncoderCalibration.java
      * @param offset
      */
-    public static void writeRightDriveEncoderOffsetMultiplier(double offset) {
-        ReadWriteFile.writeFile(rightDriveEncoderOffsetMultiplierFile, String.valueOf(offset));
+    public static void writeLeftDriveEncoderOffsetMultiplier(double offset) {
+        ReadWriteFile.writeFile(leftDriveEncoderOffsetMultiplierFile, String.valueOf(offset));
     }
-    public static double readRightDriveEncoderOffsetMultiplier() {
-        return Double.parseDouble(ReadWriteFile.readFile(rightDriveEncoderOffsetMultiplierFile).trim());
+    public static double readLeftDriveEncoderOffsetMultiplier() {
+        return Double.parseDouble(ReadWriteFile.readFile(leftDriveEncoderOffsetMultiplierFile).trim());
     }
 
 
