@@ -165,12 +165,12 @@ public class AutonomousUltimateGoal extends LinearOpMode
         //lower the wobble goal thing reee
         if (targetZone == 0) { //zone A
             double distToFiringPointFromA = 1.3;
-            encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, .1, 1);
+            encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, .05, 1);
             //deposit, move to launch position path 1
             // deposit, raise intake
             depositWobbleGoal();
             //turn, lower intake
-            encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(90), -1);
+            encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(90), -.5);
             robot.intakePulley.setPower(-1);
             sleep(timeToLowerIntake/3);
 

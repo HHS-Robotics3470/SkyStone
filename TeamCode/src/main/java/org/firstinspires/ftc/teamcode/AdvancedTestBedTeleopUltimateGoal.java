@@ -559,7 +559,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             robot.conveyor.setPower(1);
 
             //turn the launcher in one full rotation
-            robot.turretLauncher.setPower(-1);
+            //robot.turretLauncher.setPower(-1);
             sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/4);
 
             //stop the launcher, this interruption should help with missaligned loads
@@ -567,7 +567,7 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             sleep(100);
 
             //finish the rotation
-            robot.turretLauncher.setPower(-1);
+            //robot.turretLauncher.setPower(-1);
             sleep((3*HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE)/4);
 
             //stop the launcher
