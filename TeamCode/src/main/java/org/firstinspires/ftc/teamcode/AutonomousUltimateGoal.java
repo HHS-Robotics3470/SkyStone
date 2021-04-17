@@ -101,6 +101,8 @@ public class AutonomousUltimateGoal extends LinearOpMode
         for (int i = 0; i < 15 && !detection; i++) {
             if (targetZone != 0) {
                 detection = true;
+
+                i = 12;
             }
             robot.leftDrive.setPower(-.5 * ((double)i/15.0));
             robot.rightDrive.setPower(-.5 *((double)i/15.0));
@@ -172,7 +174,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
             robot.intakePulley.setPower(-1);
             sleep(timeToLowerIntake/3);
 
-            robot.turretLauncher.setPower(0);
+            robot.intakePulley.setPower(0);
 
             //make the measurements for this, bc right not, it's basically a guess
             encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromA, -1);
@@ -181,10 +183,10 @@ public class AutonomousUltimateGoal extends LinearOpMode
             //move to zone c
             double distToC = 1;
             double distToFiringPointFromC = 1.5;
-            double distToB = .5;
+            double distToB = .6;
 
             encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,distToC,-1);
-            if (targetZone == 4) { //zone C
+            if (targetZone == 2) { //zone C
                 //deposit, rotate, go to firing position
                 depositWobbleGoal();
 
@@ -194,7 +196,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
                 sleep(timeToLowerIntake/3);
 
 
-                robot.turretLauncher.setPower(0);
+                robot.intakePulley.setPower(0);
 
                 encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromC, -1);
             } else { //zone B
@@ -210,7 +212,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
                 sleep(timeToLowerIntake/3);
 
 
-                robot.turretLauncher.setPower(0);
+                robot.intakePulley.setPower(0);
 
                 encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromC-distToB, -1);
             }
@@ -300,6 +302,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
 
         robot.turretLauncher.setPower(0.5); */
         rotateTurretTo(0);
+        elevateTurretTo(0);
         //Saves the robot's position and heading
         HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
     }
@@ -319,7 +322,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
         robot.intakePulley.setPower(1);
         sleep(timeToLowerIntake / 3);
 
-
+        robot.intakePulley.setPower(0);
     }
     //TODO: eventually make a program that lets the robot move in arcs or something
     /**
