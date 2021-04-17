@@ -201,14 +201,14 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                         robot.intakePulley.setPower(1);
                     } //in normal mode, move intake up
                     else
-                        elevateTurretTo(Math.toRadians(currentTurretPitch - 5)); //in abort mode, mode turret up
+                        elevateTurretTo(Math.toRadians(currentTurretPitch + 10)); //in abort mode, mode turret up
                 } else robot.intakePulley.setPower(0);
                 if (gamepad1.dpad_down) {
                     if (!abort) {
-                        robot.intakePulley.setPower(-.75);
+                        robot.intakePulley.setPower(-1);
                     } //in normal mode, move intake down
                     else
-                        elevateTurretTo(Math.toRadians(currentTurretPitch + 10)); //in abort mode, mode turret down
+                        elevateTurretTo(Math.toRadians(currentTurretPitch - 5)); //in abort mode, mode turret down
                 } else robot.intakePulley.setPower(0);
                 //d right and left, toggle conveyor and grabber respectively (in normal mode, in abort mode, rotate turret right / left)
                 if (gamepad1.dpad_right) {

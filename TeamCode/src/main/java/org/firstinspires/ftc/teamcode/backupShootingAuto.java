@@ -1,31 +1,20 @@
 package org.firstinspires.ftc.teamcode;
 
-
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
 import java.math.BigDecimal;
 import java.math.MathContext;
 
-/**
- * basic autonomous, will probably be dead reckoning.
- *
- * after every step of the autonomous, make a call to update the position manager
- */
+@Autonomous(name="Autonomous Ultimate Goal Backup", group="UltimateGoal")
+public class backupShootingAuto extends LinearOpMode {
 
-//TODO: Rewrite for 2 things: 1) distance sensor, 2) odometry
-
-@Autonomous(name="Autonomous Ultimate Goal A", group="UltimateGoal")
-public class AutonomousUltimateGoal extends LinearOpMode
-{
     /* Declare OpMode members. */
     HardwareUltimateGoal robot          = new HardwareUltimateGoal("testing");
-    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, new double[]{1.79705 - 0.8, -1.79705 + 0.225}, -Math.PI/2 , true); //TODO: 10/21/2020 change true to false if on team blue
+    PositionAndTargetManager posTarMan  = new PositionAndTargetManager(robot, new double[]{1.79705 - 0.8, -1.79705 + 0.225}, Math.PI/2 , true); //TODO: 10/21/2020 change true to false if on team blue
     ElapsedTime runtime                 = new ElapsedTime();
     AimAssist aimMan                    = new AimAssist(robot, posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.bestTargetPosition(0));
 
@@ -71,191 +60,41 @@ public class AutonomousUltimateGoal extends LinearOpMode
         robot.distanceServo.setPosition(1);
         robot.wobbleGrabber.setPosition(0); // grab the wobble goal securely
 
-        sleep(200);
-
-        //TODO: have the deposit goal do this shtuff
-        /*
         robot.intakePulley.setPower(-1);
         sleep(timeToLowerIntake / 6);
 
         robot.intakePulley.setPower(0);
+
+        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,.2,1);
+
+        sleep(500);
 
         rotateTurretTo(Math.toRadians(40));
         rotateTurretTo(Math.PI/6); // the turret starts 30 degrees off center, move back to the middle
         robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        robot.intakePulley.setPower(-1); //lower the intake 1/2 of the way
-        sleep(timeToLowerIntake / 6);    //POTENTIAL ISSUE, not waiting, the pulley never raises
-
-        robot.intakePulley.setPower(0);
-        */
-        //------------------------------STEP 1: scan ring stack, and get to position (to start depositing the wobble goal)------------------------------//
-        //reverse to the stack
-        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.585,-1); //changed distance from 69 to 59 cm
-        //position should now be +0.69y from start position
-        sleep(200);
-        //scan with sensor
-        //scan the stack size
-        while(opModeIsActive()) {
-            short targetZone = 0; //0 == 0 rings, 1 == 1 ring, 2 == 4 rings
-            if (robot.distanceSensor.getDistance(DistanceUnit.CM) <= 6) targetZone = 2;
-            else if (robot.distanceSensor.getDistance(DistanceUnit.CM) <= 11) targetZone = 1;
-
-            telemetry.addData("ring state ", targetZone);
-            telemetry.addLine("0=0rings=A : 1=1ring=B : 2=4rings=C");
-            telemetry.addData("distance from sensor", robot.distanceSensor.getDistance(DistanceUnit.CM));
-            telemetry.update();
-        }
-
-        //------this is the test line, move it as things get tested
-        /*
-
-        //turn ccw 45 degrees
-        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), -1);
-
-        //move past rings
-        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.35, -1);
-
-
-        //rotate cw 45 degrees
-        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), 0.75);
-
-        //move to launch line
-        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.6, -0.75);
-
-        //------------------------------STEP 2: branches for different target zones------------------------------//
-        //TODO: every distance beyond here is an educated guess
-        //lower the wobble goal thing reee
-        if (targetZone == 0) { //zone A
-            double distToFiringPointFromA = 1.3;
-
-            //deposit, move to launch position path 1
-            // deposit, raise intake
-            depositWobbleGoal();
-            //turn, lower intake
-            encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(100), .75);
-            robot.intakePulley.setPower(-1);
-            sleep(timeToLowerIntake/3);
-
-            //make the measurements for this, bc right not, it's basically a guess
-            encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromA, -.75);
-
-        } else {
-            //move to zone c
-            double distToC = 1.4;
-            double distToFiringPointFromC = 2;
-            double distToB = 1;
-
-            encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,distToC,-.75);
-            if (targetZone == 4) { //zone C
-                //deposit, rotate, go to firing position
-                depositWobbleGoal();
-
-                //turn
-                encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(135),0.75);
-                robot.intakePulley.setPower(-1);
-                sleep(timeToLowerIntake/3);
-
-                encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromC, -0.75);
-            } else { //zone B
-                //turn and move to b, deposit, continue to launch position
-
-                encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,Math.toRadians(45), -0.75);
-                encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,distToB, 0.75);
-
-                depositWobbleGoal();
-
-                encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,Math.toRadians(180), 0.75);
-                robot.intakePulley.setPower(-1);
-                sleep(timeToLowerIntake/3);
-
-                encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromC-distToB, -0.75);
-            }
-
-            encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,Math.toRadians(15),-0.75);
-        }
-
-        //------------------------------STEP 3: aim and fire :D, then park ------------------------------//
-        //set target
-        posTarMan.setTarget(0);//powershot 1
-
-        fireTurret();
-        reloadTurret();
-
-        posTarMan.setTarget(2);//high goal
-
-        fireTurret();
-
-        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, .3, 1);
-        /**/
-
-
-        /*
-        //move forward to the target zone goal (closest to start position) distance is ~160 centimeters
-        encoderDrive(robot.leftDrive,robot.rightDrive, robot.leftOdometry, robot.rightOdometry, robot.horizOdometry, 1.6 * .8125, -.75);
-        //encoderDrive(robot.leftDrive,robot.rightDrive, .3 * .8125, -.5);
-
-        // drop the wobble used to be here
-
-        encoderDrive(robot.leftDrive, robot.rightDrive, robot.leftOdometry, robot.rightOdometry, robot.horizOdometry, .2 * .8125,1);
-
-        //turn left, so that the front of the robot (turret side) is facing to closest wall
-        //used to be 65, changed to 55, changed to 80
-        encoderTurn(robot.leftDrive, robot.rightDrive, robot.leftOdometry, robot.rightOdometry, robot.horizOdometry, Math.toRadians(80 * .8125), .75); //if it turns the wrong way, multiply the angle by -1
-        //supposed to be 180
-
-        //move backwards until the robot is at the firing area (where gabe goes to shoot) (4 feet) 48 * 2.54 / 100 = 1.2192
-        encoderDrive(robot.leftDrive, robot.rightDrive, robot.leftOdometry, robot.rightOdometry, robot.horizOdometry, .4 * .8125,-1);
-
-        //release the wobble goal, and fully lower the intake
-        robot.wobbleGrabber.setPosition(0.8);
-        //robot.intakePulley.setPower(-1);
-        //sleep(timeToLowerIntake * 3/4);
-        //robot.intakePulley.setPower(0);
-
-        /*
-        //angle the robot a bit toward the goals,
-        encoderTurn(robot.leftDrive, robot.rightDrive, -Math.PI/4, 1); //if it turns the wrong way, multiply the angle by -1
-
-        //move back a bit to ensure it's in the launch zone
-        encoderDrive(robot.leftDrive, robot.rightDrive, 0.25, 1);
-         */
-        /*
-        //fire twice:
-        //aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
-        //  fire loaded ring
-        //33 hit a powershot
-        //27 hits the goals
-        fireTurret(Math.toRadians(27), Math.toRadians(25));
+        sleep(500);
 
         robot.intakePulley.setPower(-1);
-        sleep(timeToLowerIntake * 2/3);
+        sleep(timeToLowerIntake / 6);
 
         robot.intakePulley.setPower(0);
 
+        //--------------------------------------------just .... shoot twice, and park--------------------------------//
+        posTarMan.setTarget(0);
 
-        //  reload and run conveyor a bit more if needed (flipped order)
-        rotateTurretTo(0);
-        elevateTurretTo(Math.toRadians(15));
-        robot.turretLauncher.setPower(.5);
 
-        robot.conveyor.setPower(1);
-        sleep(500);
-        robot.conveyor.setPower(0);
+        fireTurret();
+
         reloadTurret();
 
-        //  fire again
-        fireTurret(Math.toRadians(25), Math.toRadians(25));
+        fireTurret();
 
-
-        //turn a bit and park over the launch line
-        //encoderTurn(robot.leftDrive, robot.rightDrive, - Math.toRadians(10 * .8125), 1);
-        encoderDrive(robot.leftDrive, robot.rightDrive, robot.leftOdometry, robot.rightOdometry, robot.horizOdometry, .1, 1);
+        reloadTurret();
 
 
 
-        robot.turretLauncher.setPower(0.5); */
         rotateTurretTo(0);
         //Saves the robot's position and heading
         HardwareUltimateGoal.writePositionHeading(posTarMan.getRobotPosition(), posTarMan.getRobotHeading());
@@ -460,7 +299,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
     BigDecimal elevationLastGuessDegrees = new BigDecimal("00.0000", elevationMC);
     double elevationGuessOffset = 1;
     boolean firingError = false;
-    boolean loaded = true;
+
     /**
      * given the angle relative to the field, convert to the angle relative to the robot (front = 0), then move the turret to that angle
      * @param angle angle relative to field
@@ -593,7 +432,6 @@ public class AutonomousUltimateGoal extends LinearOpMode
         elevateTurretTo(0);
         rotateTurretTo(0);
         robot.turretLauncher.setPower(0);
-        loaded = false;
 
 
         /*old, for a standard servo
@@ -670,7 +508,6 @@ public class AutonomousUltimateGoal extends LinearOpMode
         elevateTurretTo(0);
         rotateTurretTo(0);
         robot.turretLauncher.setPower(0);
-        loaded = false;
     }
     /**
      * this will reload a ring if needed, or clear the turret otherwise (if there was a jam for instance)
@@ -680,7 +517,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
         rotateTurretTo(0);
         elevateTurretTo(Math.toRadians(10));//elevate the turret slightly to assist with the reload
 
-        if (loaded) { //if loaded, unload
+        /*if (loaded) { //if loaded, unload
             //set the conveyors to reverse
             robot.conveyor.setPower(-1);
             //rotate the launch servo two full backwards rotations
@@ -699,8 +536,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
             sleep(500);
             //stop conveyors
             robot.conveyor.setPower(0);*/
-            loaded = false;
-        } else { //if unloaded, load
+        //} else { //if unloaded, load
             //set the conveyors to forward
             robot.conveyor.setPower(1);
 
@@ -738,8 +574,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
 
             robot.turretLauncher.setPower(0.1);*/
             elevateTurretTo(0);
-            loaded = true;
-        }
+        //}
         robot.conveyor.setPower(0);
         robot.turretLauncher.setPower(0);
     }

@@ -24,24 +24,7 @@ public class testingAndHardwareCalibration extends LinearOpMode {
         waitForStart();
         robot.init(hardwareMap);
 
-
-
-
-        encoderDrive(robot.leftDrive, robot.rightDrive, robot.leftOdometry, robot.rightOdometry, robot.horizOdometry, .5, 0.5);
-
-        sleep(2000);
-
-        encoderTurn(robot.leftDrive, robot.rightDrive, robot.leftOdometry, robot.rightOdometry, robot.horizOdometry, Math.toRadians(90), 0.5);
-
-        sleep(2000);
-
-        encoderDrive(robot.leftDrive, robot.rightDrive, robot.leftOdometry, robot.rightOdometry, robot.horizOdometry, 0.3, 0.5);
-
-        sleep(2000);
-
-        encoderTurn(robot.leftDrive, robot.rightDrive, robot.leftOdometry, robot.rightOdometry, robot.horizOdometry, Math.toRadians(90), 0.5);
-
-        sleep(2000);
+        robot.distanceServo.setPosition(1);
 
         while (opModeIsActive()) {
             telemetry.addData("distance detected", robot.distanceSensor.getDistance(DistanceUnit.CM));
