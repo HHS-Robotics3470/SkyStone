@@ -57,15 +57,19 @@ public class backupShootingAuto extends LinearOpMode {
         posTarMan.setTarget(4); //set the target to be the the mid goal
 
         //initialization / startup stuff
-        robot.distanceServo.setPosition(1);
+        //robot.distanceServo.setPosition(1);
         robot.wobbleGrabber.setPosition(0); // grab the wobble goal securely
 
         robot.intakePulley.setPower(-1);
-        sleep(timeToLowerIntake / 6);
+        sleep(timeToLowerIntake / 5);
 
         robot.intakePulley.setPower(0);
 
         encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,.2,1);
+
+        //encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,.1,-1);
+
+        //encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,.1,1);
 
         sleep(500);
 
@@ -82,17 +86,17 @@ public class backupShootingAuto extends LinearOpMode {
         robot.intakePulley.setPower(0);
 
         //--------------------------------------------just .... shoot twice, and park--------------------------------//
-        posTarMan.setTarget(0);
+        posTarMan.setTarget(3);
+        aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
-
-        fireTurret();
-
+        fireTurret(aimMan.getHeadingToTarget(), Math.toRadians(23));
+        /*
         reloadTurret();
 
-        fireTurret();
+        fireTurret(aimMan.getHeadingToTarget(),Math.toRadians(24));
 
         reloadTurret();
-
+        */
 
 
         rotateTurretTo(0);
@@ -247,12 +251,14 @@ public class backupShootingAuto extends LinearOpMode {
         right.setPower(power);
         //TODO: after testing the position manager, if it is what's not working (and i can't fix it), change this to use encoders to guide it rather than the position tracker
         //while the current heading is too far from the target heading, move
-        while ( Math.abs((targetHeading%(Math.PI)) - posTarMan.getRobotHeading()) > 0.017/*robot.getHorizOdoAllowedCountOffset()*/ /*&& Math.abs(angleCircumference - (horizOdo.getCurrentPosition()-initHorizCount)) > robot.getHorizOdoAllowedOffset*/) {
+        while ( (power > 0) ? (Math.abs(targetHeading) >= Math.abs(posTarMan.getRobotHeading())) : (Math.abs(targetHeading) <= Math.abs(posTarMan.getRobotHeading())) ) {
             posTarMan.update(leftOdo.getCurrentPosition(), rightOdo.getCurrentPosition(), horizOdo.getCurrentPosition());
 
             telemetry.addData("left encoder count", robot.leftOdometry.getCurrentPosition()*robot.getLeftDirection());
             telemetry.addData("right encoder count", robot.rightOdometry.getCurrentPosition()*robot.getRightDirection());
             telemetry.addData("horizontal encoder count", robot.horizOdometry.getCurrentPosition()*robot.getHorizDirection());
+            telemetry.addData("targetHeading", Math.toDegrees(targetHeading%(Math.PI*2)));
+            telemetry.addData("currentHeading", Math.toDegrees(posTarMan.getRobotHeading()));
             telemetry.update();
         }
         //once we're at the target position, exit loop and stop
@@ -402,7 +408,7 @@ public class backupShootingAuto extends LinearOpMode {
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
         //get heading and pitch (skip for now, probably not needed bc alot of what I would put here is redundant (already happens in the teleop))
-        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition(), robot.horizOdometry.getCurrentPosition());
+        posTarMan.update(robot.leftOdometry.getCurrentPosition(), robot.rightOdometry.getCurrentPosition(), robot.horizOdometry.getCurrentPosition());
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
         //move turret to aim at target
@@ -424,7 +430,7 @@ public class backupShootingAuto extends LinearOpMode {
 
         //reset/prep other components for next shot
         robot.turretLauncher.setPower(1);
-        sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/4);
+        sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/12);
 
         //reset/prep other components for next shot
         robot.flyWheel1.setPower(0);
@@ -500,7 +506,7 @@ public class backupShootingAuto extends LinearOpMode {
 
         //reset/prep other components for next shot
         robot.turretLauncher.setPower(1);
-        sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/4);
+        sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE/12);
 
         //reset/prep other components for next shot
         robot.flyWheel1.setPower(0);

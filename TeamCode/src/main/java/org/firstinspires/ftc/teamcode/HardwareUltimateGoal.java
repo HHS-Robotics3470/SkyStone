@@ -104,7 +104,7 @@ public class HardwareUltimateGoal {
     public final double turretHeight = 0.15; //5 + (13/16) inches, from the floor to the launch platform at rest, up to date but not 100% accurate
     public final double robotOdometryWidth = 0.12065;  // 4.75in, 12.065cm, up to date, but not 100% accurate // refers to the distance between the 2 side encoders
     public final double robotOdometryLength = 0.08255; // 3.25in, 8.255cm    //refers to the distance between the front odometry encoder and the imaginary line between the 2 side encoders
-    public static final long LAUNCHER_TIME_TO_ROTATE = 1300; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
+    public static final long LAUNCHER_TIME_TO_ROTATE = 1400; //out of date, needs testing, this number represents how long it takes for the continuous servo to rotate one full rotation at full power
 
     //directions of the odometry encoders, 1 == FORWARD; -1 == REVERSE
     public final short leftDirection = 1;

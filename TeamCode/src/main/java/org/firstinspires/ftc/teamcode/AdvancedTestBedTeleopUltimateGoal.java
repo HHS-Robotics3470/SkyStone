@@ -163,12 +163,12 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
                 //abort buttons
                 leftBumperCurPressed=gamepad1.left_bumper;
                 if (leftBumperCurPressed && !leftBumperPrevPressed) {
-                    abort = true;
+                    abort = !abort;
                 } // changes the d-pad to control the turrets movement, also turns off aimbot
                 leftBumperPrevPressed=leftBumperCurPressed;
                 rightBumperCurPressed=gamepad1.right_bumper;
                 if (rightBumperCurPressed && !rightBumperPrevPressed) {
-                    abort = false;
+                    abort = !abort;
                 }// changes the d-pad to control things with the intake, also turns on aimbot
                 rightBumperPrevPressed=rightBumperCurPressed;
                 //reset the turret rotators zero position
@@ -538,7 +538,12 @@ public class AdvancedTestBedTeleopUltimateGoal extends LinearOpMode {
             //stop launcher, wait a bit, then stop conveyor
             robot.conveyor.setPower(0);
             sleep(500);
+
+            robot.turretLauncher.setPower(-1);
+            sleep(HardwareUltimateGoal.LAUNCHER_TIME_TO_ROTATE);
+
             robot.turretLauncher.setPower(0);
+
 
             /*old, from when the turret launcher was a normal servo
             //set the conveyors to reverse

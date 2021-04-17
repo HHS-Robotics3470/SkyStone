@@ -92,13 +92,24 @@ public class AutonomousUltimateGoal extends LinearOpMode
         */
         //------------------------------STEP 1: scan ring stack, and get to position (to start depositing the wobble goal)------------------------------//
         //reverse to the stack
-        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.585,-1); //changed distance from 69 to 59 cm
+        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.545,-1); //changed distance from 69 to 59 cm
         //position should now be +0.69y from start position
-        sleep(200);
-        //scan with sensor
-        //scan the stack size
-        while(opModeIsActive()) {
-            short targetZone = 0; //0 == 0 rings, 1 == 1 ring, 2 == 4 rings
+
+        short targetZone = 0; //0 == 0 rings, 1 == 1 ring, 2 == 4 rings
+        //move and increments and test
+        boolean detection = false;
+        for (int i = 0; i < 15 && !detection; i++) {
+            if (targetZone != 0) {
+                detection = true;
+            }
+            robot.leftDrive.setPower(-.5 * ((double)i/15.0));
+            robot.rightDrive.setPower(-.5 *((double)i/15.0));
+            sleep(100);
+            posTarMan.update(robot.leftOdometry.getCurrentPosition(), robot.rightOdometry.getCurrentPosition(), robot.horizOdometry.getCurrentPosition());
+            robot.leftDrive.setPower(0);
+            robot.rightDrive.setPower(0);
+            //scan with sensor
+            //scan the stack size
             if (robot.distanceSensor.getDistance(DistanceUnit.CM) <= 6) targetZone = 2;
             else if (robot.distanceSensor.getDistance(DistanceUnit.CM) <= 11) targetZone = 1;
 
@@ -107,83 +118,115 @@ public class AutonomousUltimateGoal extends LinearOpMode
             telemetry.addData("distance from sensor", robot.distanceSensor.getDistance(DistanceUnit.CM));
             telemetry.update();
         }
-
-        //------this is the test line, move it as things get tested
-        /*
-
         //turn ccw 45 degrees
-        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), -1);
+        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), .3);
 
         //move past rings
         encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.35, -1);
 
-
         //rotate cw 45 degrees
-        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), 0.75);
+        encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(45), -.3);
+
+        robot.rightDrive.setPower(1);
+        sleep(200);
+
+        robot.rightDrive.setPower(0);
 
         //move to launch line
-        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.6, -0.75);
+        encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, 0.4, -1);
+
+
+        //-----get the stuf initialized----//
+        robot.intakePulley.setPower(-1);
+        sleep(timeToLowerIntake / 6);
+
+        robot.intakePulley.setPower(0);
+
+        rotateTurretTo(Math.toRadians(40));
+        rotateTurretTo(Math.PI/6); // the turret starts 30 degrees off center, move back to the middle
+        robot.turretRotator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.turretRotator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        robot.intakePulley.setPower(-1); //lower the intake 1/2 of the way
+        sleep(timeToLowerIntake / 6);    //POTENTIAL ISSUE, not waiting, the pulley never raises
+
+        robot.intakePulley.setPower(0);
+
+        robot.rightDrive.setPower(1);
+        sleep(250);
+
+        robot.rightDrive.setPower(0);
+
 
         //------------------------------STEP 2: branches for different target zones------------------------------//
         //TODO: every distance beyond here is an educated guess
         //lower the wobble goal thing reee
         if (targetZone == 0) { //zone A
             double distToFiringPointFromA = 1.3;
-
+            encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, .1, 1);
             //deposit, move to launch position path 1
             // deposit, raise intake
             depositWobbleGoal();
             //turn, lower intake
-            encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(100), .75);
+            encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(90), -1);
             robot.intakePulley.setPower(-1);
             sleep(timeToLowerIntake/3);
 
+            robot.turretLauncher.setPower(0);
+
             //make the measurements for this, bc right not, it's basically a guess
-            encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromA, -.75);
+            encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromA, -1);
 
         } else {
             //move to zone c
-            double distToC = 1.4;
-            double distToFiringPointFromC = 2;
-            double distToB = 1;
+            double distToC = 1;
+            double distToFiringPointFromC = 1.5;
+            double distToB = .5;
 
-            encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,distToC,-.75);
+            encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,distToC,-1);
             if (targetZone == 4) { //zone C
                 //deposit, rotate, go to firing position
                 depositWobbleGoal();
 
                 //turn
-                encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(135),0.75);
+                encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, Math.toRadians(135),-1);
                 robot.intakePulley.setPower(-1);
                 sleep(timeToLowerIntake/3);
 
-                encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromC, -0.75);
+
+                robot.turretLauncher.setPower(0);
+
+                encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromC, -1);
             } else { //zone B
                 //turn and move to b, deposit, continue to launch position
 
-                encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,Math.toRadians(45), -0.75);
-                encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,distToB, 0.75);
+                encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,Math.toRadians(45), 1);
+                encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,distToB, 1);
 
                 depositWobbleGoal();
 
-                encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,Math.toRadians(180), 0.75);
+                encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,Math.toRadians(180),-1);
                 robot.intakePulley.setPower(-1);
                 sleep(timeToLowerIntake/3);
 
-                encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromC-distToB, -0.75);
+
+                robot.turretLauncher.setPower(0);
+
+                encoderDrive(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry, distToFiringPointFromC-distToB, -1);
             }
 
-            encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,Math.toRadians(15),-0.75);
+            encoderTurn(robot.leftDrive,robot.rightDrive,robot.leftOdometry,robot.rightOdometry,robot.horizOdometry,Math.toRadians(15),1);
         }
-
+        //------this is the test line, move it as things get tested
+        /*
         //------------------------------STEP 3: aim and fire :D, then park ------------------------------//
         //set target
-        posTarMan.setTarget(0);//powershot 1
+        posTarMan.setTarget(3);//high goal
 
         fireTurret();
         reloadTurret();
 
-        posTarMan.setTarget(2);//high goal
+        //posTarMan.setTarget(3);
 
         fireTurret();
 
@@ -268,6 +311,15 @@ public class AutonomousUltimateGoal extends LinearOpMode
 
         robot.intakePulley.setPower(.5);
         sleep(timeToLowerIntake / 3);
+
+
+        robot.intakePulley.setPower(-1);
+        sleep(timeToLowerIntake / 6);
+
+        robot.intakePulley.setPower(1);
+        sleep(timeToLowerIntake / 3);
+
+
     }
     //TODO: eventually make a program that lets the robot move in arcs or something
     /**
@@ -406,16 +458,30 @@ public class AutonomousUltimateGoal extends LinearOpMode
 
         left.setPower(-power);
         right.setPower(power);
-        //TODO: after testing the position manager, if it is what's not working (and i can't fix it), change this to use encoders to guide it rather than the position tracker
-        //while the current heading is too far from the target heading, move
-        while ( Math.abs((targetHeading%(Math.PI)) - posTarMan.getRobotHeading()) > 0.017/*robot.getHorizOdoAllowedCountOffset()*/ /*&& Math.abs(angleCircumference - (horizOdo.getCurrentPosition()-initHorizCount)) > robot.getHorizOdoAllowedOffset*/) {
+
+        while ( (power > 0) ? (Math.abs(targetHeading) <= Math.abs(posTarMan.getRobotHeading())) : (Math.abs(targetHeading) >= Math.abs(posTarMan.getRobotHeading())) ) {
             posTarMan.update(leftOdo.getCurrentPosition(), rightOdo.getCurrentPosition(), horizOdo.getCurrentPosition());
 
             telemetry.addData("left encoder count", robot.leftOdometry.getCurrentPosition()*robot.getLeftDirection());
             telemetry.addData("right encoder count", robot.rightOdometry.getCurrentPosition()*robot.getRightDirection());
             telemetry.addData("horizontal encoder count", robot.horizOdometry.getCurrentPosition()*robot.getHorizDirection());
+            telemetry.addData("targetHeading", Math.toDegrees(targetHeading%(Math.PI*2)));
+            telemetry.addData("currentHeading", Math.toDegrees(posTarMan.getRobotHeading()));
             telemetry.update();
         }
+
+        //TODO: after testing the position manager, if it is what's not working (and i can't fix it), change this to use encoders to guide it rather than the position tracker
+        //while the current heading is too far from the target heading, move
+        /*while ( /*Math.abs(targetHeading) >= Math.abs(posTarMan.getRobotHeading())){*//*Math.abs(angleCircumference - (horizOdo.getCurrentPosition()-initHorizCount)) > robot.getHorizOdoAllowedCountOffset()) {
+            posTarMan.update(leftOdo.getCurrentPosition(), rightOdo.getCurrentPosition(), horizOdo.getCurrentPosition());
+
+            telemetry.addData("left encoder count", robot.leftOdometry.getCurrentPosition()*robot.getLeftDirection());
+            telemetry.addData("right encoder count", robot.rightOdometry.getCurrentPosition()*robot.getRightDirection());
+            telemetry.addData("horizontal encoder count", robot.horizOdometry.getCurrentPosition()*robot.getHorizDirection());
+            telemetry.addData("targetHeading", Math.toDegrees(targetHeading%(Math.PI*2)));
+            telemetry.addData("currentHeading", Math.toDegrees(posTarMan.getRobotHeading()));
+            telemetry.update();
+        }*/
         //once we're at the target position, exit loop and stop
         left.setPower(0);
         right.setPower(0);
@@ -563,7 +629,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
         //get heading and pitch (skip for now, probably not needed bc alot of what I would put here is redundant (already happens in the teleop))
-        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition(), robot.horizOdometry.getCurrentPosition());
+        posTarMan.update(robot.leftOdometry.getCurrentPosition(), robot.rightOdometry.getCurrentPosition(), robot.horizOdometry.getCurrentPosition());
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
         //move turret to aim at target
@@ -640,7 +706,7 @@ public class AutonomousUltimateGoal extends LinearOpMode
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
         //get heading and pitch (skip for now, probably not needed bc alot of what I would put here is redundant (already happens in the teleop))
-        posTarMan.update(robot.leftDrive.getCurrentPosition(), robot.rightDrive.getCurrentPosition(), robot.horizOdometry.getCurrentPosition());
+        posTarMan.update(robot.leftOdometry.getCurrentPosition(), robot.rightOdometry.getCurrentPosition(), robot.horizOdometry.getCurrentPosition());
         aimMan.update(posTarMan.getRobotPosition(), posTarMan.getRobotHeading(), posTarMan.getTargetPosition());
 
         //move turret to aim at target
